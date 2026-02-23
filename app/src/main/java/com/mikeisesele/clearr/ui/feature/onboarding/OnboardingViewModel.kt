@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.viewmodel
+package com.mikeisesele.clearr.ui.feature.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

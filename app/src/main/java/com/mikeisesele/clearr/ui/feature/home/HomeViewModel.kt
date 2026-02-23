@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.viewmodel
+package com.mikeisesele.clearr.ui.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,8 +15,6 @@ import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.data.model.YearConfig
 import com.mikeisesele.clearr.di.AppStateHolder
 import com.mikeisesele.clearr.domain.repository.DuesRepository
-import com.mikeisesele.clearr.ui.state.HomeUiState
-import com.mikeisesele.clearr.ui.state.SnackbarData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*

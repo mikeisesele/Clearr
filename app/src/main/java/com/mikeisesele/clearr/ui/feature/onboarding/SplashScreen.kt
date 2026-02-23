@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.screen
+package com.mikeisesele.clearr.ui.feature.onboarding
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -15,9 +15,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.ui.theme.ClearrColors
+import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import kotlinx.coroutines.delay
 
 /**
@@ -139,7 +141,6 @@ fun SplashScreen(onGetStarted: () -> Unit) {
         }
 
         // ── Phase 2: CTA state — compact logo + tagline + button ──────────────
-        // Fades in as a single unit so logo and button enter together.
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -166,7 +167,6 @@ fun SplashScreen(onGetStarted: () -> Unit) {
                 )
             }
             Spacer(Modifier.height(12.dp))
-            // App name — slightly smaller than splash phase
             Text(
                 "Clearr",
                 fontSize = 28.sp,
@@ -175,14 +175,12 @@ fun SplashScreen(onGetStarted: () -> Unit) {
                 letterSpacing = (-0.5).sp
             )
             Spacer(Modifier.height(4.dp))
-            // Tagline
             Text(
                 "Know who's cleared.",
                 fontSize = 13.sp,
                 color = Color.White.copy(alpha = 0.6f)
             )
             Spacer(Modifier.height(36.dp))
-            // CTA button
             Button(
                 onClick = onGetStarted,
                 enabled = ctaVisible,
@@ -201,5 +199,13 @@ fun SplashScreen(onGetStarted: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SplashScreenPreview() {
+    ClearrTheme {
+        SplashScreen(onGetStarted = {})
     }
 }

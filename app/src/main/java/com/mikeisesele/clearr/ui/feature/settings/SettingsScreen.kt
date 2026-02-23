@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.screen
+package com.mikeisesele.clearr.ui.feature.settings
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -20,17 +20,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.TrackerType
-import com.mikeisesele.clearr.ui.state.ThemeMode
+import com.mikeisesele.clearr.ui.commons.state.ThemeMode
+import com.mikeisesele.clearr.ui.commons.util.currentYear
+import com.mikeisesele.clearr.ui.commons.util.formatAmount
+import com.mikeisesele.clearr.ui.feature.settings.components.SectionCard
+import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
-import com.mikeisesele.clearr.ui.util.currentYear
-import com.mikeisesele.clearr.ui.util.formatAmount
-import com.mikeisesele.clearr.ui.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
@@ -59,20 +61,11 @@ fun SettingsScreen(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            "Settings",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.ExtraBold,
-            color = C.text
-        )
+        Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = C.text)
 
         // ── Active Year ───────────────────────────────────────────────────────
         SectionCard(title = "Active Year", C = C) {
-            Text(
-                "Applies to the tracker, reminders, and analytics.",
-                style = MaterialTheme.typography.bodySmall,
-                color = C.muted
-            )
+            Text("Applies to the tracker, reminders, and analytics.", style = MaterialTheme.typography.bodySmall, color = C.muted)
             Spacer(Modifier.height(10.dp))
             Box {
                 OutlinedButton(
@@ -108,13 +101,7 @@ fun SettingsScreen(
                     }
                     HorizontalDivider(color = C.border)
                     DropdownMenuItem(
-                        text = {
-                            Text(
-                                "＋ Start ${state.selectedYear + 1}",
-                                color = C.accent,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        },
+                        text = { Text("＋ Start ${state.selectedYear + 1}", color = C.accent, fontWeight = FontWeight.SemiBold) },
                         onClick = { viewModel.startNewYear(state.selectedYear); yearMenuExpanded = false }
                     )
                 }
@@ -155,23 +142,11 @@ fun SettingsScreen(
                 ) { Text("Save") }
             }
             Spacer(Modifier.height(4.dp))
-            Text(
-                "Current: ${formatAmount(dueAmount)} / member / period",
-                style = MaterialTheme.typography.bodySmall,
-                color = C.muted
-            )
+            Text("Current: ${formatAmount(dueAmount)} / member / period", style = MaterialTheme.typography.bodySmall, color = C.muted)
             if (dueEditable) {
-                Text(
-                    "Applies only to the current Dues tracker.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = C.dim
-                )
+                Text("Applies only to the current Dues tracker.", style = MaterialTheme.typography.bodySmall, color = C.dim)
             } else {
-                Text(
-                    "Open a Dues tracker to edit due amount.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = C.dim
-                )
+                Text("Open a Dues tracker to edit due amount.", style = MaterialTheme.typography.bodySmall, color = C.dim)
             }
         }
 
@@ -203,11 +178,7 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
                             .background(bgColor)
-                            .border(
-                                width = if (selected) 2.dp else 1.dp,
-                                color = borderColor,
-                                shape = RoundedCornerShape(10.dp)
-                            )
+                            .border(width = if (selected) 2.dp else 1.dp, color = borderColor, shape = RoundedCornerShape(10.dp))
                             .clickable { viewModel.setLayoutStyle(style) }
                             .padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -215,25 +186,11 @@ fun SettingsScreen(
                     ) {
                         Text(icon, fontSize = 22.sp)
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                title,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (selected) C.accent else C.text
-                            )
-                            Text(
-                                desc,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = C.muted
-                            )
+                            Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = if (selected) C.accent else C.text)
+                            Text(desc, style = MaterialTheme.typography.labelSmall, color = C.muted)
                         }
                         if (selected) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = null,
-                                tint = C.accent,
-                                modifier = Modifier.size(18.dp)
-                            )
+                            Icon(Icons.Default.Check, contentDescription = null, tint = C.accent, modifier = Modifier.size(18.dp))
                         }
                     }
                 }
@@ -264,10 +221,7 @@ fun SettingsScreen(
 
         // ── App Info ──────────────────────────────────────────────────────────
         SectionCard(title = "App Info", C = C) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Version", style = MaterialTheme.typography.bodyMedium, color = C.text)
                 Text("1.0", style = MaterialTheme.typography.bodyMedium, color = C.muted)
             }
@@ -276,17 +230,13 @@ fun SettingsScreen(
                 onClick = { viewModel.resetSetup() },
                 border = BorderStroke(1.dp, C.accent),
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("⚙️  Re-run Setup Wizard", color = C.accent)
-            }
+            ) { Text("⚙️  Re-run Setup Wizard", color = C.accent) }
             Spacer(Modifier.height(8.dp))
             OutlinedButton(
                 onClick = { showResetDialog = true },
                 border = BorderStroke(1.dp, C.red),
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Reset All Data", color = C.red)
-            }
+            ) { Text("Reset All Data", color = C.red) }
         }
 
         Spacer(Modifier.height(80.dp))
@@ -297,41 +247,29 @@ fun SettingsScreen(
             onDismissRequest = { showResetDialog = false },
             containerColor = C.surface,
             title = { Text("Reset All Data?", color = C.text) },
-            text = {
-                Text(
-                    "This will permanently delete all members, payments, and configuration. This action cannot be undone.",
-                    color = C.muted
-                )
-            },
+            text = { Text("This will permanently delete all members, payments, and configuration. This action cannot be undone.", color = C.muted) },
             confirmButton = {
-                Button(
-                    onClick = { showResetDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = C.red)
-                ) { Text("Reset") }
+                Button(onClick = { showResetDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = C.red)) { Text("Reset") }
             },
-            dismissButton = {
-                TextButton(onClick = { showResetDialog = false }) { Text("Cancel", color = C.muted) }
-            },
+            dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text("Cancel", color = C.muted) } },
             shape = RoundedCornerShape(16.dp)
         )
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-private fun SectionCard(
-    title: String,
-    C: com.mikeisesele.clearr.ui.theme.DuesColors,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = C.card),
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = C.text)
-            Spacer(Modifier.height(12.dp))
-            content()
+private fun SettingsScreenPreview() {
+    ClearrTheme {
+        val C = LocalDuesColors.current
+        Column(
+            modifier = Modifier.fillMaxSize().background(C.bg).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = C.text)
+            SectionCard(title = "Active Year", C = C) {
+                Text("2026", color = C.text)
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.viewmodel
+package com.mikeisesele.clearr.ui.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,8 +8,7 @@ import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.di.AppStateHolder
 import com.mikeisesele.clearr.domain.repository.DuesRepository
-import com.mikeisesele.clearr.ui.state.SettingsUiState
-import com.mikeisesele.clearr.ui.state.ThemeMode
+import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*

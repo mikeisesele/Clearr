@@ -1,9 +1,8 @@
-package com.mikeisesele.clearr.ui.viewmodel
+package com.mikeisesele.clearr.ui.feature.analytics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mikeisesele.clearr.domain.repository.DuesRepository
-import com.mikeisesele.clearr.ui.state.AnalyticsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*

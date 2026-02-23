@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.screen
+package com.mikeisesele.clearr.ui.feature.onboarding
 
 import android.app.Activity
 import android.content.Context
@@ -26,9 +26,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.ui.theme.ClearrColors
+import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import kotlinx.coroutines.delay
 
@@ -82,13 +84,11 @@ fun OnboardingScreen(
 
     DisposableEffect(activity, themeIsDark) {
         val transparent = android.graphics.Color.TRANSPARENT
-        // Onboarding uses light backgrounds; force dark system-bar icons for readability.
         activity?.enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(transparent, transparent),
             navigationBarStyle = SystemBarStyle.light(transparent, transparent)
         )
         onDispose {
-            // Restore global behavior when leaving onboarding.
             activity?.enableEdgeToEdge(
                 statusBarStyle = if (themeIsDark) {
                     SystemBarStyle.dark(transparent)
@@ -106,13 +106,10 @@ fun OnboardingScreen(
 
     var currentSlide by remember { mutableIntStateOf(initialSlide.coerceIn(0, slides.lastIndex)) }
     var prevSlide by remember { mutableIntStateOf(currentSlide) }
-
-    // forward = true means user went next; false = back
     var goingForward by remember { mutableStateOf(true) }
 
     val slide = slides[currentSlide]
 
-    // Animate the top-zone background color
     val topBgColor by animateColorAsState(
         targetValue = slide.bgColor,
         animationSpec = tween(400, easing = FastOutSlowInEasing),
@@ -133,7 +130,6 @@ fun OnboardingScreen(
                     .weight(0.48f)
                     .background(topBgColor)
             ) {
-                // Skip button — top right
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -151,7 +147,6 @@ fun OnboardingScreen(
                     )
                 }
 
-                // Slide content — direction-aware animated entry
                 AnimatedContent(
                     targetState = currentSlide,
                     transitionSpec = {
@@ -173,7 +168,6 @@ fun OnboardingScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        // Slide icon
                         Box(
                             modifier = Modifier
                                 .size(64.dp)
@@ -204,7 +198,7 @@ fun OnboardingScreen(
                 }
             }
 
-            // ── Bottom zone (white) — animated illustration ───────────────────
+            // ── Bottom zone (white) ───────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -246,7 +240,6 @@ fun OnboardingScreen(
                     .padding(horizontal = 24.dp)
                     .padding(bottom = 32.dp, top = 8.dp)
             ) {
-                // Progress dots — centred
                 Row(
                     modifier = Modifier.align(Alignment.Center),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -277,7 +270,6 @@ fun OnboardingScreen(
                     }
                 }
 
-                // Back button — left (visible from slide 2 onward)
                 if (currentSlide > 0) {
                     IconButton(
                         onClick = {
@@ -299,7 +291,6 @@ fun OnboardingScreen(
                     }
                 }
 
-                // Next / Let's go button — right
                 val isLastSlide = currentSlide == slides.lastIndex
                 Button(
                     onClick = {
@@ -339,7 +330,7 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Slide 1 Visual — Animated member status list
+// Slide 1 Visual
 // ─────────────────────────────────────────────────────────────────────────────
 
 private val memberNames = listOf("Henry", "Simon", "Dare", "Tobi", "Michael")
@@ -355,7 +346,6 @@ private fun Slide1Visual() {
                 memberNames.indices.forEach { i ->
                     if ((i + clearedIndices.size) % 2 == 0) add(i)
                 }
-                // Ensure at least 2 and at most 4 cleared
                 if (size < 2) add(0)
             }
         }
@@ -396,7 +386,6 @@ private fun Slide1Visual() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Avatar initial
                     Box(
                         modifier = Modifier
                             .size(30.dp)
@@ -411,7 +400,6 @@ private fun Slide1Visual() {
                             color = if (cleared) ClearrColors.Emerald else ClearrColors.TextSecondary
                         )
                     }
-                    // Name
                     Text(
                         name,
                         fontSize = 13.sp,
@@ -419,7 +407,6 @@ private fun Slide1Visual() {
                         color = ClearrColors.TextPrimary,
                         modifier = Modifier.weight(1f)
                     )
-                    // Status label + dot
                     Text(
                         if (cleared) "Cleared ✓" else "Pending...",
                         fontSize = 11.sp,
@@ -439,7 +426,7 @@ private fun Slide1Visual() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Slide 2 Visual — Tracker cards with animated progress bars
+// Slide 2 Visual
 // ─────────────────────────────────────────────────────────────────────────────
 
 private data class MockTracker(val name: String, val color: Color, val bg: Color, val icon: String, val paid: Int, val total: Int)
@@ -489,7 +476,6 @@ private fun Slide2Visual() {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Type icon
                     Box(
                         modifier = Modifier
                             .size(32.dp)
@@ -532,11 +518,11 @@ private fun Slide2Visual() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Slide 3 Visual — Period progress with member chips
+// Slide 3 Visual
 // ─────────────────────────────────────────────────────────────────────────────
 
 private val slide3Names = listOf("Henry", "Simon", "Dare", "Tobi", "Michael", "Faruk", "Chidi", "Olu", "Michael I.")
-private val slide3Cleared = setOf(0, 2, 3, 5, 6, 8)   // indices of cleared members
+private val slide3Cleared = setOf(0, 2, 3, 5, 6, 8)
 
 @Composable
 private fun Slide3Visual() {
@@ -559,7 +545,6 @@ private fun Slide3Visual() {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Period header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -569,7 +554,6 @@ private fun Slide3Visual() {
                 Text("${(pct * 100).toInt()}%", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = ClearrColors.Violet)
             }
             Spacer(Modifier.height(8.dp))
-            // Overall progress bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -586,7 +570,6 @@ private fun Slide3Visual() {
                 )
             }
             Spacer(Modifier.height(12.dp))
-            // Member chips
             val rows = slide3Names.chunked(3)
             rows.forEach { rowNames ->
                 Row(
@@ -613,22 +596,9 @@ private fun Slide3Visual() {
                 }
             }
             Spacer(Modifier.height(10.dp))
-            // Stat tiles
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatTile(
-                    label = "Cleared",
-                    value = "$clearedCount",
-                    color = ClearrColors.Emerald,
-                    bg = ClearrColors.EmeraldBg,
-                    modifier = Modifier.weight(1f)
-                )
-                StatTile(
-                    label = "Pending",
-                    value = "${totalCount - clearedCount}",
-                    color = ClearrColors.Amber,
-                    bg = ClearrColors.AmberBg,
-                    modifier = Modifier.weight(1f)
-                )
+                StatTile(label = "Cleared", value = "$clearedCount", color = ClearrColors.Emerald, bg = ClearrColors.EmeraldBg, modifier = Modifier.weight(1f))
+                StatTile(label = "Pending", value = "${totalCount - clearedCount}", color = ClearrColors.Amber, bg = ClearrColors.AmberBg, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -646,5 +616,13 @@ private fun StatTile(label: String, value: String, color: Color, bg: Color, modi
             Text(value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = color)
             Text(label, fontSize = 10.sp, color = color.copy(alpha = 0.7f))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun OnboardingScreenPreview() {
+    ClearrTheme {
+        OnboardingScreen(initialSlide = 0, onComplete = {}, onSkip = {})
     }
 }

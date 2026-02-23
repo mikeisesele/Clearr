@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.screen
+package com.mikeisesele.clearr.ui.feature.onboarding
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -15,9 +15,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.ui.theme.ClearrColors
+import com.mikeisesele.clearr.ui.theme.ClearrTheme
 
 /**
  * Completion Screen — shown after the last slide or skip.
@@ -106,5 +108,13 @@ fun CompletionScreen(onCreateTracker: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CompletionScreenPreview() {
+    ClearrTheme {
+        CompletionScreen(onCreateTracker = {})
     }
 }

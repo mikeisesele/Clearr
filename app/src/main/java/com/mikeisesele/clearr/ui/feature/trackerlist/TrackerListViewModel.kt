@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.viewmodel
+package com.mikeisesele.clearr.ui.feature.trackerlist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,11 +17,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
-
-data class TrackerListUiState(
-    val summaries: List<TrackerSummary> = emptyList(),
-    val isLoading: Boolean = true
-)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
