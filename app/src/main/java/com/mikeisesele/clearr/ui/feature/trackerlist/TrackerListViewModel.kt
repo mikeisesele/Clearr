@@ -3,6 +3,7 @@ package com.mikeisesele.clearr.ui.feature.trackerlist
 import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.Frequency
+import com.mikeisesele.clearr.data.model.GoalPeriodKey
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerMember
@@ -102,6 +103,31 @@ class TrackerListViewModel @Inject constructor(
                                         createdAt = tracker.createdAt
                                     )
                                 }
+                            } else if (tracker.type == TrackerType.GOALS) {
+                                repository.getGoalsForTracker(tracker.id)
+                                    .flatMapLatest { goals ->
+                                        repository.getGoalCompletionsForTracker(tracker.id)
+                                            .map { completions ->
+                                                val doneCount = goals.count { goal ->
+                                                    val currentKey = GoalPeriodKey.currentKey(goal.frequency)
+                                                    completions.any { it.goalId == goal.id && it.periodKey == currentKey }
+                                                }
+                                                TrackerSummary(
+                                                    trackerId = tracker.id,
+                                                    name = tracker.name,
+                                                    type = tracker.type,
+                                                    frequency = tracker.frequency,
+                                                    currentPeriodLabel = "Today",
+                                                    totalMembers = goals.size,
+                                                    completedCount = doneCount,
+                                                    completionPercent = if (goals.isNotEmpty()) {
+                                                        ((doneCount.toDouble() / goals.size) * 100).toInt().coerceIn(0, 100)
+                                                    } else 0,
+                                                    isNew = tracker.isNew,
+                                                    createdAt = tracker.createdAt
+                                                )
+                                            }
+                                    }
                             } else {
                                 repository.getActiveMembersForTracker(tracker.id)
                                     .flatMapLatest { members ->

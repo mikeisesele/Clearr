@@ -104,6 +104,7 @@ data class BudgetColorScheme(
 
 fun ClearrColors.fromToken(token: String): BudgetColorScheme = when (token.lowercase()) {
     "teal" -> BudgetColorScheme(Emerald, EmeraldBg)
+    "emerald" -> BudgetColorScheme(Emerald, EmeraldBg)
     "coral" -> BudgetColorScheme(Coral, CoralBg)
     "amber" -> BudgetColorScheme(Amber, AmberBg)
     "violet" -> BudgetColorScheme(Violet, VioletBg)

@@ -1,0 +1,843 @@
+package com.mikeisesele.clearr.ui.feature.goals
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mikeisesele.clearr.data.model.GoalFrequency
+import com.mikeisesele.clearr.data.model.GoalSummary
+import com.mikeisesele.clearr.ui.theme.ClearrColors
+import com.mikeisesele.clearr.ui.theme.fromToken
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.roundToInt
+
+@Composable
+fun GoalsDetailScreen(
+    trackerId: Long,
+    onNavigateBack: () -> Unit,
+    viewModel: GoalsViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var showAddSheet by remember { mutableStateOf(false) }
+    var detailGoal by remember { mutableStateOf<GoalSummary?>(null) }
+
+    if (state.trackerId != trackerId) return
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ClearrColors.Background)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            GoalsNavBar(
+                title = state.trackerName,
+                doneCount = state.doneCount,
+                totalCount = state.totalCount,
+                onBack = onNavigateBack,
+                onAdd = { showAddSheet = true }
+            )
+
+            AnimatedVisibility(
+                visible = state.allDoneThisPeriod,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut()
+            ) {
+                AllClearedBanner()
+            }
+
+            SwipeHintStrip()
+
+            if (!state.isLoading && state.summaries.isEmpty()) {
+                GoalsEmptyState(modifier = Modifier.weight(1f))
+            } else {
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    itemsIndexed(state.summaries, key = { _, summary -> summary.goal.id }) { index, summary ->
+                        SwipeableGoalRow(
+                            summary = summary,
+                            isLast = index == state.summaries.lastIndex,
+                            onDone = { viewModel.onAction(GoalsAction.MarkDone(it)) },
+                            onTap = { detailGoal = it }
+                        )
+                    }
+                }
+            }
+        }
+
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 20.dp, bottom = 24.dp)
+                .size(52.dp)
+                .clickable { showAddSheet = true },
+            shape = RoundedCornerShape(16.dp),
+            color = ClearrColors.Violet,
+            shadowElevation = 8.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+
+    if (showAddSheet) {
+        AddGoalSheet(
+            onDismiss = { showAddSheet = false },
+            onConfirm = { title, emoji, colorToken, target, frequency ->
+                viewModel.onAction(
+                    GoalsAction.AddGoal(
+                        title = title,
+                        emoji = emoji,
+                        colorToken = colorToken,
+                        target = target,
+                        frequency = frequency
+                    )
+                )
+                showAddSheet = false
+            }
+        )
+    }
+
+    detailGoal?.let { summary ->
+        GoalDetailSheet(
+            summary = summary,
+            onDismiss = { detailGoal = null },
+            onMarkDone = {
+                viewModel.onAction(GoalsAction.MarkDone(it))
+                detailGoal = null
+            }
+        )
+    }
+}
+
+@Composable
+private fun GoalsNavBar(
+    title: String,
+    doneCount: Int,
+    totalCount: Int,
+    onBack: () -> Unit,
+    onAdd: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ClearrColors.Surface)
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            modifier = Modifier
+                .size(34.dp)
+                .clickable(onClick = onBack),
+            shape = RoundedCornerShape(10.dp),
+            color = ClearrColors.NavBg
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text("←", fontSize = 15.sp, color = ClearrColors.TextPrimary)
+            }
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(title, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
+            Text("$doneCount/$totalCount cleared today", fontSize = 12.sp, color = ClearrColors.TextMuted)
+        }
+
+        Surface(
+            modifier = Modifier
+                .size(34.dp)
+                .clickable(onClick = onAdd),
+            shape = RoundedCornerShape(10.dp),
+            color = ClearrColors.Violet
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text("+", fontSize = 20.sp, color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+    HorizontalDivider(color = ClearrColors.Border)
+}
+
+@Composable
+private fun AllClearedBanner() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ClearrColors.EmeraldBg)
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("🎉", fontSize = 18.sp)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "All goals cleared for today!",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = ClearrColors.Emerald
+        )
+    }
+}
+
+@Composable
+private fun SwipeHintStrip() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(28.dp)
+            .background(ClearrColors.Background),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Swipe right to mark a goal done for today",
+            fontSize = 11.sp,
+            color = ClearrColors.TextMuted
+        )
+    }
+}
+
+@Composable
+private fun SwipeableGoalRow(
+    summary: GoalSummary,
+    isLast: Boolean,
+    onDone: (String) -> Unit,
+    onTap: (GoalSummary) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val maxSwipePx = with(density) { 130.dp.toPx() }
+    val thresholdPx = with(density) { 90.dp.toPx() }
+    val tapThresholdPx = with(density) { 5.dp.toPx() }
+
+    val offsetX = remember(summary.goal.id) { Animatable(0f) }
+    var rowWidthPx by remember { mutableStateOf(0f) }
+    var dragMagnitudePx by remember { mutableStateOf(0f) }
+
+    val doneThisPeriod = summary.isDoneThisPeriod
+    val palette = goalPalette(summary.goal.colorToken)
+    val bgColor = if (offsetX.value > 20f) ClearrColors.Emerald else ClearrColors.Border
+
+    Box(modifier = Modifier.fillMaxWidth().background(bgColor)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (offsetX.value > 20f) "✓ Done!" else "",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(ClearrColors.Surface)
+                .alpha(if (doneThisPeriod) 0.6f else 1f)
+                .onSizeChanged { rowWidthPx = it.width.toFloat() }
+                .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                .pointerInput(summary.goal.id, doneThisPeriod) {
+                    detectTapGestures(onTap = {
+                        if (dragMagnitudePx < tapThresholdPx) onTap(summary)
+                        dragMagnitudePx = 0f
+                    })
+                }
+                .pointerInput(summary.goal.id, doneThisPeriod) {
+                    if (doneThisPeriod) return@pointerInput
+                    detectHorizontalDragGestures(
+                        onDragStart = { dragMagnitudePx = 0f },
+                        onHorizontalDrag = { change, dragAmount ->
+                            change.consume()
+                            dragMagnitudePx += abs(dragAmount)
+                            scope.launch {
+                                val next = (offsetX.value + dragAmount).coerceIn(0f, maxSwipePx)
+                                offsetX.snapTo(next)
+                            }
+                        },
+                        onDragEnd = {
+                            scope.launch {
+                                if (offsetX.value >= thresholdPx) {
+                                    offsetX.animateTo(rowWidthPx.coerceAtLeast(maxSwipePx), spring())
+                                    onDone(summary.goal.id)
+                                } else {
+                                    offsetX.animateTo(0f, spring())
+                                }
+                            }
+                        },
+                        onDragCancel = {
+                            scope.launch { offsetX.animateTo(0f, spring()) }
+                        }
+                    )
+                }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(13.dp)
+        ) {
+            Surface(
+                modifier = Modifier.size(42.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = if (doneThisPeriod) ClearrColors.EmeraldBg else palette.background
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if (doneThisPeriod) "✓" else summary.goal.emoji,
+                        fontSize = 20.sp,
+                        color = if (doneThisPeriod) ClearrColors.Emerald else Color.Unspecified
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = summary.goal.title,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (doneThisPeriod) ClearrColors.TextMuted else ClearrColors.TextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Surface(shape = RoundedCornerShape(10.dp), color = ClearrColors.Background) {
+                            Text(
+                                text = if (summary.goal.frequency == GoalFrequency.DAILY) "Daily" else "Weekly",
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 1.dp),
+                                fontSize = 11.sp,
+                                color = ClearrColors.TextMuted
+                            )
+                        }
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("🔥", fontSize = 13.sp)
+                        Spacer(Modifier.width(3.dp))
+                        Text(
+                            text = summary.currentStreak.toString(),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (summary.currentStreak > 0) ClearrColors.Amber else ClearrColors.TextMuted
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = summary.goal.target ?: "No target set",
+                    fontSize = 12.sp,
+                    color = ClearrColors.TextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(Modifier.height(6.dp))
+                HistoryDots(history = summary.recentHistory, color = palette.color)
+            }
+        }
+
+        if (!isLast) HorizontalDivider(color = ClearrColors.Border, modifier = Modifier.align(Alignment.BottomCenter))
+    }
+}
+
+@Composable
+private fun HistoryDots(
+    history: List<com.mikeisesele.clearr.data.model.HistoryEntry>,
+    color: Color
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+        history.forEach { entry ->
+            val dotColor by animateColorAsState(
+                targetValue = if (entry.isDone) color else ClearrColors.Border,
+                label = "goal_history_dot"
+            )
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .background(dotColor, CircleShape)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GoalDetailSheet(
+    summary: GoalSummary,
+    onDismiss: () -> Unit,
+    onMarkDone: (String) -> Unit
+) {
+    val doneThisPeriod = summary.isDoneThisPeriod
+    val palette = goalPalette(summary.goal.colorToken)
+    val completionPct = (summary.completionRate * 100f).roundToInt().coerceIn(0, 100)
+    val historyTitle = if (summary.goal.frequency == GoalFrequency.DAILY) "LAST 7 DAYS" else "LAST 7 WEEKS"
+
+    BackHandler(onBack = onDismiss)
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = ClearrColors.Surface) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .navigationBarsPadding()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text("Close", color = ClearrColors.TextSecondary)
+                }
+                Text("Goal Detail", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
+                Spacer(modifier = Modifier.width(40.dp))
+            }
+
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Surface(
+                    modifier = Modifier.size(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (doneThisPeriod) ClearrColors.EmeraldBg else palette.background
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(if (doneThisPeriod) "✓" else summary.goal.emoji, fontSize = 24.sp)
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(summary.goal.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ClearrColors.TextPrimary)
+                    Text(
+                        text = "${summary.goal.target ?: "No target"} · ${if (summary.goal.frequency == GoalFrequency.DAILY) "Daily" else "Weekly"}",
+                        fontSize = 13.sp,
+                        color = ClearrColors.TextMuted
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                StatTile(
+                    label = "Streak",
+                    value = "${summary.currentStreak}🔥",
+                    fg = if (summary.currentStreak > 0) ClearrColors.Amber else ClearrColors.TextMuted,
+                    bg = if (summary.currentStreak > 0) ClearrColors.AmberBg else ClearrColors.Background,
+                    modifier = Modifier.weight(1f)
+                )
+                StatTile(
+                    label = "Best",
+                    value = "${summary.bestStreak}🏆",
+                    fg = ClearrColors.Violet,
+                    bg = ClearrColors.VioletBg,
+                    modifier = Modifier.weight(1f)
+                )
+                val (rateFg, rateBg) = when {
+                    completionPct >= 70 -> ClearrColors.Emerald to ClearrColors.EmeraldBg
+                    completionPct >= 40 -> ClearrColors.Amber to ClearrColors.AmberBg
+                    else -> ClearrColors.Coral to ClearrColors.CoralBg
+                }
+                StatTile(
+                    label = "Rate",
+                    value = "$completionPct%",
+                    fg = rateFg,
+                    bg = rateBg,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+            Text(historyTitle, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextMuted)
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                summary.recentHistory.forEach { entry ->
+                    Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(36.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (entry.isDone) palette.color else ClearrColors.Background
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = if (entry.isDone) "✓" else "—",
+                                    fontSize = if (entry.isDone) 14.sp else 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (entry.isDone) Color.White else ClearrColors.Border
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        Text(entry.label, fontSize = 9.sp, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+            if (!doneThisPeriod) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onMarkDone(summary.goal.id)
+                        },
+                    shape = RoundedCornerShape(14.dp),
+                    color = palette.color,
+                    shadowElevation = 8.dp
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(vertical = 15.dp)) {
+                        Text(
+                            "Mark as Done Today ✓",
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                }
+            } else {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = ClearrColors.EmeraldBg
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(vertical = 14.dp)) {
+                        Text(
+                            "✓ Completed for this period",
+                            color = ClearrColors.Emerald,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatTile(
+    label: String,
+    value: String,
+    fg: Color,
+    bg: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(modifier = modifier, shape = RoundedCornerShape(12.dp), color = bg) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = fg)
+            Spacer(Modifier.height(2.dp))
+            Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextMuted)
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun AddGoalSheet(
+    onDismiss: () -> Unit,
+    onConfirm: (title: String, emoji: String, colorToken: String, target: String?, frequency: GoalFrequency) -> Unit
+) {
+    var title by rememberSaveable { mutableStateOf("") }
+    var emoji by rememberSaveable { mutableStateOf("🎯") }
+    var target by rememberSaveable { mutableStateOf("") }
+    var frequency by rememberSaveable { mutableStateOf(GoalFrequency.DAILY) }
+    var colorToken by rememberSaveable { mutableStateOf("Purple") }
+
+    val emojis = listOf("🎯", "🏃", "💰", "📚", "🥗", "🚿", "💪", "🧘", "✍️", "🎸", "🌅", "💊")
+    val colorTokens = listOf("Purple", "Emerald", "Blue", "Amber", "Coral")
+    val palette = goalPalette(colorToken)
+
+    BackHandler(onBack = onDismiss)
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = ClearrColors.Surface) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .navigationBarsPadding()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onDismiss) { Text("Cancel", color = ClearrColors.TextSecondary) }
+                Text("New Goal", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
+                TextButton(
+                    enabled = title.trim().isNotEmpty(),
+                    onClick = {
+                        onConfirm(
+                            title.trim(),
+                            emoji,
+                            colorToken,
+                            target.trim().ifBlank { null },
+                            frequency
+                        )
+                    }
+                ) {
+                    Text(
+                        "Add",
+                        color = if (title.trim().isNotEmpty()) ClearrColors.Violet else ClearrColors.TextMuted,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = palette.background.copy(alpha = 0.5f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Surface(
+                        modifier = Modifier.size(44.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = palette.background
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(emoji, fontSize = 22.sp)
+                        }
+                    }
+                    Column {
+                        Text(
+                            text = title.ifBlank { "Goal name" },
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ClearrColors.TextPrimary
+                        )
+                        Text(
+                            text = "${target.ifBlank { "Set a target" }} · ${if (frequency == GoalFrequency.DAILY) "Daily" else "Weekly"}",
+                            fontSize = 12.sp,
+                            color = ClearrColors.TextMuted
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+            SectionTitle("ICON")
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                emojis.forEach { value ->
+                    Surface(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clickable { emoji = value },
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (emoji == value) palette.background else ClearrColors.Background,
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 2.dp,
+                            color = if (emoji == value) palette.color else Color.Transparent
+                        )
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(value, fontSize = 18.sp)
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+            SectionTitle("COLOR")
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                colorTokens.forEach { token ->
+                    val tokenPalette = goalPalette(token)
+                    Surface(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clickable { colorToken = token },
+                        shape = CircleShape,
+                        color = tokenPalette.color,
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 3.dp,
+                            color = if (colorToken == token) ClearrColors.TextPrimary else Color.Transparent
+                        )
+                    ) {}
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+            SectionTitle("GOAL NAME")
+            Surface(shape = RoundedCornerShape(10.dp), color = ClearrColors.Background, modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp)) {
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            color = ClearrColors.TextPrimary,
+                            fontSize = 15.sp
+                        ),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        decorationBox = { inner ->
+                            if (title.isBlank()) {
+                                Text("e.g. Exercise", color = ClearrColors.TextMuted, fontSize = 15.sp)
+                            }
+                            inner()
+                        }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            SectionTitle("TARGET (OPTIONAL)")
+            Surface(shape = RoundedCornerShape(10.dp), color = ClearrColors.Background, modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp)) {
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = target,
+                        onValueChange = { target = it },
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            color = ClearrColors.TextPrimary,
+                            fontSize = 15.sp
+                        ),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        decorationBox = { inner ->
+                            if (target.isBlank()) {
+                                Text("e.g. 30 mins, ₦10,000, 20 pages", color = ClearrColors.TextMuted, fontSize = 15.sp)
+                            }
+                            inner()
+                        }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+            SectionTitle("FREQUENCY")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                listOf(GoalFrequency.DAILY, GoalFrequency.WEEKLY).forEach { value ->
+                    val selected = value == frequency
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .clickable { frequency = value },
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (selected) palette.background else ClearrColors.Background,
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 2.dp,
+                            color = if (selected) palette.color else Color.Transparent
+                        )
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = if (value == GoalFrequency.DAILY) "Daily" else "Weekly",
+                                color = if (selected) palette.color else ClearrColors.TextMuted,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(label: String) {
+    Text(
+        text = label,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = ClearrColors.TextMuted,
+        modifier = Modifier.padding(start = 4.dp)
+    )
+}
+
+@Composable
+private fun GoalsEmptyState(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(ClearrColors.Background),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("🎯", fontSize = 40.sp)
+        Spacer(Modifier.height(12.dp))
+        Text("No goals yet", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ClearrColors.TextPrimary)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Add your first goal and start building a streak.",
+            fontSize = 13.sp,
+            color = ClearrColors.TextMuted
+        )
+    }
+}
+
+private data class GoalPalette(
+    val color: Color,
+    val background: Color
+)
+
+private fun goalPalette(token: String): GoalPalette {
+    val scheme = ClearrColors.fromToken(token)
+    return GoalPalette(color = scheme.color, background = scheme.background)
+}

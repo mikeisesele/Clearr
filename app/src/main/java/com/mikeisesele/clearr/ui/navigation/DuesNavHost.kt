@@ -21,6 +21,7 @@ import androidx.navigation.navArgument
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import com.mikeisesele.clearr.ui.feature.analytics.AnalyticsScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetDetailScreen
+import com.mikeisesele.clearr.ui.feature.goals.GoalsDetailScreen
 import com.mikeisesele.clearr.ui.feature.home.HomeScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingAction
@@ -256,6 +257,11 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     )
                 } else if (detailState.trackerType == TrackerType.TODO) {
                     TodoDetailScreen(
+                        trackerId = trackerId,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                } else if (detailState.trackerType == TrackerType.GOALS) {
+                    GoalsDetailScreen(
                         trackerId = trackerId,
                         onNavigateBack = { navController.popBackStack() }
                     )
