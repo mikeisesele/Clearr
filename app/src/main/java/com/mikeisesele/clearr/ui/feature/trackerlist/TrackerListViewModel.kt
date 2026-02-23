@@ -9,6 +9,8 @@ import com.mikeisesele.clearr.data.model.TrackerMember
 import com.mikeisesele.clearr.data.model.TrackerPeriod
 import com.mikeisesele.clearr.data.model.TrackerSummary
 import com.mikeisesele.clearr.data.model.TrackerType
+import com.mikeisesele.clearr.data.model.TodoStatus
+import com.mikeisesele.clearr.data.model.derivedStatus
 import com.mikeisesele.clearr.domain.repository.DuesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -82,6 +84,24 @@ class TrackerListViewModel @Inject constructor(
                                                     }
                                             }
                                     }
+                            } else if (tracker.type == TrackerType.TODO) {
+                                repository.getTodosForTracker(tracker.id).map { todos ->
+                                    val doneCount = todos.count { it.derivedStatus() == TodoStatus.DONE }
+                                    TrackerSummary(
+                                        trackerId = tracker.id,
+                                        name = tracker.name,
+                                        type = tracker.type,
+                                        frequency = tracker.frequency,
+                                        currentPeriodLabel = "Todo List",
+                                        totalMembers = todos.size,
+                                        completedCount = doneCount,
+                                        completionPercent = if (todos.isNotEmpty()) {
+                                            ((doneCount.toDouble() / todos.size) * 100).toInt().coerceIn(0, 100)
+                                        } else 0,
+                                        isNew = tracker.isNew,
+                                        createdAt = tracker.createdAt
+                                    )
+                                }
                             } else {
                                 repository.getActiveMembersForTracker(tracker.id)
                                     .flatMapLatest { members ->

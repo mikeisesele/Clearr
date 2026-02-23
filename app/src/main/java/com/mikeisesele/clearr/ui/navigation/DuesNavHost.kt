@@ -29,6 +29,7 @@ import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingViewModel
 import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
 import com.mikeisesele.clearr.ui.feature.settings.SettingsScreen
 import com.mikeisesele.clearr.ui.feature.setup.SetupWizardScreen
+import com.mikeisesele.clearr.ui.feature.todo.TodoDetailScreen
 import com.mikeisesele.clearr.ui.feature.trackerlist.TrackerListScreen
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.ui.theme.ClearrColors
@@ -250,6 +251,11 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     }
                 } else if (detailState.trackerType == TrackerType.BUDGET) {
                     BudgetDetailScreen(
+                        trackerId = trackerId,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                } else if (detailState.trackerType == TrackerType.TODO) {
+                    TodoDetailScreen(
                         trackerId = trackerId,
                         onNavigateBack = { navController.popBackStack() }
                     )
