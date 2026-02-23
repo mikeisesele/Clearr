@@ -42,8 +42,7 @@ enum class TrackerType {
     DUES,       // Group financial obligations
     GOALS,      // Personal goals / recurring habits
     TODO,       // Personal to-do / task list
-    BUDGET,     // Planned vs actual spending
-    EXPENSES    // Shared/group expenses tracking
+    BUDGET      // Planned vs actual spending
 }
 
 enum class Frequency {

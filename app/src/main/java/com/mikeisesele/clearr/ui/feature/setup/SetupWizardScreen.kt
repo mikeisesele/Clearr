@@ -318,8 +318,7 @@ private fun TrackerTypeStep(
         TrackerType.DUES to Pair("💰", "Financial Dues – Track monthly / periodic payments"),
         TrackerType.GOALS to Pair("🎯", "Goals – Track recurring habits or targets"),
         TrackerType.TODO to Pair("📝", "To-do – Track completion of personal tasks"),
-        TrackerType.BUDGET to Pair("💳", "Budget – Planned vs actual spending"),
-        TrackerType.EXPENSES to Pair("🧾", "Expenses – Shared or personal expense planning")
+        TrackerType.BUDGET to Pair("💳", "Budget – Planned vs actual spending")
     )
     Column(modifier = Modifier.fillMaxWidth().padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)) {
         StepHeader("What are you tracking?", "Choose the type that best describes your group's needs.", colors)
@@ -380,7 +379,7 @@ private fun AmountStep(
 ) {
     val label = when (trackerType) {
         TrackerType.DUES -> "Amount per ${frequency.name.lowercase().replaceFirstChar { it.uppercase() }} (₦)"
-        TrackerType.GOALS, TrackerType.TODO, TrackerType.BUDGET, TrackerType.EXPENSES -> "Not applicable for this tracker type"
+        TrackerType.GOALS, TrackerType.TODO, TrackerType.BUDGET -> "Not applicable for this tracker type"
     }
     val skipAmount = trackerType != TrackerType.DUES
     Column(modifier = Modifier.fillMaxWidth().padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)) {

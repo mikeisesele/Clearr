@@ -72,7 +72,6 @@ fun TrackerType.brandColor(): Color = when (this) {
     TrackerType.GOALS    -> ClearrColors.Emerald
     TrackerType.TODO     -> ClearrColors.Amber
     TrackerType.BUDGET   -> ClearrColors.Blue
-    TrackerType.EXPENSES -> ClearrColors.Coral
 }
 
 fun TrackerType.brandBackground(): Color = when (this) {
@@ -80,7 +79,6 @@ fun TrackerType.brandBackground(): Color = when (this) {
     TrackerType.GOALS    -> ClearrColors.EmeraldBg
     TrackerType.TODO     -> ClearrColors.AmberBg
     TrackerType.BUDGET   -> ClearrColors.BlueBg
-    TrackerType.EXPENSES -> ClearrColors.CoralBg
 }
 
 fun TrackerType.brandSurface(): Color = when (this) {
@@ -88,7 +86,6 @@ fun TrackerType.brandSurface(): Color = when (this) {
     TrackerType.GOALS    -> ClearrColors.EmeraldSurface
     TrackerType.TODO     -> ClearrColors.AmberSurface
     TrackerType.BUDGET   -> ClearrColors.BlueSurface
-    TrackerType.EXPENSES -> ClearrColors.CoralSurface
 }
 
 fun TrackerType.brandIcon(): String = when (this) {
@@ -96,7 +93,6 @@ fun TrackerType.brandIcon(): String = when (this) {
     TrackerType.GOALS    -> "🎯"
     TrackerType.TODO     -> "☑"
     TrackerType.BUDGET   -> "💳"
-    TrackerType.EXPENSES -> "🧾"
 }
 
 data class BudgetColorScheme(
@@ -159,12 +155,6 @@ fun RecordStatus.brandLabel(type: TrackerType): String = when (type) {
         RecordStatus.PAID -> "On Track"
         RecordStatus.PARTIAL -> "Near Limit"
         RecordStatus.UNPAID -> "Over"
-        else -> name.lowercase().replaceFirstChar { it.uppercase() }
-    }
-    TrackerType.EXPENSES -> when (this) {
-        RecordStatus.PAID    -> "Settled"
-        RecordStatus.PARTIAL -> "Partial"
-        RecordStatus.UNPAID  -> "Outstanding"
         else -> name.lowercase().replaceFirstChar { it.uppercase() }
     }
 }

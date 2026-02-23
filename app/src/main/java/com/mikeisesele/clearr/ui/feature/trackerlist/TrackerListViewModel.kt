@@ -263,7 +263,6 @@ class TrackerListViewModel @Inject constructor(
         TrackerType.GOALS -> setOf("DONE")
         TrackerType.TODO -> setOf("DONE")
         TrackerType.BUDGET -> emptySet()
-        TrackerType.EXPENSES -> setOf("PAID", "DONE", "PRESENT")
     }
 
     private fun currentPeriodLabel(frequency: Frequency): String {

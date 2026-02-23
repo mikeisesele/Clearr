@@ -188,7 +188,6 @@ class SetupViewModel @Inject constructor(
         TrackerType.GOALS -> "Goals Tracker"
         TrackerType.TODO -> "To-do Tracker"
         TrackerType.BUDGET -> "Budget Tracker"
-        TrackerType.EXPENSES -> "Expenses Tracker"
     }
 
     private companion object {

@@ -67,7 +67,7 @@ class SetupViewModelTest {
         assertEquals("Goals Tracker", viewModel.uiState.value.trackerName)
 
         viewModel.onAction(SetupAction.SetTrackerName("Custom Name"))
-        viewModel.onAction(SetupAction.SetTrackerType(TrackerType.EXPENSES))
+        viewModel.onAction(SetupAction.SetTrackerType(TrackerType.BUDGET))
         assertEquals("Custom Name", viewModel.uiState.value.trackerName)
     }
 
