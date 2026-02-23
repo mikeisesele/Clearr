@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        Use Theme.AppCompat.NoActionBar (or MaterialComponents equiv) as base.
+        On Android 15+ edge-to-edge is enforced, so we use a fully transparent
+        status/nav bar and let Compose handle all insets via windowInsetsPadding.
+    -->
+    <style name="Theme.Clearr" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Let Compose draw behind both bars -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- API 35+ enforces edge-to-edge; this opt-in keeps pre-35 consistent -->
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+</resources>

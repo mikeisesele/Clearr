@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Root of cacheDir — covers files saved directly to context.cacheDir -->
+    <cache-path name="cache_root" path="." />
+    <!-- Subfolder used for images if needed in future -->
+    <cache-path name="shared_images" path="images/" />
+    <external-files-path name="external_files" path="." />
+    <files-path name="files" path="." />
+</paths>
