@@ -54,7 +54,7 @@ private val slides = listOf(
         icon = "◎",
         accentColor = ClearrColors.Violet,
         bgColor = ClearrColors.VioletBg,
-        headline = "Know what's's cleared.",
+        headline = "Clear your obligations.",
         subtext = "Track dues, attendance, tasks and events across all your groups — in one place."
     ),
     SlideData(

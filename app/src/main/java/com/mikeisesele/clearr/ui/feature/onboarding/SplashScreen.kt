@@ -127,7 +127,7 @@ fun SplashScreen(onGetStarted: () -> Unit) {
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                "Know what's cleared.",
+                "Clear your obligations.",
                 fontSize = 14.sp,
                 color = ClearrColors.Violet.copy(alpha = 0.72f)
             )
@@ -159,7 +159,7 @@ fun SplashScreen(onGetStarted: () -> Unit) {
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "Know what's cleared.",
+                "Clear your obligations.",
                 fontSize = 13.sp,
                 color = ClearrColors.Violet.copy(alpha = 0.72f)
             )
