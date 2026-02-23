@@ -169,7 +169,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
             if (showBottomBar) {
                 NavigationBar(
                     containerColor = colors.surface,
-                    tonalElevation = 0.dp,
+                    tonalElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0,
                     windowInsets = NavigationBarDefaults.windowInsets
                 ) {
                     bottomNavItems.forEach { item ->
@@ -185,11 +185,11 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                                     restoreState = true
                                 }
                             },
-                            icon = { Text(item.icon, fontSize = 17.sp) },
+                            icon = { Text(item.icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp17) },
                             label = {
                                 Text(
                                     item.label,
-                                    fontSize = 10.sp,
+                                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp10,
                                     color = if (isSelected) colors.accent else colors.muted
                                 )
                             },

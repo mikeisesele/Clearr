@@ -138,17 +138,17 @@ fun OnboardingScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(16.dp)
+                        .padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
                 ) {
                     Text(
                         "Skip",
                         color = slide.accentColor.copy(alpha = 0.7f),
-                        fontSize = 13.sp,
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
                             .clickable { onSkip() }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
                     )
                 }
 
@@ -168,50 +168,50 @@ fun OnboardingScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 32.dp)
-                            .padding(top = 60.dp, bottom = 24.dp),
+                            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
+                            .padding(top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp60, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(64.dp)
-                                .clip(RoundedCornerShape(18.dp))
+                                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp64)
+                                .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp18))
                                 .background(s.accentColor.copy(alpha = 0.12f)),
-//                                .background(if (idx == 0) Color.Transparent else s.accentColor.copy(alpha = 0.12f)),
+//                                .background(if (idx == 0) ClearrColors.Transparent else s.accentColor.copy(alpha = 0.12f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Image(
                                     painter = painterResource(id = R.drawable.clear_icon_vector),
                                     contentDescription = "Clearr icon",
-                                    modifier = Modifier.size(200.dp)
+                                    modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp200)
                                 )
 //                            if (idx == 0) {
 //                                Image(
 //                                    painter = painterResource(id = R.drawable.clear_icon_vector),
 //                                    contentDescription = "Clearr icon",
-//                                    modifier = Modifier.size(200.dp)
+//                                    modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp200)
 //                                )
 //                            } else {
-//                                Text(s.icon, fontSize = 28.sp, color = s.accentColor)
+//                                Text(s.icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp28, color = s.accentColor)
 //                            }
                         }
-                        Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20))
                         Text(
                             s.headline,
-                            fontSize = 24.sp,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp24,
                             fontWeight = FontWeight.ExtraBold,
                             color = ClearrColors.TextPrimary,
                             textAlign = TextAlign.Center,
-                            lineHeight = 30.sp
+                            lineHeight = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp30
                         )
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
                         Text(
                             s.subtext,
-                            fontSize = 14.sp,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14,
                             color = ClearrColors.TextSecondary,
                             textAlign = TextAlign.Center,
-                            lineHeight = 22.sp
+                            lineHeight = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp22
                         )
                     }
                 }
@@ -239,7 +239,7 @@ fun OnboardingScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 24.dp, vertical = 12.dp),
+                            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
                         contentAlignment = Alignment.Center
                     ) {
                         when (idx) {
@@ -256,24 +256,24 @@ fun OnboardingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(ClearrColors.Surface)
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 32.dp, top = 8.dp)
+                    .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24)
+                    .padding(bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32, top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
             ) {
                 Row(
                     modifier = Modifier.align(Alignment.Center),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     slides.indices.forEach { idx ->
                         val isActive = idx == currentSlide
                         val dotWidth by animateDpAsState(
-                            targetValue = if (isActive) 24.dp else 8.dp,
+                            targetValue = if (isActive) com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24 else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8,
                             animationSpec = tween(300),
                             label = "dot_width"
                         )
                         Box(
                             modifier = Modifier
-                                .height(8.dp)
+                                .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
                                 .width(dotWidth)
                                 .clip(CircleShape)
                                 .background(
@@ -298,8 +298,8 @@ fun OnboardingScreen(
                         },
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(14.dp))
+                            .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp48)
+                            .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14))
                             .background(ClearrColors.NavBg)
                     ) {
                         Icon(
@@ -323,18 +323,18 @@ fun OnboardingScreen(
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = slide.accentColor,
-                        contentColor = Color.White
+                        contentColor = ClearrColors.Surface
                     ),
-                    shape = RoundedCornerShape(14.dp),
-                    contentPadding = PaddingValues(horizontal = 24.dp),
+                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+                    contentPadding = PaddingValues(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24),
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .height(48.dp)
+                        .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp48)
                 ) {
                     Text(
                         if (isLastSlide) "Let's go →" else "Next →",
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize = 14.sp
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14
                     )
                 }
             }
@@ -371,13 +371,13 @@ private fun Slide1Visual() {
     }
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
         modifier = Modifier.fillMaxWidth()
     ) {
         memberNames.forEachIndexed { i, name ->
             val cleared = i in clearedIndices
             val rowOffset by animateDpAsState(
-                targetValue = if (cleared) (-2).dp else 2.dp,
+                targetValue = if (cleared) (-2).dp else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
                 animationSpec = tween(400),
                 label = "row_offset_$i"
             )
@@ -394,47 +394,47 @@ private fun Slide1Visual() {
 
             Surface(
                 color = ClearrColors.Surface,
-                shape = RoundedCornerShape(14.dp),
-                shadowElevation = 1.dp,
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+                shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1,
                 modifier = Modifier
                     .fillMaxWidth()
                     .offset(x = rowOffset)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp30)
                             .clip(CircleShape)
                             .background(avatarBg),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             name.first().toString(),
-                            fontSize = 13.sp,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
                             fontWeight = FontWeight.Bold,
                             color = if (cleared) ClearrColors.Emerald else ClearrColors.TextSecondary
                         )
                     }
                     Text(
                         name,
-                        fontSize = 13.sp,
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
                         fontWeight = FontWeight.SemiBold,
                         color = ClearrColors.TextPrimary,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
                         if (cleared) "Cleared ✓" else "Pending...",
-                        fontSize = 11.sp,
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
                         fontWeight = FontWeight.Medium,
                         color = statusColor
                     )
                     Box(
                         modifier = Modifier
-                            .size(7.dp)
+                            .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp7)
                             .clip(CircleShape)
                             .background(statusColor)
                     )
@@ -461,7 +461,7 @@ private fun Slide2Visual() {
     var animated by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { delay(100); animated = true }
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+    Column(verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {
         mockTrackers.forEachIndexed { i, tracker ->
             val pct = tracker.paid.toFloat() / tracker.total
 
@@ -476,33 +476,33 @@ private fun Slide2Visual() {
                 label = "card_alpha_$i"
             )
             val cardOffset by animateDpAsState(
-                targetValue = if (animated) 0.dp else 12.dp,
+                targetValue = if (animated) com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0 else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12,
                 animationSpec = tween(300, delayMillis = i * 100),
                 label = "card_offset_$i"
             )
 
             Surface(
                 color = ClearrColors.Surface,
-                shape = RoundedCornerShape(14.dp),
-                shadowElevation = 1.dp,
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+                shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1,
                 modifier = Modifier
                     .fillMaxWidth()
                     .alpha(cardAlpha)
                     .offset(y = cardOffset)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
+                            .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
                             .background(tracker.bg),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(tracker.icon, fontSize = 15.sp, color = tracker.color, fontWeight = FontWeight.Bold)
+                        Text(tracker.icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15, color = tracker.color, fontWeight = FontWeight.Bold)
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Row(
@@ -510,22 +510,22 @@ private fun Slide2Visual() {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(tracker.name, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
-                            Text("${tracker.paid}/${tracker.total}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = tracker.color)
+                            Text(tracker.name, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
+                            Text("${tracker.paid}/${tracker.total}", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, fontWeight = FontWeight.Bold, color = tracker.color)
                         }
-                        Spacer(Modifier.height(5.dp))
+                        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5))
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(5.dp)
-                                .clip(RoundedCornerShape(99.dp))
+                                .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5)
+                                .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp99))
                                 .background(ClearrColors.Border)
                         ) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth(animatedPct)
                                     .fillMaxHeight()
-                                    .clip(RoundedCornerShape(99.dp))
+                                    .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp99))
                                     .background(tracker.color)
                             )
                         }
@@ -560,60 +560,60 @@ private fun Slide3Visual() {
 
     Surface(
         color = ClearrColors.Surface,
-        shape = RoundedCornerShape(16.dp),
-        shadowElevation = 2.dp,
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
+        shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("February 2026", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = ClearrColors.TextPrimary)
-                Text("${(pct * 100).toInt()}%", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = ClearrColors.Violet)
+                Text("February 2026", fontWeight = FontWeight.Bold, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14, color = ClearrColors.TextPrimary)
+                Text("${(pct * 100).toInt()}%", fontWeight = FontWeight.ExtraBold, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14, color = ClearrColors.Violet)
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(99.dp))
+                    .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
+                    .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp99))
                     .background(ClearrColors.Border)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(animatedPct)
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(99.dp))
+                        .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp99))
                         .background(ClearrColors.Violet)
                 )
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp)
+                horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
+                verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5)
             ) {
                 slide3Names.forEachIndexed { index, name ->
                     val cleared = index in slide3Cleared
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20))
                             .background(if (cleared) ClearrColors.EmeraldBg else ClearrColors.CoralBg)
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
                     ) {
                         Text(
                             name,
-                            fontSize = 10.sp,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp10,
                             fontWeight = FontWeight.SemiBold,
                             color = if (cleared) ClearrColors.Emerald else ClearrColors.Coral
                         )
                     }
                 }
             }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
+            Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
                 StatTile(label = "Cleared", value = "$clearedCount", color = ClearrColors.Emerald, bg = ClearrColors.EmeraldBg, modifier = Modifier.weight(1f))
                 StatTile(label = "Pending", value = "${totalCount - clearedCount}", color = ClearrColors.Amber, bg = ClearrColors.AmberBg, modifier = Modifier.weight(1f))
             }
@@ -625,13 +625,13 @@ private fun Slide3Visual() {
 private fun StatTile(label: String, value: String, color: Color, bg: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
             .background(bg)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = color)
-            Text(label, fontSize = 10.sp, color = color.copy(alpha = 0.7f))
+            Text(value, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18, fontWeight = FontWeight.ExtraBold, color = color)
+            Text(label, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp10, color = color.copy(alpha = 0.7f))
         }
     }
 }

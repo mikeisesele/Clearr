@@ -37,17 +37,17 @@ internal fun TopDefaultersCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = colors.card),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)) {
             Text(
                 "🏆 Top Defaulters",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.text
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
 
             if (defaulters.isEmpty()) {
                 Text(
@@ -59,13 +59,13 @@ internal fun TopDefaultersCard(
                 defaulters.take(5).forEachIndexed { i, (member, unpaidCount) ->
                     if (i > 0) HorizontalDivider(color = colors.border)
                     Row(
-                        modifier = Modifier.padding(vertical = 10.dp),
+                        modifier = Modifier.padding(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(28.dp)
+                                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp28)
                                 .clip(CircleShape)
                                 .background(
                                     when (i) {
@@ -99,9 +99,9 @@ internal fun TopDefaultersCard(
                                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link)))
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = WhatsAppGreen),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                contentPadding = PaddingValues(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
                             ) {
-                                Text("WhatsApp", color = Color.White, fontSize = 11.sp)
+                                Text("WhatsApp", color = ClearrColors.Surface, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11)
                             }
                         }
                     }

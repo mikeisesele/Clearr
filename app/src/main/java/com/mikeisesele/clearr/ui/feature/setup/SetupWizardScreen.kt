@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.TrackerType
+import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 
@@ -61,7 +62,7 @@ fun SetupWizardScreen(
                 .fillMaxWidth()
                 .background(colors.surface)
                 .statusBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 14.dp)
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -80,23 +81,23 @@ fun SetupWizardScreen(
                     color = colors.muted
                 )
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
             LinearProgressIndicator(
                 progress = { (displayStep + 1f) / totalSteps },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
+                    .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
+                    .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)),
                 color = colors.accent,
                 trackColor = colors.border
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
             // Step dots
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
                 repeat(totalSteps) { i ->
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
+                            .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
                             .clip(CircleShape)
                             .background(if (i <= displayStep) colors.accent else colors.border)
                     )
@@ -183,20 +184,20 @@ fun SetupWizardScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 10.dp),
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (state.step > 0) {
                     OutlinedButton(
                         onClick = { viewModel.onAction(SetupAction.PrevStep) },
-                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.border)
+                    border = androidx.compose.foundation.BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, colors.border)
                 ) {
                     Icon(Icons.Default.ChevronLeft, contentDescription = null, tint = colors.text)
                     Text("Back", color = colors.text)
                 }
             } else {
-                Spacer(Modifier.width(1.dp))
+                Spacer(Modifier.width(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1))
             }
 
             if (state.step < finalStep) {
@@ -204,8 +205,8 @@ fun SetupWizardScreen(
                         onClick = { viewModel.onAction(SetupAction.NextStep) },
                     colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
                 ) {
-                    Text("Next", color = Color.White)
-                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.White)
+                    Text("Next", color = ClearrColors.Surface)
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = ClearrColors.Surface)
                 }
             } else {
                     Button(
@@ -215,14 +216,14 @@ fun SetupWizardScreen(
                 ) {
                     if (state.isSaving) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
+                            modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp18),
+                            color = ClearrColors.Surface,
+                            strokeWidth = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2
                         )
                     } else {
-                        Icon(Icons.Default.Check, contentDescription = null, tint = Color.White)
-                        Spacer(Modifier.width(4.dp))
-                        Text("Finish Setup", color = Color.White)
+                        Icon(Icons.Default.Check, contentDescription = null, tint = ClearrColors.Surface)
+                        Spacer(Modifier.width(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
+                        Text("Finish Setup", color = ClearrColors.Surface)
                     }
                 }
             }
@@ -236,9 +237,9 @@ private fun WelcomeStep(colors: com.mikeisesele.clearr.ui.theme.DuesColors) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(32.dp),
+            .padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
     ) {
         Text(
             "Quick setup",
@@ -274,8 +275,8 @@ private fun GroupInfoStep(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24),
+        verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
     ) {
         StepHeader("Group Information", "Tell us about your group.", colors)
         WizardTextField(value = groupName, onValueChange = onGroupName, label = "Group / Organisation Name", colors = colors)
@@ -284,11 +285,11 @@ private fun GroupInfoStep(
         WizardTextField(value = adminPhone, onValueChange = onAdminPhone, label = "Admin Phone (optional)", keyboardType = KeyboardType.Phone, colors = colors)
         Card(
             colors = CardDefaults.cardColors(containerColor = colors.card),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -299,7 +300,7 @@ private fun GroupInfoStep(
                 Switch(
                     checked = loadSampleMembers,
                     onCheckedChange = onLoadSampleMembers,
-                    colors = SwitchDefaults.colors(checkedTrackColor = colors.accent, checkedThumbColor = Color.White)
+                    colors = SwitchDefaults.colors(checkedTrackColor = colors.accent, checkedThumbColor = ClearrColors.Surface)
                 )
             }
         }
@@ -320,7 +321,7 @@ private fun TrackerTypeStep(
         TrackerType.BUDGET to Pair("💳", "Budget – Planned vs actual spending"),
         TrackerType.EXPENSES to Pair("🧾", "Expenses – Shared or personal expense planning")
     )
-    Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)) {
         StepHeader("What are you tracking?", "Choose the type that best describes your group's needs.", colors)
         options.forEach { (type, info) ->
             val (icon, desc) = info
@@ -352,7 +353,7 @@ private fun FrequencyStep(
         Frequency.ANNUAL to Pair("🎯", "Annual – 1 period per year"),
         Frequency.CUSTOM to Pair("🛠️", "Custom – Define your own period labels")
     )
-    Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)) {
         StepHeader("How often do you meet / collect?", "This determines how many periods appear in your tracker.", colors)
         options.forEach { (freq, info) ->
             val (icon, desc) = info
@@ -382,13 +383,13 @@ private fun AmountStep(
         TrackerType.GOALS, TrackerType.TODO, TrackerType.BUDGET, TrackerType.EXPENSES -> "Not applicable for this tracker type"
     }
     val skipAmount = trackerType != TrackerType.DUES
-    Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)) {
         StepHeader("Set the Amount", "How much is due per period per member?", colors)
         if (skipAmount) {
-            Card(colors = CardDefaults.cardColors(containerColor = colors.card), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+            Card(colors = CardDefaults.cardColors(containerColor = colors.card), shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12), modifier = Modifier.fillMaxWidth()) {
                 Text(
                     "No amount required for ${trackerType.name.lowercase()} tracking. You can skip this step.",
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
                     color = colors.muted,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -429,7 +430,7 @@ private fun LayoutStyleStep(
         LayoutStyle.CARDS to Triple("🃏", "Cards", "One card per member showing all periods"),
         LayoutStyle.RECEIPT to Triple("🧾", "Receipt / Ledger", "Detailed financial ledger style")
     )
-    Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)) {
         StepHeader("Choose a Layout Style", "Pick how you want to view your tracker. You can change this anytime.", colors)
         options.forEach { (style, info) ->
             val (icon, title, desc) = info
@@ -450,10 +451,10 @@ private fun ReviewStep(
     loadSampleMembers: Boolean,
     colors: com.mikeisesele.clearr.ui.theme.DuesColors
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)) {
         StepHeader("Review", "Confirm your setup before creating the tracker.", colors)
-        Card(colors = CardDefaults.cardColors(containerColor = colors.card), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Card(colors = CardDefaults.cardColors(containerColor = colors.card), shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16), modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
                 Text("Group: ${groupName.ifBlank { "Unnamed Group" }}", color = colors.text)
                 Text("Tracker: ${trackerName.ifBlank { "Unnamed Tracker" }}", color = colors.text)
                 Text("Type: ${trackerType.name.lowercase().replaceFirstChar { it.uppercase() }}", color = colors.text)
@@ -472,7 +473,7 @@ private fun ReviewStep(
 
 @Composable
 private fun StepHeader(title: String, subtitle: String, colors: com.mikeisesele.clearr.ui.theme.DuesColors) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)) {
         Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = colors.text)
         Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.muted)
     }
@@ -491,24 +492,24 @@ private fun SelectionCard(
     val bgColor = if (selected) colors.accent.copy(alpha = 0.08f) else colors.card
     Card(
         colors = CardDefaults.cardColors(containerColor = bgColor),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
         modifier = Modifier
             .fillMaxWidth()
-            .border(width = if (selected) 2.dp else 1.dp, color = borderColor, shape = RoundedCornerShape(12.dp))
+            .border(width = if (selected) com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2 else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, color = borderColor, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             .clickable { onClick() }
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+            horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(icon, fontSize = 24.sp)
+            Text(icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp24)
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, fontWeight = FontWeight.SemiBold, color = if (selected) colors.accent else colors.text)
                 Text(description, style = MaterialTheme.typography.bodySmall, color = colors.muted)
             }
             if (selected) {
-                Icon(Icons.Default.Check, contentDescription = null, tint = colors.accent, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Check, contentDescription = null, tint = colors.accent, modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20))
             }
         }
     }

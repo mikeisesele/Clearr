@@ -43,6 +43,7 @@ import com.mikeisesele.clearr.ui.commons.util.saveBitmapToCache
 import com.mikeisesele.clearr.ui.commons.util.shareImageUri
 import com.mikeisesele.clearr.ui.feature.home.components.StatsRow
 import com.mikeisesele.clearr.ui.feature.home.components.TrackerGrid
+import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 
@@ -178,17 +179,17 @@ fun HomeScreen(
             onClick = { showAddMember = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 20.dp),
+                .padding(end = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20),
             containerColor = colors.accent,
-            contentColor = Color.White,
+            contentColor = ClearrColors.Surface,
             shape = CircleShape,
-            elevation = FloatingActionButtonDefaults.elevation(4.dp, 6.dp)
+            elevation = FloatingActionButtonDefaults.elevation(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4, com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add member", modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Add, contentDescription = "Add member", modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20))
         }
 
         // ── Snackbar ──────────────────────────────────────────────────────────
-        Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)) {
+        Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp80)) {
             state.snackbarMessage?.let { snack ->
                 DuesSnackbar(
                     message = snack.message,
@@ -295,7 +296,7 @@ fun HomeScreen(
             },
             confirmButton = {},
             dismissButton = { TextButton(onClick = { contextTarget = null }) { Text("Cancel", color = previewColors.muted) } },
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
         )
     }
 
@@ -313,7 +314,7 @@ fun HomeScreen(
                 ) { Text("Delete") }
             },
             dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Cancel", color = previewColors.muted) } },
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
         )
     }
 
@@ -323,8 +324,8 @@ fun HomeScreen(
             containerColor = colors.surface
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
+                verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
             ) {
                 Text("Choose Layout", style = MaterialTheme.typography.titleMedium, color = colors.text)
                 listOf(
@@ -336,14 +337,14 @@ fun HomeScreen(
                     val selected = state.layoutStyle == style
                     Surface(
                         color = if (selected) colors.accent.copy(alpha = 0.12f) else colors.card,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
                         modifier = Modifier.fillMaxWidth().clickable {
                             viewModel.onAction(HomeAction.SetLayoutStyleForCurrentTracker(style))
                             showLayoutSheet = false
                         }
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -352,7 +353,7 @@ fun HomeScreen(
                         }
                     }
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             }
         }
     }

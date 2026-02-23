@@ -32,10 +32,10 @@ internal fun MonthlyBarChartCard(
 
     Card(
         colors = CardDefaults.cardColors(containerColor = colors.card),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -51,12 +51,12 @@ internal fun MonthlyBarChartCard(
                     Text(
                         if (showPrevYear) "Hide ${selectedYear - 1}" else "vs ${selectedYear - 1}",
                         color = colors.accent,
-                        fontSize = 12.sp
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12
                     )
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
 
             val maxBarHeightDp = 80
 
@@ -65,7 +65,7 @@ internal fun MonthlyBarChartCard(
                     .fillMaxWidth()
                     .height((maxBarHeightDp + 24).dp),
                 verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
             ) {
                 MONTHS.forEachIndexed { mi, month ->
                     val isFutureMonth = isFuture(selectedYear, mi)
@@ -87,16 +87,16 @@ internal fun MonthlyBarChartCard(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth(0.4f)
-                                    .height((prevRate * maxBarHeightDp).dp.coerceAtLeast(3.dp))
-                                    .clip(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp))
+                                    .height((prevRate * maxBarHeightDp).dp.coerceAtLeast(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3))
+                                    .clip(RoundedCornerShape(topStart = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2, topEnd = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2))
                                     .background(colors.muted.copy(alpha = 0.5f))
                             )
                         }
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth(if (showPrevYear) 0.6f else 0.8f)
-                                .height((rate * maxBarHeightDp).dp.coerceAtLeast(3.dp))
-                                .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
+                                .height((rate * maxBarHeightDp).dp.coerceAtLeast(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3))
+                                .clip(RoundedCornerShape(topStart = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3, topEnd = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3))
                                 .background(
                                     when {
                                         isFutureMonth -> colors.border
@@ -108,9 +108,9 @@ internal fun MonthlyBarChartCard(
                         )
                         Text(
                             month,
-                            fontSize = 8.sp,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp8,
                             color = colors.muted,
-                            modifier = Modifier.padding(top = 4.dp)
+                            modifier = Modifier.padding(top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
                         )
                     }
                 }
@@ -118,16 +118,16 @@ internal fun MonthlyBarChartCard(
 
             if (showPrevYear) {
                 Row(
-                    modifier = Modifier.padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.padding(top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
+                    horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(modifier = Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(colors.accent))
-                        Text("$selectedYear", fontSize = 11.sp, color = colors.muted)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)) {
+                        Box(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8).clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)).background(colors.accent))
+                        Text("$selectedYear", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, color = colors.muted)
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(modifier = Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(colors.muted.copy(alpha = 0.5f)))
-                        Text("${selectedYear - 1}", fontSize = 11.sp, color = colors.muted)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)) {
+                        Box(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8).clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)).background(colors.muted.copy(alpha = 0.5f)))
+                        Text("${selectedYear - 1}", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, color = colors.muted)
                     }
                 }
             }

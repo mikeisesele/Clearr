@@ -82,7 +82,7 @@ internal fun TrackerCard(
             },
         colors = CardDefaults.cardColors(containerColor = ClearrColors.Surface),
         shape = RoundedCornerShape(radii.lg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
     ) {
         Box {
             // NEW badge border tint
@@ -91,11 +91,11 @@ internal fun TrackerCard(
                     modifier = Modifier
                         .matchParentSize()
                         .clip(RoundedCornerShape(radii.lg))
-                        .border(2.dp, style.color, RoundedCornerShape(radii.lg))
+                        .border(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2, style.color, RoundedCornerShape(radii.lg))
                 )
             }
 
-            Column(modifier = Modifier.padding(start = spacing.xl - 2.dp, top = spacing.xl - 2.dp, end = spacing.lg, bottom = spacing.xl - 2.dp)) {
+            Column(modifier = Modifier.padding(start = spacing.xl - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2, top = spacing.xl - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2, end = spacing.lg, bottom = spacing.xl - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(spacing.md)
@@ -103,7 +103,7 @@ internal fun TrackerCard(
                     // ── Type icon square ──────────────────────────────────────
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp40)
                             .clip(RoundedCornerShape(radii.md))
                             .background(style.bgColor),
                         contentAlignment = Alignment.Center
@@ -111,7 +111,7 @@ internal fun TrackerCard(
                         Text(
                             style.icon,
                             color = style.color,
-                            fontSize = 18.sp,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -121,7 +121,7 @@ internal fun TrackerCard(
                         Text(
                             summary.name,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15,
                             color = ClearrColors.BrandText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -129,27 +129,27 @@ internal fun TrackerCard(
                         Spacer(Modifier.height(spacing.xxs))
                         Text(
                             "${summary.frequency.displayName()}  ·  ${summary.currentPeriodLabel}",
-                            fontSize = 12.sp,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
                             color = ClearrColors.TextSecondary
                         )
                     }
 
                     // ── Progress ring ─────────────────────────────────────────
                     Box(
-                        modifier = Modifier.size(44.dp),
+                        modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp44),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
                             progress = { pct / 100f },
-                            modifier = Modifier.size(44.dp),
+                            modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp44),
                             color = if (allDone) ClearrColors.BrandSecondary else style.color,
                             trackColor = ClearrColors.Border,
-                            strokeWidth = 4.dp,
+                            strokeWidth = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4,
                             strokeCap = StrokeCap.Round
                         )
                         Text(
                             "$pct%",
-                            fontSize = 8.sp,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp8,
                             fontWeight = FontWeight.Bold,
                             color = if (allDone) ClearrColors.BrandSecondary else style.color
                         )
@@ -162,17 +162,17 @@ internal fun TrackerCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(spacing.md - 2.dp)
+                        .padding(spacing.md - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
                         .clip(RoundedCornerShape(radii.xl))
                         .background(style.color)
-                        .padding(horizontal = spacing.sm - 2.dp, vertical = 1.dp)
+                        .padding(horizontal = spacing.sm - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1)
                 ) {
                     Text(
                         "NEW",
-                        color = Color.White,
-                        fontSize = 8.sp,
+                        color = ClearrColors.Surface,
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp8,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
+                        letterSpacing = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp0_5
                     )
                 }
             }

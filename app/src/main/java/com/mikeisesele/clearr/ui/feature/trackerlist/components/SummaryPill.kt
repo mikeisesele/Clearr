@@ -27,8 +27,8 @@ internal fun SummaryPill(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
+        horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
     ) {
         PillItem(label = "Trackers", value = "$trackerCount", colors = colors, modifier = Modifier.weight(1f))
         PillItem(label = "Members", value = "$totalMembers", colors = colors, modifier = Modifier.weight(1f))
@@ -45,13 +45,13 @@ private fun PillItem(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
             .background(colors.card)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(value, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = colors.accent)
+            Text(value, fontWeight = FontWeight.ExtraBold, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14, color = colors.accent)
             Text(label, style = MaterialTheme.typography.labelSmall, color = colors.muted)
         }
     }

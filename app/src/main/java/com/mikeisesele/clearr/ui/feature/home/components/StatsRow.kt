@@ -23,8 +23,8 @@ internal fun StatsRow(
     pct: Int,
     colors: DuesColors = LocalDuesColors.current
 ) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)) {
             listOf(
                 Triple("COLLECTED", formatAmount(totalCollected), colors.green),
                 Triple("EXPECTED", formatAmount(totalExpected), colors.text),
@@ -33,20 +33,20 @@ internal fun StatsRow(
                 Card(
                     modifier = Modifier.weight(1f),
                     colors = CardDefaults.cardColors(containerColor = colors.card),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
                 ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
+                    Column(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)) {
                         Text(label, style = MaterialTheme.typography.labelSmall, color = colors.muted)
-                        Spacer(Modifier.height(3.dp))
+                        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3))
                         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.ExtraBold, color = color)
                     }
                 }
             }
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
         LinearProgressIndicator(
             progress = { pct / 100f },
-            modifier = Modifier.fillMaxWidth().height(5.dp).clip(RoundedCornerShape(3.dp)),
+            modifier = Modifier.fillMaxWidth().height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5).clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3)),
             color = colors.green,
             trackColor = colors.border
         )
@@ -54,7 +54,7 @@ internal fun StatsRow(
             "$pct% collected",
             style = MaterialTheme.typography.labelSmall,
             color = colors.muted,
-            modifier = Modifier.align(Alignment.End).padding(top = 3.dp)
+            modifier = Modifier.align(Alignment.End).padding(top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3)
         )
     }
 }

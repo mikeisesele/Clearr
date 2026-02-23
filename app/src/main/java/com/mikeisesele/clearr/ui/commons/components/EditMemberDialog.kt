@@ -32,7 +32,7 @@ fun EditMemberDialog(
             Text("Edit Member", color = colors.text, style = MaterialTheme.typography.titleLarge)
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -68,7 +68,7 @@ fun EditMemberDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancel", color = colors.muted) }
         },
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
     )
 }
 

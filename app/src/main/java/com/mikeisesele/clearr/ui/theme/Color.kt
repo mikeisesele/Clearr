@@ -17,6 +17,7 @@ object ClearrColors {
     val Amber   = Color(0xFFF59E0B)  // Caution / Tasks / Pending
     val Blue    = Color(0xFF3B82F6)  // Info / Budget
     val Coral   = Color(0xFFEF4444)  // Danger / Events / Unpaid / Absent
+    val Orange  = Color(0xFFFF9500)  // Emphasis for due-today / medium priority
 
     // ── BRAND TOKENS (for logo/marketing + app-level theming) ───────────────
     val BrandPrimary   = Violet
@@ -49,6 +50,7 @@ object ClearrColors {
     val TextMuted    = Color(0xFFBBBBBB)   // Placeholders, disabled
     val Inactive     = Color(0xFFDDDDDD)   // Inactive dots, empty bars
     val NavBg        = Color(0xFFEBEBF0)   // Back button background
+    val Transparent  = Color.Transparent
 
     // ── DARK MODE VARIANTS ────────────────────────────────────────────────────
     val DarkBackground  = Color(0xFF0F0F1A)

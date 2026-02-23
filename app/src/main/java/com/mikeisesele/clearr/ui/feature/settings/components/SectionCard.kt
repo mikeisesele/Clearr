@@ -20,12 +20,12 @@ internal fun SectionCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = colors.card),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)) {
             Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = colors.text)
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             content()
         }
     }

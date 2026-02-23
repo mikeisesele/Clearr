@@ -37,7 +37,7 @@ fun CompletionScreen(onCreateTracker: () -> Unit) {
         label = "completion_alpha"
     )
     val offsetY by animateDpAsState(
-        targetValue = if (visible) 0.dp else 12.dp,
+        targetValue = if (visible) com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0 else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12,
         animationSpec = tween(400, easing = FastOutSlowInEasing),
         label = "completion_offset"
     )
@@ -54,57 +54,57 @@ fun CompletionScreen(onCreateTracker: () -> Unit) {
             modifier = Modifier
                 .alpha(alpha)
                 .offset(y = offsetY)
-                .padding(horizontal = 36.dp),
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp36),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Icon container
             Box(
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(24.dp))
+                    .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp80)
+                    .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24))
                     .background(ClearrColors.EmeraldBg),
                 contentAlignment = Alignment.Center
             ) {
-                Text("✓", fontSize = 36.sp, color = ClearrColors.Emerald, fontWeight = FontWeight.ExtraBold)
+                Text("✓", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp36, color = ClearrColors.Emerald, fontWeight = FontWeight.ExtraBold)
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp28))
 
             Text(
                 "You're all set.",
-                fontSize = 24.sp,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp24,
                 fontWeight = FontWeight.Black,
                 color = ClearrColors.TextPrimary,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
 
             Text(
                 "Let's create your first tracker. It only takes a minute.",
-                fontSize = 14.sp,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14,
                 color = ClearrColors.TextSecondary,
                 textAlign = TextAlign.Center,
                 lineHeight = (14 * 1.7).sp
             )
 
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp40))
 
             Button(
                 onClick = onCreateTracker,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ClearrColors.Violet,
-                    contentColor = Color.White
+                    contentColor = ClearrColors.Surface
                 ),
-                contentPadding = PaddingValues(vertical = 16.dp)
+                contentPadding = PaddingValues(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
             ) {
                 Text(
                     "Create First Tracker →",
-                    fontSize = 15.sp,
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color.White
+                    color = ClearrColors.Surface
                 )
             }
         }

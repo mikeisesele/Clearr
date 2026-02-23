@@ -33,12 +33,12 @@ internal fun EmptyTrackerState(onCreate: () -> Unit) {
             // Illustration
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp80)
                     .clip(RoundedCornerShape(radii.xxl))
                     .background(ClearrColors.VioletBg),
                 contentAlignment = Alignment.Center
             ) {
-                Text("📋", fontSize = 36.sp)
+                Text("📋", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp36)
             }
 
             Spacer(Modifier.height(spacing.xl))
@@ -46,7 +46,7 @@ internal fun EmptyTrackerState(onCreate: () -> Unit) {
             Text(
                 "No trackers yet",
                 fontWeight = FontWeight.ExtraBold,
-                fontSize = 20.sp,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp20,
                 color = ClearrColors.BrandText
             )
 
@@ -54,21 +54,21 @@ internal fun EmptyTrackerState(onCreate: () -> Unit) {
 
             Text(
                 "Create your first tracker to start managing dues, attendance, tasks, or events for your group.",
-                fontSize = 14.sp,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14,
                 color = ClearrColors.TextSecondary,
-                lineHeight = 22.sp,
+                lineHeight = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp22,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(spacing.xxl + 4.dp))
+            Spacer(Modifier.height(spacing.xxl + com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
 
             Button(
                 onClick = onCreate,
                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
-                shape = RoundedCornerShape(radii.md + 2.dp),
-                contentPadding = PaddingValues(horizontal = spacing.xxl + 4.dp, vertical = spacing.md + 2.dp)
+                shape = RoundedCornerShape(radii.md + com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2),
+                contentPadding = PaddingValues(horizontal = spacing.xxl + com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4, vertical = spacing.md + com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
             ) {
-                Text("+ Create Tracker", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text("+ Create Tracker", color = ClearrColors.Surface, fontWeight = FontWeight.Bold, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
             }
         }
     }

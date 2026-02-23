@@ -29,22 +29,22 @@ internal fun CollectionGaugeCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = colors.card),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
         ) {
             // Donut gauge
             Box(
-                modifier = Modifier.size(90.dp),
+                modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp90),
                 contentAlignment = Alignment.Center
             ) {
                 val sweepAngle = (pct / 100f) * 360f
-                Canvas(modifier = Modifier.size(90.dp)) {
-                    val strokeWidth = 14.dp.toPx()
+                Canvas(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp90)) {
+                    val strokeWidth = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14.toPx()
                     drawArc(
                         color = colors.border,
                         startAngle = -90f,
@@ -68,14 +68,14 @@ internal fun CollectionGaugeCard(
                 )
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)) {
                 Text("Collection Rate", style = MaterialTheme.typography.labelMedium, color = colors.muted)
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(colors.green))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)) {
+                    Box(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10).clip(CircleShape).background(colors.green))
                     Text("Collected: ${formatAmount(totalCollected)}", style = MaterialTheme.typography.bodyMedium, color = colors.green)
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(colors.red))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)) {
+                    Box(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10).clip(CircleShape).background(colors.red))
                     Text("Outstanding: ${formatAmount(outstanding)}", style = MaterialTheme.typography.bodyMedium, color = colors.red)
                 }
             }

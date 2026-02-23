@@ -31,6 +31,7 @@ import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import com.mikeisesele.clearr.ui.commons.util.currentYear
 import com.mikeisesele.clearr.ui.commons.util.formatAmount
 import com.mikeisesele.clearr.ui.feature.settings.components.SectionCard
+import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 
@@ -58,21 +59,21 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(colors.bg)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+        verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
     ) {
         Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = colors.text)
 
         // ── Active Year ───────────────────────────────────────────────────────
         SectionCard(title = "Active Year", colors = colors) {
             Text("Applies to the tracker, reminders, and analytics.", style = MaterialTheme.typography.bodySmall, color = colors.muted)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
             Box {
                 OutlinedButton(
                     onClick = { yearMenuExpanded = true },
                     modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, colors.accent),
-                    shape = RoundedCornerShape(10.dp)
+                    border = BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, colors.accent),
+                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)
                 ) {
                     Text(
                         "${state.selectedYear}${if (state.selectedYear == cy) "  (current)" else ""}",
@@ -112,7 +113,7 @@ fun SettingsScreen(
         SectionCard(title = "Due Amount", colors = colors) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
@@ -141,7 +142,7 @@ fun SettingsScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
                 ) { Text("Save") }
             }
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
             Text("Current: ${formatAmount(dueAmount)} / member / period", style = MaterialTheme.typography.bodySmall, color = colors.muted)
             if (dueEditable) {
                 Text("Applies only to the current Dues tracker.", style = MaterialTheme.typography.bodySmall, color = colors.dim)
@@ -157,7 +158,7 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.muted
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
 
             val layoutOptions = listOf(
                 LayoutStyle.GRID    to Triple("⊞", "Grid",    "Compact scrollable table — members × months"),
@@ -166,31 +167,31 @@ fun SettingsScreen(
                 LayoutStyle.RECEIPT to Triple("🧾", "Receipt","Detailed financial ledger per member")
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
                 layoutOptions.forEach { (style, info) ->
                     val (icon, title, desc) = info
                     val selected = state.layoutStyle == style
                     val borderColor = if (selected) colors.accent else colors.border
-                    val bgColor = if (selected) colors.accent.copy(alpha = 0.08f) else Color.Transparent
+                    val bgColor = if (selected) colors.accent.copy(alpha = 0.08f) else ClearrColors.Transparent
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
                             .background(bgColor)
-                            .border(width = if (selected) 2.dp else 1.dp, color = borderColor, shape = RoundedCornerShape(10.dp))
+                            .border(width = if (selected) com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2 else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, color = borderColor, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
                             .clickable { viewModel.onAction(SettingsAction.SetLayoutStyle(style)) }
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)
                     ) {
-                        Text(icon, fontSize = 22.sp)
+                        Text(icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp22)
                         Column(modifier = Modifier.weight(1f)) {
                             Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = if (selected) colors.accent else colors.text)
                             Text(desc, style = MaterialTheme.typography.labelSmall, color = colors.muted)
                         }
                         if (selected) {
-                            Icon(Icons.Default.Check, contentDescription = null, tint = colors.accent, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Check, contentDescription = null, tint = colors.accent, modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp18))
                         }
                     }
                 }
@@ -200,8 +201,8 @@ fun SettingsScreen(
         // ── Appearance ────────────────────────────────────────────────────────
         SectionCard(title = "Appearance", colors = colors) {
             Text("Theme", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+            Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
                 ThemeMode.entries.forEach { mode ->
                     val selected = state.themeMode == mode
                     FilterChip(
@@ -210,7 +211,7 @@ fun SettingsScreen(
                         label = { Text(mode.name.lowercase().replaceFirstChar { it.uppercase() }) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = colors.accent,
-                            selectedLabelColor = Color.White,
+                            selectedLabelColor = ClearrColors.Surface,
                             containerColor = colors.card,
                             labelColor = colors.muted
                         )
@@ -225,21 +226,21 @@ fun SettingsScreen(
                 Text("Version", style = MaterialTheme.typography.bodyMedium, color = colors.text)
                 Text("1.0", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             OutlinedButton(
                 onClick = { viewModel.onAction(SettingsAction.ResetSetup) },
-                border = BorderStroke(1.dp, colors.accent),
+                border = BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, colors.accent),
                 modifier = Modifier.fillMaxWidth()
             ) { Text("⚙️  Re-run Setup Wizard", color = colors.accent) }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
             OutlinedButton(
                 onClick = { showResetDialog = true },
-                border = BorderStroke(1.dp, colors.red),
+                border = BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, colors.red),
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Reset All Data", color = colors.red) }
         }
 
-        Spacer(Modifier.height(80.dp))
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp80))
     }
 
     if (showResetDialog) {
@@ -252,7 +253,7 @@ fun SettingsScreen(
                 Button(onClick = { showResetDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = colors.red)) { Text("Reset") }
             },
             dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text("Cancel", color = colors.muted) } },
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
         )
     }
 }
@@ -263,8 +264,8 @@ private fun SettingsScreenPreview() {
     ClearrTheme {
         val colors = LocalDuesColors.current
         Column(
-            modifier = Modifier.fillMaxSize().background(colors.bg).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.fillMaxSize().background(colors.bg).padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
+            verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
         ) {
             Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = colors.text)
             SectionCard(title = "Active Year", colors = colors) {

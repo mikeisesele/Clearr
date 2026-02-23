@@ -61,8 +61,8 @@ fun AnalyticsScreen(
             .fillMaxSize()
             .background(colors.bg)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+        verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
     ) {
         Text(
             "Analytics — ${state.selectedYear}",
@@ -99,7 +99,7 @@ fun AnalyticsScreen(
             colors = colors
         )
 
-        Spacer(Modifier.height(80.dp))
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp80))
     }
 }
 
@@ -112,8 +112,8 @@ private fun AnalyticsScreenPreview() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(colors.bg)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+            verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
         ) {
             Text("Analytics — 2026", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = colors.text)
             CollectionGaugeCard(pct = 75, totalCollected = 45000.0, outstanding = 15000.0, colors = colors)

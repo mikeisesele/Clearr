@@ -62,8 +62,8 @@ fun KanbanLayout(d: TrackerLayoutData) {
 
     LazyRow(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        contentPadding = PaddingValues(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
+        horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)
     ) {
         items(MONTHS.size) { mi ->
             val future = isFuture(d.selectedYear, mi)
@@ -73,16 +73,16 @@ fun KanbanLayout(d: TrackerLayoutData) {
 
             Card(
                 modifier = Modifier
-                    .width(160.dp)
+                    .width(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp160)
                     .wrapContentHeight()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isCurrent) d.colors.accent.copy(alpha = 0.08f) else d.colors.card
                 ),
-                shape = RoundedCornerShape(14.dp),
-                border = if (isCurrent) BorderStroke(1.5.dp, d.colors.accent) else null
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+                border = if (isCurrent) BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1_5, d.colors.accent) else null
             ) {
-                Column(modifier = Modifier.padding(10.dp)) {
+                Column(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)) {
                     Text(
                         MONTHS[mi],
                         style = MaterialTheme.typography.labelMedium,
@@ -94,8 +94,8 @@ fun KanbanLayout(d: TrackerLayoutData) {
                         style = MaterialTheme.typography.labelSmall,
                         color = d.colors.muted
                     )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = d.colors.border)
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), color = d.colors.border)
+                    Column(verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)) {
                         d.members.forEach { member ->
                             val full = d.isFullPaid(member.id, mi)
                             val partial = d.isPartial(member.id, mi)
@@ -113,9 +113,9 @@ fun KanbanLayout(d: TrackerLayoutData) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
                                     .background(chipBg)
-                                    .border(width = 0.5.dp, color = d.colors.border, shape = RoundedCornerShape(8.dp))
+                                    .border(width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0_5, color = d.colors.border, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
                                     .let {
                                         if (!future && !member.isArchived) {
                                             it.pointerInput(member.id, mi) {
@@ -126,11 +126,11 @@ fun KanbanLayout(d: TrackerLayoutData) {
                                             }
                                         } else it
                                     }
-                                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                                    .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
                                 ) {
                                     Text(
                                         when {
@@ -139,7 +139,7 @@ fun KanbanLayout(d: TrackerLayoutData) {
                                             partial -> "½"
                                             else -> "○"
                                         },
-                                        fontSize = 12.sp,
+                                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
                                         color = if (full || partial) ClearrColors.BrandText else d.colors.dim
                                     )
                                     Text(
@@ -168,8 +168,8 @@ fun CardsLayout(d: TrackerLayoutData) {
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        contentPadding = PaddingValues(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
+        verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)
     ) {
         items(d.members) { member ->
             val paidMonths = (0..11).count { d.isFullPaid(member.id, it) && !isFuture(d.selectedYear, it) }
@@ -186,9 +186,9 @@ fun CardsLayout(d: TrackerLayoutData) {
                         )
                     },
                 colors = CardDefaults.cardColors(containerColor = d.colors.card),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
+                Column(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -222,11 +222,11 @@ fun CardsLayout(d: TrackerLayoutData) {
                         }
                     }
 
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
 
                     Row(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
                     ) {
                         MONTHS.forEachIndexed { mi, month ->
                             val future = isFuture(d.selectedYear, mi)
@@ -245,12 +245,12 @@ fun CardsLayout(d: TrackerLayoutData) {
                             )
                             Column(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
                                     .background(chipBg)
                                     .border(
-                                        width = if (isCur) 1.5.dp else 0.5.dp,
+                                        width = if (isCur) com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1_5 else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0_5,
                                         color = if (isCur) d.colors.accent else d.colors.border,
-                                        shape = RoundedCornerShape(8.dp)
+                                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
                                     )
                                     .let {
                                         if (!future && !member.isArchived) {
@@ -262,14 +262,14 @@ fun CardsLayout(d: TrackerLayoutData) {
                                             }
                                         } else it
                                     }
-                                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                                    .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
                                     month,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 9.sp,
+                                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp9,
                                     color = if (isCur) d.colors.accent else if (future) d.colors.dim else d.colors.muted
                                 )
                                 Text(
@@ -279,7 +279,7 @@ fun CardsLayout(d: TrackerLayoutData) {
                                         partial -> "½"
                                         else -> "·"
                                     },
-                                    fontSize = 13.sp,
+                                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
                                     color = if (full || partial) ClearrColors.BrandText else d.colors.dim
                                 )
                             }
@@ -302,8 +302,8 @@ fun ReceiptLayout(d: TrackerLayoutData) {
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        contentPadding = PaddingValues(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
+        verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)
     ) {
         item {
             val totalExpected = d.members.filter { !it.isArchived }.size * pastMonths.size * d.dueAmount
@@ -311,11 +311,11 @@ fun ReceiptLayout(d: TrackerLayoutData) {
                 .sumOf { m -> pastMonths.sumOf { mi -> d.paidForMonth(m.id, mi) } }
             Card(
                 colors = CardDefaults.cardColors(containerColor = d.colors.card),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(14.dp),
+                    modifier = Modifier.fillMaxWidth().padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     LedgerStat("EXPECTED", formatAmount(totalExpected), d.colors.muted)
@@ -329,7 +329,7 @@ fun ReceiptLayout(d: TrackerLayoutData) {
         items(d.members.filter { !it.isArchived }) { member ->
             Card(
                 colors = CardDefaults.cardColors(containerColor = d.colors.card),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
                 modifier = Modifier
                     .fillMaxWidth()
                     .pointerInput(member) {
@@ -339,21 +339,21 @@ fun ReceiptLayout(d: TrackerLayoutData) {
                         )
                     }
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
+                Column(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14)) {
                     Text(
                         privacyName(member.name, d.blurMemberNames),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = d.colors.text
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Text("Month", modifier = Modifier.weight(1.5f), style = MaterialTheme.typography.labelSmall, color = d.colors.muted)
                         Text("Due", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = d.colors.muted, textAlign = TextAlign.End)
                         Text("Paid", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = d.colors.muted, textAlign = TextAlign.End)
                         Text("Status", modifier = Modifier.weight(0.8f), style = MaterialTheme.typography.labelSmall, color = d.colors.muted, textAlign = TextAlign.End)
                     }
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = d.colors.border)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4), color = d.colors.border)
                     pastMonths.forEach { mi ->
                         val paid = d.paidForMonth(member.id, mi)
                         val full = d.isFullPaid(member.id, mi)
@@ -361,12 +361,12 @@ fun ReceiptLayout(d: TrackerLayoutData) {
                         val rowBg = when {
                             full -> d.colors.green.copy(alpha = 0.08f)
                             partial -> d.colors.amber.copy(alpha = 0.08f)
-                            else -> Color.Transparent
+                            else -> ClearrColors.Transparent
                         }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6))
                                 .background(rowBg)
                                 .pointerInput(member.id, mi) {
                                     detectTapGestures(
@@ -374,7 +374,7 @@ fun ReceiptLayout(d: TrackerLayoutData) {
                                         onLongPress = { d.onCellLongPress(member, mi) }
                                     )
                                 }
-                                .padding(vertical = 5.dp, horizontal = 4.dp),
+                                .padding(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5, horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(MONTHS[mi], modifier = Modifier.weight(1.5f), style = MaterialTheme.typography.bodySmall, color = d.colors.text)
@@ -384,14 +384,14 @@ fun ReceiptLayout(d: TrackerLayoutData) {
                                 when { full -> "✓ PAID"; partial -> "½ PART"; else -> "UNPAID" },
                                 modifier = Modifier.weight(0.8f),
                                 style = MaterialTheme.typography.labelSmall,
-                                fontSize = 9.sp,
+                                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp9,
                                 fontWeight = FontWeight.Bold,
                                 color = when { full -> d.colors.green; partial -> d.colors.amber; else -> d.colors.red },
                                 textAlign = TextAlign.End
                             )
                         }
                     }
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = d.colors.border)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4), color = d.colors.border)
                     val memberTotal = pastMonths.sumOf { d.paidForMonth(member.id, it) }
                     val memberDue = pastMonths.size * d.dueAmount
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

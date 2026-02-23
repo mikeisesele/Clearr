@@ -76,11 +76,11 @@ fun TrackerListScreen(
             Column(modifier = Modifier.fillMaxSize()) {
 
                 // ── Header ────────────────────────────────────────────────────
-                Surface(color = ClearrColors.Surface, shadowElevation = 0.dp) {
+                Surface(color = ClearrColors.Surface, shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = spacing.xl, end = spacing.xl, top = spacing.lg - 2.dp, bottom = 0.dp)
+                            .padding(start = spacing.xl, end = spacing.xl, top = spacing.lg - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -93,12 +93,12 @@ fun TrackerListScreen(
                                     style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = ClearrColors.BrandText,
-                                    fontSize = 22.sp
+                                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp22
                                 )
                             }
                             IconPill(icon = "⚙️", onClick = onSettingsClick)
                         }
-                        Spacer(Modifier.height(spacing.lg - 2.dp))
+                        Spacer(Modifier.height(spacing.lg - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2))
                     }
                 }
 
@@ -115,8 +115,8 @@ fun TrackerListScreen(
                     else -> {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 100.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            contentPadding = PaddingValues(start = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, end = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp100),
+                            verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
                         ) {
                             items(state.summaries, key = { it.trackerId }) { summary ->
                                 val dismissState = rememberSwipeToDismissBoxState(
@@ -141,7 +141,7 @@ fun TrackerListScreen(
                                                 .padding(horizontal = spacing.xl),
                                             contentAlignment = Alignment.CenterEnd
                                         ) {
-                                            Text("Delete", color = Color.White, fontWeight = FontWeight.Bold)
+                                            Text("Delete", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
                                         }
                                     },
                                     enableDismissFromStartToEnd = false,
@@ -174,19 +174,19 @@ fun TrackerListScreen(
                         .align(Alignment.BottomEnd)
                         .padding(end = spacing.xl, bottom = spacing.xxl),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(spacing.md - 2.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.md - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
                 ) {
                     Surface(
                         color = ClearrColors.BrandText,
                         shape = RoundedCornerShape(radii.xl),
-                        shadowElevation = 8.dp
+                        shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8
                     ) {
                         Text(
                             "New Tracker",
-                            color = Color.White,
-                            fontSize = 13.sp,
+                            color = ClearrColors.Surface,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.md - 2.dp)
+                            modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.md - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
                         )
                     }
                     Box(
@@ -197,7 +197,7 @@ fun TrackerListScreen(
                             .clickable { onCreateTracker() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("+", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Light)
+                        Text("+", color = ClearrColors.Surface, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp28, fontWeight = FontWeight.Light)
                     }
                 }
             }
@@ -264,12 +264,12 @@ private fun IconPill(icon: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(sizes.chipHeight)
-            .clip(RoundedCornerShape(radii.sm + 2.dp))
+            .clip(RoundedCornerShape(radii.sm + com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2))
             .background(ClearrColors.VioletBg)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Text(icon, fontSize = 16.sp)
+        Text(icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16)
     }
 }
 

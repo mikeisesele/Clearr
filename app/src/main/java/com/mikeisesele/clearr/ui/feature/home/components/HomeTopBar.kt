@@ -36,18 +36,18 @@ internal fun HomeTopBar(
     onShareClick: () -> Unit,
     colors: DuesColors = LocalDuesColors.current
 ) {
-    Surface(color = colors.surface, shadowElevation = 2.dp) {
+    Surface(color = colors.surface, shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 8.dp),
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             if (onBack != null) {
                 IconButton(
                     onClick = onBack,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -55,23 +55,23 @@ internal fun HomeTopBar(
                         tint = colors.text
                     )
                 }
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     trackerName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18,
                     color = colors.text
                 )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Surface(
                         color = colors.accent.copy(alpha = 0.10f),
-                        shape = RoundedCornerShape(4.dp),
+                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4),
                         modifier = Modifier.clickable { onLayoutClick() }
                     ) {
                         Text(
@@ -79,26 +79,26 @@ internal fun HomeTopBar(
                             style = MaterialTheme.typography.labelSmall,
                             color = colors.accent,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.sp,
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp10,
+                            modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
                         )
                     }
                     Text(
                         "$selectedYear  ·  ${formatAmount(dueAmount)}/member",
                         style = MaterialTheme.typography.bodySmall,
-                        fontSize = 11.sp,
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
                         color = colors.muted
                     )
                 }
             }
             Row(
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (showBlurToggle) {
                     IconButton(
                         onClick = onBlurToggle,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
                     ) {
                         Icon(
                             imageVector = if (blurMemberNames) Icons.Default.VisibilityOff else Icons.Default.Visibility,
@@ -109,7 +109,7 @@ internal fun HomeTopBar(
                 }
                 IconButton(
                     onClick = onShareClick,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Share,

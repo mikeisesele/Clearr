@@ -27,7 +27,7 @@ internal fun CreateTrackerDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = colors.surface,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
         title = {
             Text(
                 "Create Tracker",
@@ -36,7 +36,7 @@ internal fun CreateTrackerDialog(
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
                 Text(
                     "Use the Setup Wizard to create a new tracker with a name, type, frequency, and members.",
                     color = colors.muted,

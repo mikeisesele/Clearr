@@ -83,23 +83,23 @@ fun SplashScreen(onGetStarted: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
+            .background(ClearrColors.Surface),
         contentAlignment = Alignment.Center
     ) {
         // ── Decorative background circles ─────────────────────────────────────
         Box(
             modifier = Modifier
-                .size(280.dp)
+                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp280)
                 .align(Alignment.TopEnd)
-                .offset(x = 60.dp, y = (-60).dp)
+                .offset(x = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp60, y = (-60).dp)
                 .clip(RoundedCornerShape(percent = 50))
                 .background(ClearrColors.Violet.copy(alpha = 0.08f))
         )
         Box(
             modifier = Modifier
-                .size(200.dp)
+                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp200)
                 .align(Alignment.BottomStart)
-                .offset(x = (-60).dp, y = 60.dp)
+                .offset(x = (-60).dp, y = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp60)
                 .clip(RoundedCornerShape(percent = 50))
                 .background(ClearrColors.Violet.copy(alpha = 0.06f))
         )
@@ -115,20 +115,20 @@ fun SplashScreen(onGetStarted: () -> Unit) {
             Image(
                 painter = painterResource(id = R.drawable.clear_icon_vector),
                 contentDescription = "Clearr icon",
-                modifier = Modifier.size(200.dp)
+                modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp200)
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20))
             Text(
                 "Clearr",
-                fontSize = 36.sp,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp36,
                 fontWeight = FontWeight.Black,
                 color = ClearrColors.Violet,
                 letterSpacing = (-1).sp
             )
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6))
             Text(
                 "Clear your obligations.",
-                fontSize = 14.sp,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14,
                 color = ClearrColors.Violet.copy(alpha = 0.72f)
             )
         }
@@ -140,45 +140,45 @@ fun SplashScreen(onGetStarted: () -> Unit) {
                 .align(Alignment.BottomCenter)
                 .alpha(ctaAlpha)
                 .offset(y = ctaOffsetY.dp)
-                .padding(bottom = 64.dp),
+                .padding(bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp64),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+            verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.clear_icon_vector),
                 contentDescription = "Clearr icon",
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp56)
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             Text(
                 "Clearr",
-                fontSize = 28.sp,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp28,
                 fontWeight = FontWeight.Black,
                 color = ClearrColors.Violet,
                 letterSpacing = (-0.5).sp
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
             Text(
                 "Clear your obligations.",
-                fontSize = 13.sp,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
                 color = ClearrColors.Violet.copy(alpha = 0.72f)
             )
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp36))
             Button(
                 onClick = onGetStarted,
                 enabled = ctaVisible,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ClearrColors.Violet,
-                    contentColor = Color.White
+                    contentColor = ClearrColors.Surface
                 ),
-                contentPadding = PaddingValues(horizontal = 40.dp, vertical = 16.dp)
+                contentPadding = PaddingValues(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp40, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
             ) {
                 Text(
                     "Get Started",
-                    fontSize = 16.sp,
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color.White
+                    color = ClearrColors.Surface
                 )
             }
         }

@@ -30,6 +30,7 @@ import com.mikeisesele.clearr.ui.commons.util.isFuture
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.DuesColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.WhatsAppGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,8 +72,8 @@ fun MemberDetailSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp)
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20)
+                .padding(bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
         ) {
             // Header
             Row(
@@ -91,7 +92,7 @@ fun MemberDetailSheet(
                         Text(member.phone, style = MaterialTheme.typography.bodyMedium, color = colors.muted)
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
                     TextButton(onClick = onEdit) {
                         Text("Edit", color = colors.accent)
                     }
@@ -112,12 +113,12 @@ fun MemberDetailSheet(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
 
             // Stats row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
@@ -135,7 +136,7 @@ fun MemberDetailSheet(
                 )
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
 
             // WhatsApp button
             if (!member.phone.isNullOrBlank()) {
@@ -153,9 +154,9 @@ fun MemberDetailSheet(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = WhatsAppGreen)
                 ) {
-                    Text("WhatsApp ${member.name}", color = Color.White)
+                    Text("WhatsApp ${member.name}", color = ClearrColors.Surface)
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
             }
 
             // Payment history
@@ -165,7 +166,7 @@ fun MemberDetailSheet(
                 color = colors.text,
                 fontWeight = FontWeight.SemiBold
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
 
             val historyEntries = activePayments
                 .sortedWith(compareBy({ it.monthIndex }, { it.paidAt }))
@@ -178,7 +179,7 @@ fun MemberDetailSheet(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 10.dp),
+                            .padding(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
@@ -217,7 +218,7 @@ fun MemberDetailSheet(
                 HorizontalDivider(color = colors.border)
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
         }
     }
 }
@@ -233,11 +234,11 @@ private fun StatCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = colors.card),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)) {
             Text(label, style = MaterialTheme.typography.labelSmall, color = colors.muted)
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = valueColor)
         }
     }
@@ -248,7 +249,7 @@ private fun StatCard(
 private fun StatCardPreview() {
     ClearrTheme {
         val colors = com.mikeisesele.clearr.ui.theme.LocalDuesColors.current
-        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16), horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)) {
             StatCard(
                 modifier = Modifier.weight(1f),
                 label = "OUTSTANDING 2026",

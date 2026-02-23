@@ -41,9 +41,9 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
         return
     }
 
-    val memberColWidth = 140.dp
-    val cellSize = 44.dp
-    val cellPad = 4.dp
+    val memberColWidth = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp140
+    val cellSize = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp44
+    val cellPad = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4
 
     val vertScroll = rememberScrollState()
     val horizScroll = rememberScrollState()
@@ -60,7 +60,7 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
+                    .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp40)
                     .background(colors.surface)
             ) {
                 Text(
@@ -68,7 +68,7 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = colors.muted,
-                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 12.dp)
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
                 )
             }
             d.members.forEachIndexed { idx, member ->
@@ -77,14 +77,14 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                         .fillMaxWidth()
                         .height(cellSize + cellPad * 2)
                         .background(if (idx % 2 == 0) colors.bg else colors.surface.copy(alpha = 0.4f))
-                        .border(BorderStroke(0.5.dp, colors.border.copy(alpha = 0.25f)))
+                        .border(BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0_5, colors.border.copy(alpha = 0.25f)))
                         .pointerInput(member) {
                             detectTapGestures(
                                 onTap = { d.onMemberTap(member) },
                                 onLongPress = { d.onMemberLongPress(member) }
                             )
                         }
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Column {
@@ -119,7 +119,7 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                     Column(
                         modifier = Modifier
                             .width(cellSize + cellPad * 2)
-                            .height(40.dp),
+                            .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp40),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -127,7 +127,7 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                             month,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp10,
                             color = when {
                                 future -> colors.dim
                                 current -> colors.accent
@@ -137,8 +137,8 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                         if (current) {
                             Box(
                                 modifier = Modifier
-                                    .padding(top = 2.dp)
-                                    .size(4.dp)
+                                    .padding(top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
+                                    .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
                                     .clip(CircleShape)
                                     .background(colors.accent)
                             )
@@ -172,7 +172,7 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                             modifier = Modifier
                                 .padding(cellPad)
                                 .size(cellSize)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
                                 .background(bgColor)
                                 .let {
                                     if (!future && !member.isArchived) {
@@ -187,9 +187,9 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                             contentAlignment = Alignment.Center
                         ) {
                             when {
-                                future -> Text("—", color = colors.dim, fontSize = 12.sp)
-                                full -> Text("✓", color = ClearrColors.BrandText, fontSize = 16.sp, fontWeight = FontWeight.Black)
-                                partial -> Text("½", color = ClearrColors.BrandText, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
+                                future -> Text("—", color = colors.dim, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12)
+                                full -> Text("✓", color = ClearrColors.BrandText, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.Black)
+                                partial -> Text("½", color = ClearrColors.BrandText, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13, fontWeight = FontWeight.ExtraBold)
                             }
                         }
                     }

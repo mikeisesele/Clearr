@@ -134,7 +134,7 @@ fun TodoDetailScreen(
         TodoFab(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 24.dp),
+                .padding(end = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24),
             onClick = { showAddSheet = true }
         )
     }
@@ -177,36 +177,36 @@ private fun TodoNavBar(
             .fillMaxWidth()
             .background(ClearrColors.Surface)
             .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
             modifier = Modifier
-                .size(34.dp)
+                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)
                 .clickable(onClick = onBack),
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
             color = ClearrColors.NavBg
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text("←", fontSize = 15.sp, color = ClearrColors.TextPrimary)
+                Text("←", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15, color = ClearrColors.TextPrimary)
             }
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("My Todos", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
-            Text("$pendingCount pending · $doneCount done", fontSize = 12.sp, color = ClearrColors.TextMuted)
+            Text("My Todos", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp17, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
+            Text("$pendingCount pending · $doneCount done", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted)
         }
 
         Surface(
             modifier = Modifier
-                .size(34.dp)
+                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)
                 .clickable(onClick = onAdd),
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
             color = ClearrColors.Blue
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text("+", fontSize = 20.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                Text("+", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp20, color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -238,27 +238,27 @@ private fun TodoFilterTabs(
                 label = "todo_tab_text"
             )
             val lineColor by animateColorAsState(
-                targetValue = if (selectedTab) ClearrColors.Blue else Color.Transparent,
+                targetValue = if (selectedTab) ClearrColors.Blue else ClearrColors.Transparent,
                 label = "todo_tab_line"
             )
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(42.dp)
+                    .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp42)
                     .clickable { onSelect(filter) },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = label,
-                    modifier = Modifier.padding(top = 10.dp),
+                    modifier = Modifier.padding(top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                     color = textColor,
-                    fontSize = 13.sp,
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
                     fontWeight = if (selectedTab) FontWeight.Bold else FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(lineColor))
+                Box(modifier = Modifier.fillMaxWidth().height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2).background(lineColor))
             }
         }
     }
@@ -269,13 +269,13 @@ private fun SwipeHintStrip() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(28.dp)
+            .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp28)
             .background(ClearrColors.Background),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "← Swipe right to mark done  ·  Swipe left to delete →",
-            fontSize = 11.sp,
+            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
             color = ClearrColors.TextMuted
         )
     }
@@ -291,9 +291,9 @@ private fun SwipeableTodoRow(
 ) {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
-    val maxSwipePx = with(density) { 120.dp.toPx() }
-    val thresholdPx = with(density) { 90.dp.toPx() }
-    val tapThresholdPx = with(density) { 5.dp.toPx() }
+    val maxSwipePx = with(density) { com.mikeisesele.clearr.ui.theme.ClearrDimens.dp120.toPx() }
+    val thresholdPx = with(density) { com.mikeisesele.clearr.ui.theme.ClearrDimens.dp90.toPx() }
+    val tapThresholdPx = with(density) { com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5.toPx() }
 
     val offsetX = remember(todo.id) { Animatable(0f) }
     var rowWidthPx by remember { mutableStateOf(0f) }
@@ -312,12 +312,12 @@ private fun SwipeableTodoRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(if (offsetX.value > 20f) "✓" else "", color = Color.White, fontSize = 20.sp)
-            Text(if (offsetX.value < -20f) "🗑" else "", color = Color.White, fontSize = 18.sp)
+            Text(if (offsetX.value > 20f) "✓" else "", color = ClearrColors.Surface, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp20)
+            Text(if (offsetX.value < -20f) "🗑" else "", color = ClearrColors.Surface, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18)
         }
 
         Row(
@@ -365,21 +365,21 @@ private fun SwipeableTodoRow(
                         }
                     )
                 }
-                .padding(horizontal = 16.dp, vertical = 13.dp),
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp13),
             verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
         ) {
             Box(
                 modifier = Modifier
-                    .padding(top = 5.dp)
-                    .size(10.dp)
+                    .padding(top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5)
+                    .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)
                     .background(priorityDotColor(todo, derived), CircleShape)
             )
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = todo.title,
-                    fontSize = 15.sp,
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15,
                     fontWeight = FontWeight.Medium,
                     color = if (isDone) ClearrColors.TextMuted else ClearrColors.TextPrimary,
                     textDecoration = if (isDone) TextDecoration.LineThrough else TextDecoration.None,
@@ -388,21 +388,21 @@ private fun SwipeableTodoRow(
                 )
 
                 if (!todo.note.isNullOrBlank()) {
-                    Spacer(Modifier.height(3.dp))
+                    Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3))
                     Text(
                         text = todo.note,
-                        fontSize = 12.sp,
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
                         color = ClearrColors.TextMuted,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Spacer(Modifier.height(5.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
                     Text(
                         text = if (isDone) "Done" else dueLabel(todo.dueDate),
-                        fontSize = 11.sp,
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
                         fontWeight = FontWeight.SemiBold,
                         color = dueLabelColor(todo, derived)
                     )
@@ -417,9 +417,9 @@ private fun SwipeableTodoRow(
             }
 
             if (isDone) {
-                Surface(modifier = Modifier.size(22.dp), shape = CircleShape, color = ClearrColors.EmeraldBg) {
+                Surface(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp22), shape = CircleShape, color = ClearrColors.EmeraldBg) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("✓", color = ClearrColors.Emerald, fontSize = 12.sp)
+                        Text("✓", color = ClearrColors.Emerald, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12)
                     }
                 }
             }
@@ -431,11 +431,11 @@ private fun SwipeableTodoRow(
 
 @Composable
 private fun StatusPill(label: String, bg: Color, fg: Color) {
-    Surface(shape = RoundedCornerShape(20.dp), color = bg) {
+    Surface(shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20), color = bg) {
         Text(
             text = label,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
-            fontSize = 10.sp,
+            modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1),
+            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp10,
             fontWeight = FontWeight.Bold,
             color = fg
         )
@@ -460,12 +460,12 @@ private fun AddTodoSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
                 .navigationBarsPadding()
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onDismiss) { Text("Cancel", color = ClearrColors.TextSecondary) }
-                Text("New Todo", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
+                Text("New Todo", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
                 TextButton(
                     enabled = title.trim().isNotEmpty(),
                     onClick = {
@@ -489,7 +489,7 @@ private fun AddTodoSheet(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             OutlinedTextField(
                 value = note,
                 onValueChange = { note = it },
@@ -499,23 +499,23 @@ private fun AddTodoSheet(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
 
-            Spacer(Modifier.height(16.dp))
-            Text("PRIORITY", fontSize = 12.sp, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+            Text("PRIORITY", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+            Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {
                 listOf(TodoPriority.HIGH, TodoPriority.MEDIUM, TodoPriority.LOW).forEach { value ->
                     val selected = priority == value
                     val palette = when (value) {
                         TodoPriority.HIGH -> ClearrColors.CoralBg to ClearrColors.Coral
-                        TodoPriority.MEDIUM -> ClearrColors.AmberBg to Color(0xFFFF9500)
+                        TodoPriority.MEDIUM -> ClearrColors.AmberBg to ClearrColors.Orange
                         TodoPriority.LOW -> ClearrColors.BlueBg to ClearrColors.Blue
                     }
                     Surface(
                         modifier = Modifier
                             .weight(1f)
-                            .height(38.dp)
+                            .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
                             .clickable { priority = value },
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                         color = if (selected) palette.first else ClearrColors.Background
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -523,38 +523,38 @@ private fun AddTodoSheet(
                                 text = value.name.lowercase().replaceFirstChar { it.uppercase() },
                                 color = if (selected) palette.second else ClearrColors.TextMuted,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 13.sp
+                                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13
                             )
                         }
                     }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-            Text("DUE DATE", fontSize = 12.sp, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+            Text("DUE DATE", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
+                verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
             ) {
                 options.forEach { option ->
                     val selected = dueOption == option
                     Surface(
                         modifier = Modifier.clickable { dueOption = option },
                         color = if (selected) ClearrColors.Blue else ClearrColors.Background,
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20)
                     ) {
                         Text(
                             text = option,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                            color = if (selected) Color.White else ClearrColors.TextMuted,
-                            fontSize = 12.sp,
+                            modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp7),
+                            color = if (selected) ClearrColors.Surface else ClearrColors.TextMuted,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
         }
     }
 }
@@ -575,40 +575,40 @@ private fun TodoDetailSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
                 .navigationBarsPadding()
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onDismiss) { Text("Close", color = ClearrColors.TextSecondary) }
-                Text("Detail", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
+                Text("Detail", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
                 TextButton(onClick = { onDelete(todo.id) }) { Text("Delete", color = ClearrColors.Coral, fontWeight = FontWeight.SemiBold) }
             }
 
             Text(
                 text = todo.title,
-                fontSize = 18.sp,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18,
                 fontWeight = FontWeight.Bold,
                 color = if (isDone) ClearrColors.TextMuted else ClearrColors.TextPrimary,
                 textDecoration = if (isDone) TextDecoration.LineThrough else TextDecoration.None
             )
 
             if (!todo.note.isNullOrBlank()) {
-                Spacer(Modifier.height(12.dp))
-                Surface(color = ClearrColors.Background, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth()) {
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
+                Surface(color = ClearrColors.Background, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10), modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = todo.note,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                        fontSize = 14.sp,
+                        modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14,
                         color = ClearrColors.TextSecondary
                     )
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+            Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
                 val priorityPalette = when (todo.priority) {
                     TodoPriority.HIGH -> ClearrColors.CoralBg to ClearrColors.Coral
-                    TodoPriority.MEDIUM -> ClearrColors.AmberBg to Color(0xFFFF9500)
+                    TodoPriority.MEDIUM -> ClearrColors.AmberBg to ClearrColors.Orange
                     TodoPriority.LOW -> ClearrColors.BlueBg to ClearrColors.Blue
                 }
                 StatusPill(
@@ -630,17 +630,17 @@ private fun TodoDetailSheet(
             }
 
             if (!isDone) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24))
                 Button(
                     onClick = { onMarkDone(todo.id) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = ClearrColors.Emerald),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14)
                 ) {
-                    Text("Mark as Done ✓", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Mark as Done ✓", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
         }
     }
 }
@@ -652,18 +652,18 @@ private fun TodoEmptyState(filter: TodoFilter) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("✓", fontSize = 40.sp)
-        Spacer(Modifier.height(12.dp))
+        Text("✓", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp40)
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
         Text(
             text = if (filter == TodoFilter.DONE) "Nothing done yet" else "All clear!",
-            fontSize = 16.sp,
+            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16,
             fontWeight = FontWeight.Bold,
             color = ClearrColors.TextPrimary
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
         Text(
             text = if (filter == TodoFilter.DONE) "Complete a task to see it here" else "No pending tasks",
-            fontSize = 13.sp,
+            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
             color = ClearrColors.TextMuted
         )
     }
@@ -672,10 +672,10 @@ private fun TodoEmptyState(filter: TodoFilter) {
 @Composable
 private fun TodoFab(modifier: Modifier, onClick: () -> Unit) {
     Surface(
-        modifier = modifier.size(52.dp),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp52),
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
         color = ClearrColors.Blue,
-        shadowElevation = 10.dp
+        shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10
     ) {
         Box(
             modifier = Modifier
@@ -683,7 +683,7 @@ private fun TodoFab(modifier: Modifier, onClick: () -> Unit) {
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
-            Text("+", color = Color.White, fontSize = 24.sp)
+            Text("+", color = ClearrColors.Surface, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp24)
         }
     }
 }
@@ -692,7 +692,7 @@ private fun priorityDotColor(todo: TodoItem, derived: TodoStatus): Color {
     if (derived == TodoStatus.DONE) return ClearrColors.Emerald
     return when (todo.priority) {
         TodoPriority.HIGH -> ClearrColors.Coral
-        TodoPriority.MEDIUM -> Color(0xFFFF9500)
+        TodoPriority.MEDIUM -> ClearrColors.Orange
         TodoPriority.LOW -> ClearrColors.Blue
     }
 }
@@ -700,7 +700,7 @@ private fun priorityDotColor(todo: TodoItem, derived: TodoStatus): Color {
 private fun dueLabelColor(todo: TodoItem, derived: TodoStatus): Color = when {
     derived == TodoStatus.DONE -> ClearrColors.TextMuted
     derived == TodoStatus.OVERDUE -> ClearrColors.Coral
-    todo.dueDate == LocalDate.now() -> Color(0xFFFF9500)
+    todo.dueDate == LocalDate.now() -> ClearrColors.Orange
     else -> ClearrColors.TextMuted
 }
 
