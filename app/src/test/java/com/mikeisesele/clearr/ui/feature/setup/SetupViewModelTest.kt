@@ -50,7 +50,7 @@ class SetupViewModelTest {
         val viewModel = SetupViewModel(repository, appState)
 
         viewModel.onAction(SetupAction.GoToStep(3))
-        viewModel.onAction(SetupAction.SetTrackerType(TrackerType.TASKS))
+        viewModel.onAction(SetupAction.SetTrackerType(TrackerType.TODO))
         viewModel.onAction(SetupAction.NextStep)
         assertEquals(5, viewModel.uiState.value.step)
 
@@ -63,11 +63,11 @@ class SetupViewModelTest {
         every { repository.getAllTrackers() } returns MutableStateFlow(emptyList())
         val viewModel = SetupViewModel(repository, appState)
 
-        viewModel.onAction(SetupAction.SetTrackerType(TrackerType.ATTENDANCE))
-        assertEquals("Attendance Tracker", viewModel.uiState.value.trackerName)
+        viewModel.onAction(SetupAction.SetTrackerType(TrackerType.GOALS))
+        assertEquals("Goals Tracker", viewModel.uiState.value.trackerName)
 
         viewModel.onAction(SetupAction.SetTrackerName("Custom Name"))
-        viewModel.onAction(SetupAction.SetTrackerType(TrackerType.EVENTS))
+        viewModel.onAction(SetupAction.SetTrackerType(TrackerType.EXPENSES))
         assertEquals("Custom Name", viewModel.uiState.value.trackerName)
     }
 
@@ -82,7 +82,7 @@ class SetupViewModelTest {
                     groupName = "Clearr",
                     adminName = "Mike",
                     adminPhone = "1234",
-                    trackerType = TrackerType.TASKS,
+                    trackerType = TrackerType.TODO,
                     frequency = Frequency.WEEKLY,
                     defaultAmount = 3200.0,
                     layoutStyle = LayoutStyle.CARDS
@@ -92,7 +92,7 @@ class SetupViewModelTest {
 
         val state = viewModel.uiState.value
         assertEquals("Clearr", state.groupName)
-        assertEquals("Task Tracker", state.trackerName)
+        assertEquals("To-do Tracker", state.trackerName)
         assertEquals("Mike", state.adminName)
         assertEquals("1234", state.adminPhone)
         assertEquals("3200", state.defaultAmount)

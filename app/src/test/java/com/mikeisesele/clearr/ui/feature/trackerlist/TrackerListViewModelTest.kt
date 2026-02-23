@@ -110,7 +110,7 @@ class TrackerListViewModelTest {
 
     @Test
     fun `rename tracker trims name and updates repository`() = runTest {
-        val existing = Tracker(id = 8, name = "Old", type = TrackerType.TASKS, frequency = Frequency.WEEKLY, layoutStyle = LayoutStyle.CARDS)
+        val existing = Tracker(id = 8, name = "Old", type = TrackerType.TODO, frequency = Frequency.WEEKLY, layoutStyle = LayoutStyle.CARDS)
         every { repository.getAllTrackers() } returns MutableStateFlow(emptyList())
         coEvery { repository.getTrackerById(8) } returns existing
         coEvery { repository.updateTracker(any()) } just runs

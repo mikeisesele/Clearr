@@ -66,7 +66,7 @@ class SettingsViewModelTest {
 
         coVerify { repository.updateTracker(match { it.id == 10L && it.defaultAmount == 9500.0 }) }
 
-        coEvery { repository.getTrackerById(10) } returns Tracker(id = 10, name = "Tasks", type = TrackerType.TASKS, defaultAmount = 0.0)
+        coEvery { repository.getTrackerById(10) } returns Tracker(id = 10, name = "Todo", type = TrackerType.TODO, defaultAmount = 0.0)
         viewModel.onAction(SettingsAction.UpdateDueAmount(year = 2026, amount = 1111.0))
         advanceUntilIdle()
 

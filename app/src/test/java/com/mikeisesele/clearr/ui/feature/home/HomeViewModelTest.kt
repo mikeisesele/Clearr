@@ -56,7 +56,7 @@ class HomeViewModelTest {
     @Test
     fun `add member inserts tracker member when tracker selected`() = runTest {
         appState.setCurrentTrackerId(7)
-        stubTrackerInit(trackerId = 7, trackerType = TrackerType.TASKS)
+        stubTrackerInit(trackerId = 7, trackerType = TrackerType.TODO)
         coEvery { repository.insertTrackerMember(any()) } returns 1L
 
         val viewModel = HomeViewModel(repository, appState)
