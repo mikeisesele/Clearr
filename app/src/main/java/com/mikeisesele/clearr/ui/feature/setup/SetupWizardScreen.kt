@@ -60,6 +60,7 @@ fun SetupWizardScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.surface)
+                .statusBarsPadding()
                 .padding(horizontal = 24.dp, vertical = 14.dp)
         ) {
             Row(
@@ -181,6 +182,7 @@ fun SetupWizardScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .padding(horizontal = 24.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
