@@ -14,55 +14,59 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mikeisesele.clearr.ui.theme.ClearrColors
+import com.mikeisesele.clearr.ui.theme.ClearrDS
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 
 @Composable
 internal fun EmptyTrackerState(onCreate: () -> Unit) {
+    val spacing = ClearrDS.spacing
+    val radii = ClearrDS.radii
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 32.dp)
+            modifier = Modifier.padding(horizontal = spacing.xxxl)
         ) {
             // Illustration
             Box(
                 modifier = Modifier
                     .size(80.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFFF4F3FF)),
+                    .clip(RoundedCornerShape(radii.xxl))
+                    .background(ClearrColors.VioletBg),
                 contentAlignment = Alignment.Center
             ) {
                 Text("📋", fontSize = 36.sp)
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(spacing.xl))
 
             Text(
                 "No trackers yet",
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 20.sp,
-                color = Color(0xFF1A1A2E)
+                color = ClearrColors.BrandText
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(spacing.sm))
 
             Text(
                 "Create your first tracker to start managing dues, attendance, tasks, or events for your group.",
                 fontSize = 14.sp,
-                color = Color(0xFF888888),
+                color = ClearrColors.TextSecondary,
                 lineHeight = 22.sp,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(spacing.xxl + 4.dp))
 
             Button(
                 onClick = onCreate,
                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
-                shape = RoundedCornerShape(14.dp),
-                contentPadding = PaddingValues(horizontal = 28.dp, vertical = 14.dp)
+                shape = RoundedCornerShape(radii.md + 2.dp),
+                contentPadding = PaddingValues(horizontal = spacing.xxl + 4.dp, vertical = spacing.md + 2.dp)
             ) {
                 Text("+ Create Tracker", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }

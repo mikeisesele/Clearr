@@ -23,7 +23,11 @@ import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.TrackerSummary
 import com.mikeisesele.clearr.data.model.TrackerType
+import com.mikeisesele.clearr.ui.theme.ClearrColors
+import com.mikeisesele.clearr.ui.theme.ClearrDS
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
+import com.mikeisesele.clearr.ui.theme.brandBackground
+import com.mikeisesele.clearr.ui.theme.brandColor
 
 // ── Type color palette ────────────────────────────────────────────────────────
 
@@ -35,14 +39,14 @@ internal data class TypeStyle(
 )
 
 internal val typeStyles = mapOf(
-    TrackerType.DUES       to TypeStyle("₦",  Color(0xFF6C63FF), Color(0xFFEEF0FF), "Dues"),
-    TrackerType.ATTENDANCE to TypeStyle("✓",  Color(0xFF00A67E), Color(0xFFE6F7F3), "Attendance"),
-    TrackerType.TASKS      to TypeStyle("⬡",  Color(0xFFF59E0B), Color(0xFFFEF3C7), "Tasks"),
-    TrackerType.EVENTS     to TypeStyle("◈",  Color(0xFFEF4444), Color(0xFFFEE2E2), "Events"),
-    TrackerType.CUSTOM     to TypeStyle("☰",  Color(0xFF6C63FF), Color(0xFFEEF0FF), "Custom"),
+    TrackerType.DUES       to TypeStyle("₦", TrackerType.DUES.brandColor(), TrackerType.DUES.brandBackground(), "Dues"),
+    TrackerType.ATTENDANCE to TypeStyle("✓", TrackerType.ATTENDANCE.brandColor(), TrackerType.ATTENDANCE.brandBackground(), "Attendance"),
+    TrackerType.TASKS      to TypeStyle("⬡", TrackerType.TASKS.brandColor(), TrackerType.TASKS.brandBackground(), "Tasks"),
+    TrackerType.EVENTS     to TypeStyle("◈", TrackerType.EVENTS.brandColor(), TrackerType.EVENTS.brandBackground(), "Events"),
+    TrackerType.CUSTOM     to TypeStyle("☰", TrackerType.CUSTOM.brandColor(), TrackerType.CUSTOM.brandBackground(), "Custom"),
 )
 
-internal val primaryColor = Color(0xFF6C63FF)
+internal val primaryColor = ClearrColors.BrandPrimary
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TrackerCard
@@ -54,9 +58,11 @@ internal fun TrackerCard(
     onClick: () -> Unit,
     onLongPress: () -> Unit
 ) {
+    val radii = ClearrDS.radii
+    val spacing = ClearrDS.spacing
     val style = typeStyles[summary.type] ?: typeStyles[TrackerType.DUES]!!
     val allDone = summary.completedCount == summary.totalMembers && summary.totalMembers > 0
-    val barColor = if (allDone) Color(0xFF00A67E) else style.color
+    val barColor = if (allDone) ClearrColors.BrandSecondary else style.color
     val pct = summary.completionPercent
 
     val animatedBarColor by animateColorAsState(
@@ -74,8 +80,8 @@ internal fun TrackerCard(
                     onLongPress = { onLongPress() }
                 )
             },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = ClearrColors.Surface),
+        shape = RoundedCornerShape(radii.lg),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box {
@@ -84,21 +90,21 @@ internal fun TrackerCard(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .clip(RoundedCornerShape(16.dp))
-                        .border(2.dp, style.color, RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(radii.lg))
+                        .border(2.dp, style.color, RoundedCornerShape(radii.lg))
                 )
             }
 
-            Column(modifier = Modifier.padding(18.dp, 18.dp, 16.dp, 18.dp)) {
+            Column(modifier = Modifier.padding(start = spacing.xl - 2.dp, top = spacing.xl - 2.dp, end = spacing.lg, bottom = spacing.xl - 2.dp)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.md)
                 ) {
                     // ── Type icon square ──────────────────────────────────────
                     Box(
                         modifier = Modifier
                             .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(radii.md))
                             .background(style.bgColor),
                         contentAlignment = Alignment.Center
                     ) {
@@ -116,15 +122,15 @@ internal fun TrackerCard(
                             summary.name,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
-                            color = Color(0xFF1A1A2E),
+                            color = ClearrColors.BrandText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(Modifier.height(2.dp))
+                        Spacer(Modifier.height(spacing.xxs))
                         Text(
                             "${summary.frequency.displayName()}  ·  ${summary.currentPeriodLabel}",
                             fontSize = 12.sp,
-                            color = Color(0xFF888888)
+                            color = ClearrColors.TextSecondary
                         )
                     }
 
@@ -136,8 +142,8 @@ internal fun TrackerCard(
                         CircularProgressIndicator(
                             progress = { pct / 100f },
                             modifier = Modifier.size(44.dp),
-                            color = if (allDone) Color(0xFF00A67E) else style.color,
-                            trackColor = Color(0xFFF0F0F0),
+                            color = if (allDone) ClearrColors.BrandSecondary else style.color,
+                            trackColor = ClearrColors.Border,
                             strokeWidth = 4.dp,
                             strokeCap = StrokeCap.Round
                         )
@@ -145,7 +151,7 @@ internal fun TrackerCard(
                             "$pct%",
                             fontSize = 8.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (allDone) Color(0xFF00A67E) else style.color
+                            color = if (allDone) ClearrColors.BrandSecondary else style.color
                         )
                     }
                 }
@@ -156,10 +162,10 @@ internal fun TrackerCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(10.dp)
-                        .clip(RoundedCornerShape(20.dp))
+                        .padding(spacing.md - 2.dp)
+                        .clip(RoundedCornerShape(radii.xl))
                         .background(style.color)
-                        .padding(horizontal = 6.dp, vertical = 1.dp)
+                        .padding(horizontal = spacing.sm - 2.dp, vertical = 1.dp)
                 ) {
                     Text(
                         "NEW",

@@ -62,14 +62,14 @@ fun DuesNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val appConfig          by appConfigVm.appConfig.collectAsStateWithLifecycle()
     val appConfigLoading   by appConfigVm.isLoading.collectAsStateWithLifecycle()
 
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
 
     // Show blank until both DataStore and Room have emitted at least once.
     if (onboardingComplete == null || appConfigLoading) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(if (onboardingComplete == null) ClearrColors.Violet else C.bg)
+                .background(if (onboardingComplete == null) ClearrColors.Violet else colors.bg)
         )
         return
     }
@@ -149,7 +149,7 @@ private fun OnboardingNavHost(onboardingVm: OnboardingViewModel) {
 @Composable
 private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val navController = rememberNavController()
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
 
@@ -157,11 +157,11 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
         currentRoute != NavRoutes.Setup.route
 
     Scaffold(
-        containerColor = C.bg,
+        containerColor = colors.bg,
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
-                    containerColor = C.surface,
+                    containerColor = colors.surface,
                     tonalElevation = 0.dp,
                     windowInsets = NavigationBarDefaults.windowInsets
                 ) {
@@ -183,13 +183,13 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                                 Text(
                                     item.label,
                                     fontSize = 10.sp,
-                                    color = if (isSelected) C.accent else C.muted
+                                    color = if (isSelected) colors.accent else colors.muted
                                 )
                             },
                             colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = C.accent.copy(alpha = 0.15f),
-                                selectedTextColor = C.accent,
-                                unselectedTextColor = C.muted
+                                indicatorColor = colors.accent.copy(alpha = 0.15f),
+                                selectedTextColor = colors.accent,
+                                unselectedTextColor = colors.muted
                             )
                         )
                     }

@@ -22,7 +22,7 @@ internal fun SummaryPill(
     trackerCount: Int,
     totalMembers: Int,
     avgCompletion: Int,
-    C: DuesColors = LocalDuesColors.current
+    colors: DuesColors = LocalDuesColors.current
 ) {
     Row(
         modifier = Modifier
@@ -30,9 +30,9 @@ internal fun SummaryPill(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        PillItem(label = "Trackers", value = "$trackerCount", C = C, modifier = Modifier.weight(1f))
-        PillItem(label = "Members", value = "$totalMembers", C = C, modifier = Modifier.weight(1f))
-        PillItem(label = "Avg. Done", value = "$avgCompletion%", C = C, modifier = Modifier.weight(1f))
+        PillItem(label = "Trackers", value = "$trackerCount", colors = colors, modifier = Modifier.weight(1f))
+        PillItem(label = "Members", value = "$totalMembers", colors = colors, modifier = Modifier.weight(1f))
+        PillItem(label = "Avg. Done", value = "$avgCompletion%", colors = colors, modifier = Modifier.weight(1f))
     }
 }
 
@@ -40,19 +40,19 @@ internal fun SummaryPill(
 private fun PillItem(
     label: String,
     value: String,
-    C: DuesColors,
+    colors: DuesColors,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(10.dp))
-            .background(C.card)
+            .background(colors.card)
             .padding(horizontal = 10.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(value, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = C.accent)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = C.muted)
+            Text(value, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = colors.accent)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = colors.muted)
         }
     }
 }
@@ -61,7 +61,7 @@ private fun PillItem(
 @Composable
 private fun SummaryPillPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
-        SummaryPill(trackerCount = 3, totalMembers = 24, avgCompletion = 67, C = C)
+        val colors = LocalDuesColors.current
+        SummaryPill(trackerCount = 3, totalMembers = 24, avgCompletion = 67, colors = colors)
     }
 }

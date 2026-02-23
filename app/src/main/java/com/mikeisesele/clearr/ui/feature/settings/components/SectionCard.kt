@@ -15,16 +15,16 @@ import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 @Composable
 internal fun SectionCard(
     title: String,
-    C: DuesColors = LocalDuesColors.current,
+    colors: DuesColors = LocalDuesColors.current,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = C.card),
+        colors = CardDefaults.cardColors(containerColor = colors.card),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = C.text)
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = colors.text)
             Spacer(Modifier.height(12.dp))
             content()
         }
@@ -35,9 +35,9 @@ internal fun SectionCard(
 @Composable
 private fun SectionCardPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
-        SectionCard(title = "Active Year", C = C) {
-            Text("2026", color = C.text)
+        val colors = LocalDuesColors.current
+        SectionCard(title = "Active Year", colors = colors) {
+            Text("2026", color = colors.text)
         }
     }
 }

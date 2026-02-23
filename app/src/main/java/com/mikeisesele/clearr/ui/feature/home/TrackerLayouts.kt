@@ -26,6 +26,7 @@ import com.mikeisesele.clearr.data.model.Member
 import com.mikeisesele.clearr.ui.commons.util.MONTHS
 import com.mikeisesele.clearr.ui.commons.util.formatAmount
 import com.mikeisesele.clearr.ui.commons.util.isFuture
+import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.DuesColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
@@ -46,7 +47,7 @@ data class TrackerLayoutData(
     val onCellLongPress: (Member, Int) -> Unit,
     val onMemberTap: (Member) -> Unit,
     val onMemberLongPress: (Member) -> Unit,
-    val C: DuesColors
+    val colors: DuesColors
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,7 +57,7 @@ data class TrackerLayoutData(
 fun KanbanLayout(d: TrackerLayoutData) {
     val visibleMonths = (0..11).filter { !isFuture(d.selectedYear, it) || it == d.currentMonth }
 
-    if (d.members.isEmpty()) { EmptyState(d.C); return }
+    if (d.members.isEmpty()) { EmptyState(d.colors); return }
 
     LazyRow(
         modifier = Modifier.fillMaxSize(),
@@ -75,24 +76,24 @@ fun KanbanLayout(d: TrackerLayoutData) {
                     .wrapContentHeight()
                     .padding(bottom = 16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isCurrent) d.C.accent.copy(alpha = 0.08f) else d.C.card
+                    containerColor = if (isCurrent) d.colors.accent.copy(alpha = 0.08f) else d.colors.card
                 ),
                 shape = RoundedCornerShape(14.dp),
-                border = if (isCurrent) BorderStroke(1.5.dp, d.C.accent) else null
+                border = if (isCurrent) BorderStroke(1.5.dp, d.colors.accent) else null
             ) {
                 Column(modifier = Modifier.padding(10.dp)) {
                     Text(
                         MONTHS[mi],
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = if (isCurrent) d.C.accent else if (future) d.C.dim else d.C.text
+                        color = if (isCurrent) d.colors.accent else if (future) d.colors.dim else d.colors.text
                     )
                     Text(
                         if (future) "upcoming" else "$paidCount / $total paid",
                         style = MaterialTheme.typography.labelSmall,
-                        color = d.C.muted
+                        color = d.colors.muted
                     )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = d.C.border)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = d.colors.border)
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         d.members.forEach { member ->
                             val full = d.isFullPaid(member.id, mi)
@@ -100,10 +101,10 @@ fun KanbanLayout(d: TrackerLayoutData) {
 
                             val chipBg by animateColorAsState(
                                 targetValue = when {
-                                    future -> d.C.surface
-                                    full -> d.C.green
-                                    partial -> d.C.amber
-                                    else -> d.C.surface
+                                    future -> d.colors.surface
+                                    full -> d.colors.green
+                                    partial -> d.colors.amber
+                                    else -> d.colors.surface
                                 },
                                 animationSpec = tween(200),
                                 label = "kanban_chip"
@@ -113,7 +114,7 @@ fun KanbanLayout(d: TrackerLayoutData) {
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(chipBg)
-                                    .border(width = 0.5.dp, color = d.C.border, shape = RoundedCornerShape(8.dp))
+                                    .border(width = 0.5.dp, color = d.colors.border, shape = RoundedCornerShape(8.dp))
                                     .let {
                                         if (!future && !member.isArchived) {
                                             it.pointerInput(member.id, mi) {
@@ -138,12 +139,12 @@ fun KanbanLayout(d: TrackerLayoutData) {
                                             else -> "○"
                                         },
                                         fontSize = 12.sp,
-                                        color = if (full || partial) Color(0xFF0F172A) else d.C.dim
+                                        color = if (full || partial) ClearrColors.BrandText else d.colors.dim
                                     )
                                     Text(
                                         member.name,
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = if (full || partial) Color(0xFF0F172A) else if (future) d.C.dim else d.C.text,
+                                        color = if (full || partial) ClearrColors.BrandText else if (future) d.colors.dim else d.colors.text,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
@@ -162,7 +163,7 @@ fun KanbanLayout(d: TrackerLayoutData) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun CardsLayout(d: TrackerLayoutData) {
-    if (d.members.isEmpty()) { EmptyState(d.C); return }
+    if (d.members.isEmpty()) { EmptyState(d.colors); return }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -183,7 +184,7 @@ fun CardsLayout(d: TrackerLayoutData) {
                             onLongPress = { d.onMemberLongPress(member) }
                         )
                     },
-                colors = CardDefaults.cardColors(containerColor = d.C.card),
+                colors = CardDefaults.cardColors(containerColor = d.colors.card),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
@@ -197,25 +198,25 @@ fun CardsLayout(d: TrackerLayoutData) {
                                 member.name,
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = if (member.isArchived) d.C.muted else d.C.text,
+                                color = if (member.isArchived) d.colors.muted else d.colors.text,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                             if (!member.phone.isNullOrBlank()) {
-                                Text(member.phone, style = MaterialTheme.typography.labelSmall, color = d.C.muted)
+                                Text(member.phone, style = MaterialTheme.typography.labelSmall, color = d.colors.muted)
                             }
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 "$paidMonths/$totalDue months",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (paidMonths == totalDue) d.C.green else d.C.muted
+                                color = if (paidMonths == totalDue) d.colors.green else d.colors.muted
                             )
                             Text(
                                 formatAmount(totalPaidAmt),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = d.C.green
+                                color = d.colors.green
                             )
                         }
                     }
@@ -234,10 +235,10 @@ fun CardsLayout(d: TrackerLayoutData) {
 
                             val chipBg by animateColorAsState(
                                 targetValue = when {
-                                    future -> d.C.surface
-                                    full -> d.C.green
-                                    partial -> d.C.amber
-                                    else -> d.C.surface
+                                    future -> d.colors.surface
+                                    full -> d.colors.green
+                                    partial -> d.colors.amber
+                                    else -> d.colors.surface
                                 },
                                 animationSpec = tween(200), label = "card_chip"
                             )
@@ -247,7 +248,7 @@ fun CardsLayout(d: TrackerLayoutData) {
                                     .background(chipBg)
                                     .border(
                                         width = if (isCur) 1.5.dp else 0.5.dp,
-                                        color = if (isCur) d.C.accent else d.C.border,
+                                        color = if (isCur) d.colors.accent else d.colors.border,
                                         shape = RoundedCornerShape(8.dp)
                                     )
                                     .let {
@@ -268,7 +269,7 @@ fun CardsLayout(d: TrackerLayoutData) {
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 9.sp,
-                                    color = if (isCur) d.C.accent else if (future) d.C.dim else d.C.muted
+                                    color = if (isCur) d.colors.accent else if (future) d.colors.dim else d.colors.muted
                                 )
                                 Text(
                                     when {
@@ -278,7 +279,7 @@ fun CardsLayout(d: TrackerLayoutData) {
                                         else -> "·"
                                     },
                                     fontSize = 13.sp,
-                                    color = if (full || partial) Color(0xFF0F172A) else d.C.dim
+                                    color = if (full || partial) ClearrColors.BrandText else d.colors.dim
                                 )
                             }
                         }
@@ -294,7 +295,7 @@ fun CardsLayout(d: TrackerLayoutData) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun ReceiptLayout(d: TrackerLayoutData) {
-    if (d.members.isEmpty()) { EmptyState(d.C); return }
+    if (d.members.isEmpty()) { EmptyState(d.colors); return }
 
     val pastMonths = (0..11).filter { !isFuture(d.selectedYear, it) }
 
@@ -308,7 +309,7 @@ fun ReceiptLayout(d: TrackerLayoutData) {
             val totalCollected = d.members.filter { !it.isArchived }
                 .sumOf { m -> pastMonths.sumOf { mi -> d.paidForMonth(m.id, mi) } }
             Card(
-                colors = CardDefaults.cardColors(containerColor = d.C.card),
+                colors = CardDefaults.cardColors(containerColor = d.colors.card),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -316,17 +317,17 @@ fun ReceiptLayout(d: TrackerLayoutData) {
                     modifier = Modifier.fillMaxWidth().padding(14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    LedgerStat("EXPECTED", formatAmount(totalExpected), d.C.muted)
-                    LedgerStat("COLLECTED", formatAmount(totalCollected), d.C.green)
+                    LedgerStat("EXPECTED", formatAmount(totalExpected), d.colors.muted)
+                    LedgerStat("COLLECTED", formatAmount(totalCollected), d.colors.green)
                     LedgerStat("BALANCE", formatAmount(totalExpected - totalCollected),
-                        if (totalCollected < totalExpected) d.C.red else d.C.green)
+                        if (totalCollected < totalExpected) d.colors.red else d.colors.green)
                 }
             }
         }
 
         items(d.members.filter { !it.isArchived }) { member ->
             Card(
-                colors = CardDefaults.cardColors(containerColor = d.C.card),
+                colors = CardDefaults.cardColors(containerColor = d.colors.card),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -338,22 +339,22 @@ fun ReceiptLayout(d: TrackerLayoutData) {
                     }
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text(member.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = d.C.text)
+                    Text(member.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = d.colors.text)
                     Spacer(Modifier.height(8.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        Text("Month", modifier = Modifier.weight(1.5f), style = MaterialTheme.typography.labelSmall, color = d.C.muted)
-                        Text("Due", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = d.C.muted, textAlign = TextAlign.End)
-                        Text("Paid", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = d.C.muted, textAlign = TextAlign.End)
-                        Text("Status", modifier = Modifier.weight(0.8f), style = MaterialTheme.typography.labelSmall, color = d.C.muted, textAlign = TextAlign.End)
+                        Text("Month", modifier = Modifier.weight(1.5f), style = MaterialTheme.typography.labelSmall, color = d.colors.muted)
+                        Text("Due", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = d.colors.muted, textAlign = TextAlign.End)
+                        Text("Paid", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = d.colors.muted, textAlign = TextAlign.End)
+                        Text("Status", modifier = Modifier.weight(0.8f), style = MaterialTheme.typography.labelSmall, color = d.colors.muted, textAlign = TextAlign.End)
                     }
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = d.C.border)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = d.colors.border)
                     pastMonths.forEach { mi ->
                         val paid = d.paidForMonth(member.id, mi)
                         val full = d.isFullPaid(member.id, mi)
                         val partial = d.isPartial(member.id, mi)
                         val rowBg = when {
-                            full -> d.C.green.copy(alpha = 0.08f)
-                            partial -> d.C.amber.copy(alpha = 0.08f)
+                            full -> d.colors.green.copy(alpha = 0.08f)
+                            partial -> d.colors.amber.copy(alpha = 0.08f)
                             else -> Color.Transparent
                         }
                         Row(
@@ -370,30 +371,30 @@ fun ReceiptLayout(d: TrackerLayoutData) {
                                 .padding(vertical = 5.dp, horizontal = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(MONTHS[mi], modifier = Modifier.weight(1.5f), style = MaterialTheme.typography.bodySmall, color = d.C.text)
-                            Text(formatAmount(d.dueAmount), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = d.C.muted, textAlign = TextAlign.End)
-                            Text(if (paid > 0) formatAmount(paid) else "—", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = if (paid > 0) d.C.green else d.C.dim, textAlign = TextAlign.End)
+                            Text(MONTHS[mi], modifier = Modifier.weight(1.5f), style = MaterialTheme.typography.bodySmall, color = d.colors.text)
+                            Text(formatAmount(d.dueAmount), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = d.colors.muted, textAlign = TextAlign.End)
+                            Text(if (paid > 0) formatAmount(paid) else "—", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = if (paid > 0) d.colors.green else d.colors.dim, textAlign = TextAlign.End)
                             Text(
                                 when { full -> "✓ PAID"; partial -> "½ PART"; else -> "UNPAID" },
                                 modifier = Modifier.weight(0.8f),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = when { full -> d.C.green; partial -> d.C.amber; else -> d.C.red },
+                                color = when { full -> d.colors.green; partial -> d.colors.amber; else -> d.colors.red },
                                 textAlign = TextAlign.End
                             )
                         }
                     }
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = d.C.border)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = d.colors.border)
                     val memberTotal = pastMonths.sumOf { d.paidForMonth(member.id, it) }
                     val memberDue = pastMonths.size * d.dueAmount
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Total", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = d.C.text)
+                        Text("Total", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = d.colors.text)
                         Text(
                             "${formatAmount(memberTotal)} / ${formatAmount(memberDue)}",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (memberTotal >= memberDue) d.C.green else d.C.red
+                            color = if (memberTotal >= memberDue) d.colors.green else d.colors.red
                         )
                     }
                 }
@@ -407,11 +408,11 @@ fun ReceiptLayout(d: TrackerLayoutData) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun EmptyState(C: DuesColors) {
+private fun EmptyState(colors: DuesColors) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
             "No members yet.\nTap  +  to add one.",
-            color = C.muted,
+            color = colors.muted,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center
         )
@@ -421,7 +422,7 @@ private fun EmptyState(C: DuesColors) {
 @Composable
 private fun LedgerStat(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = ClearrColors.TextSecondary)
         Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = color)
     }
 }
@@ -430,7 +431,7 @@ private fun LedgerStat(label: String, value: String, color: Color) {
 @Composable
 private fun KanbanLayoutPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
+        val colors = LocalDuesColors.current
         KanbanLayout(
             d = TrackerLayoutData(
                 members = emptyList(),
@@ -445,7 +446,7 @@ private fun KanbanLayoutPreview() {
                 onCellLongPress = { _, _ -> },
                 onMemberTap = {},
                 onMemberLongPress = {},
-                C = C
+                colors = colors
             )
         )
     }

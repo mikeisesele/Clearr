@@ -23,15 +23,15 @@ internal fun CreateTrackerDialog(
     onDismiss: () -> Unit,
     onNavigateToSetup: () -> Unit
 ) {
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = C.surface,
+        containerColor = colors.surface,
         shape = RoundedCornerShape(16.dp),
         title = {
             Text(
                 "Create Tracker",
-                color = C.text,
+                color = colors.text,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -39,7 +39,7 @@ internal fun CreateTrackerDialog(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     "Use the Setup Wizard to create a new tracker with a name, type, frequency, and members.",
-                    color = C.muted,
+                    color = colors.muted,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -47,14 +47,14 @@ internal fun CreateTrackerDialog(
         confirmButton = {
             Button(
                 onClick = { onNavigateToSetup(); onDismiss() },
-                colors = ButtonDefaults.buttonColors(containerColor = C.accent)
+                colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
             ) {
                 Text("Open Wizard")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = C.muted)
+                Text("Cancel", color = colors.muted)
             }
         }
     )

@@ -20,33 +20,33 @@ internal fun YearSummarySection(
     currentExpected: Double,
     currentPct: Int,
     activeMemberCount: Int,
-    C: DuesColors = LocalDuesColors.current
+    colors: DuesColors = LocalDuesColors.current
 ) {
     Text(
         "Year Summary",
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.SemiBold,
-        color = C.text
+        color = colors.text
     )
     Card(
-        colors = CardDefaults.cardColors(containerColor = C.card),
+        colors = CardDefaults.cardColors(containerColor = colors.card),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("$currentYear", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = C.text)
+                Text("$currentYear", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = colors.text)
                 Text(
                     "$currentPct% rate",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (currentPct >= 80) C.green else if (currentPct >= 50) C.amber else C.red
+                    color = if (currentPct >= 80) colors.green else if (currentPct >= 50) colors.amber else colors.red
                 )
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Collected: ${formatAmount(currentCollected)}", style = MaterialTheme.typography.bodySmall, color = C.green)
-                Text("Expected: ${formatAmount(currentExpected)}", style = MaterialTheme.typography.bodySmall, color = C.muted)
+                Text("Collected: ${formatAmount(currentCollected)}", style = MaterialTheme.typography.bodySmall, color = colors.green)
+                Text("Expected: ${formatAmount(currentExpected)}", style = MaterialTheme.typography.bodySmall, color = colors.muted)
             }
-            Text("Active members: $activeMemberCount", style = MaterialTheme.typography.bodySmall, color = C.muted)
+            Text("Active members: $activeMemberCount", style = MaterialTheme.typography.bodySmall, color = colors.muted)
         }
     }
 }
@@ -55,14 +55,14 @@ internal fun YearSummarySection(
 @Composable
 private fun YearSummarySectionPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
+        val colors = LocalDuesColors.current
         YearSummarySection(
             currentYear = 2026,
             currentCollected = 45000.0,
             currentExpected = 60000.0,
             currentPct = 75,
             activeMemberCount = 10,
-            C = C
+            colors = colors
         )
     }
 }

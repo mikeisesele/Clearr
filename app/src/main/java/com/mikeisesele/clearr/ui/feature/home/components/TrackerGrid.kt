@@ -22,17 +22,18 @@ import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.ui.commons.util.MONTHS
 import com.mikeisesele.clearr.ui.commons.util.isFuture
 import com.mikeisesele.clearr.ui.feature.home.TrackerLayoutData
+import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 
 @Composable
 internal fun TrackerGrid(d: TrackerLayoutData) {
-    val C = d.C
+    val colors = d.colors
     if (d.members.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 "No members yet.\nTap  +  to add one.",
-                color = C.muted,
+                color = colors.muted,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -60,13 +61,13 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(40.dp)
-                    .background(C.surface)
+                    .background(colors.surface)
             ) {
                 Text(
                     "MEMBER",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = C.muted,
+                    color = colors.muted,
                     modifier = Modifier.align(Alignment.CenterStart).padding(start = 12.dp)
                 )
             }
@@ -75,8 +76,8 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(cellSize + cellPad * 2)
-                        .background(if (idx % 2 == 0) C.bg else C.surface.copy(alpha = 0.4f))
-                        .border(BorderStroke(0.5.dp, C.border.copy(alpha = 0.25f)))
+                        .background(if (idx % 2 == 0) colors.bg else colors.surface.copy(alpha = 0.4f))
+                        .border(BorderStroke(0.5.dp, colors.border.copy(alpha = 0.25f)))
                         .pointerInput(member) {
                             detectTapGestures(
                                 onTap = { d.onMemberTap(member) },
@@ -91,12 +92,12 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                             member.name,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (member.isArchived) C.muted else C.text,
+                            color = if (member.isArchived) colors.muted else colors.text,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         if (member.isArchived) {
-                            Text("archived", style = MaterialTheme.typography.labelSmall, color = C.dim)
+                            Text("archived", style = MaterialTheme.typography.labelSmall, color = colors.dim)
                         }
                     }
                 }
@@ -111,7 +112,7 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                 .horizontalScroll(horizScroll)
                 .verticalScroll(vertScroll)
         ) {
-            Row(modifier = Modifier.background(C.surface)) {
+            Row(modifier = Modifier.background(colors.surface)) {
                 MONTHS.forEachIndexed { mi, month ->
                     val future = isFuture(d.selectedYear, mi)
                     val current = d.selectedYear == d.currentYear && mi == d.currentMonth
@@ -128,9 +129,9 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
                             color = when {
-                                future -> C.dim
-                                current -> C.accent
-                                else -> C.muted
+                                future -> colors.dim
+                                current -> colors.accent
+                                else -> colors.muted
                             }
                         )
                         if (current) {
@@ -139,7 +140,7 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                                     .padding(top = 2.dp)
                                     .size(4.dp)
                                     .clip(CircleShape)
-                                    .background(C.accent)
+                                    .background(colors.accent)
                             )
                         }
                     }
@@ -149,7 +150,7 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
             d.members.forEachIndexed { idx, member ->
                 Row(
                     modifier = Modifier
-                        .background(if (idx % 2 == 0) C.bg else C.surface.copy(alpha = 0.4f))
+                        .background(if (idx % 2 == 0) colors.bg else colors.surface.copy(alpha = 0.4f))
                 ) {
                     MONTHS.forEachIndexed { mi, _ ->
                         val future = isFuture(d.selectedYear, mi)
@@ -158,10 +159,10 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
 
                         val bgColor by animateColorAsState(
                             targetValue = when {
-                                future -> C.surface
-                                full -> C.green
-                                partial -> C.amber
-                                else -> C.card
+                                future -> colors.surface
+                                full -> colors.green
+                                partial -> colors.amber
+                                else -> colors.card
                             },
                             animationSpec = tween(200),
                             label = "cell_bg"
@@ -186,9 +187,9 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                             contentAlignment = Alignment.Center
                         ) {
                             when {
-                                future -> Text("—", color = C.dim, fontSize = 12.sp)
-                                full -> Text("✓", color = Color(0xFF0F172A), fontSize = 16.sp, fontWeight = FontWeight.Black)
-                                partial -> Text("½", color = Color(0xFF0F172A), fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
+                                future -> Text("—", color = colors.dim, fontSize = 12.sp)
+                                full -> Text("✓", color = ClearrColors.BrandText, fontSize = 16.sp, fontWeight = FontWeight.Black)
+                                partial -> Text("½", color = ClearrColors.BrandText, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
                             }
                         }
                     }
@@ -202,7 +203,7 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
 @Composable
 private fun TrackerGridPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
+        val colors = LocalDuesColors.current
         TrackerGrid(
             d = TrackerLayoutData(
                 members = emptyList(),
@@ -217,7 +218,7 @@ private fun TrackerGridPreview() {
                 onCellLongPress = { _, _ -> },
                 onMemberTap = {},
                 onMemberLongPress = {},
-                C = C
+                colors = colors
             )
         )
     }

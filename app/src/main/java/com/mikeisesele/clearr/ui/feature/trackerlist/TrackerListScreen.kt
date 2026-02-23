@@ -23,6 +23,8 @@ import com.mikeisesele.clearr.data.model.TrackerSummary
 import com.mikeisesele.clearr.ui.feature.trackerlist.components.EmptyTrackerState
 import com.mikeisesele.clearr.ui.feature.trackerlist.components.TrackerCard
 import com.mikeisesele.clearr.ui.feature.trackerlist.components.primaryColor
+import com.mikeisesele.clearr.ui.theme.ClearrColors
+import com.mikeisesele.clearr.ui.theme.ClearrDS
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -39,6 +41,9 @@ fun TrackerListScreen(
     onSettingsClick: () -> Unit,
     onCreateTracker: () -> Unit
 ) {
+    val spacing = ClearrDS.spacing
+    val radii = ClearrDS.radii
+    val sizes = ClearrDS.sizes
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var deleteTarget by remember { mutableStateOf<TrackerSummary?>(null) }
@@ -53,7 +58,7 @@ fun TrackerListScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF7F7FB))
+            .background(ClearrColors.BrandBackground)
     ) {
         PullToRefreshBox(
             isRefreshing = isRefreshing,
@@ -70,11 +75,11 @@ fun TrackerListScreen(
             Column(modifier = Modifier.fillMaxSize()) {
 
                 // ── Header ────────────────────────────────────────────────────
-                Surface(color = Color.White, shadowElevation = 0.dp) {
+                Surface(color = ClearrColors.Surface, shadowElevation = 0.dp) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 0.dp)
+                            .padding(start = spacing.xl, end = spacing.xl, top = spacing.lg - 2.dp, bottom = 0.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -86,13 +91,13 @@ fun TrackerListScreen(
                                     "My Trackers",
                                     style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = Color(0xFF1A1A2E),
+                                    color = ClearrColors.BrandText,
                                     fontSize = 22.sp
                                 )
                             }
                             IconPill(icon = "⚙️", onClick = onSettingsClick)
                         }
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(spacing.lg - 2.dp))
                     }
                 }
 
@@ -130,9 +135,9 @@ fun TrackerListScreen(
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxSize()
-                                                .clip(RoundedCornerShape(16.dp))
-                                                .background(Color(0xFFEF4444))
-                                                .padding(horizontal = 20.dp),
+                                                .clip(RoundedCornerShape(radii.lg))
+                                                .background(ClearrColors.BrandDanger)
+                                                .padding(horizontal = spacing.xl),
                                             contentAlignment = Alignment.CenterEnd
                                         ) {
                                             Text("Delete", color = Color.White, fontWeight = FontWeight.Bold)
@@ -164,13 +169,13 @@ fun TrackerListScreen(
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 20.dp, bottom = 24.dp),
+                        .padding(end = spacing.xl, bottom = spacing.xxl),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.md - 2.dp)
                 ) {
                     Surface(
-                        color = Color(0xFF1A1A2E),
-                        shape = RoundedCornerShape(20.dp),
+                        color = ClearrColors.BrandText,
+                        shape = RoundedCornerShape(radii.xl),
                         shadowElevation = 8.dp
                     ) {
                         Text(
@@ -178,13 +183,13 @@ fun TrackerListScreen(
                             color = Color.White,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                            modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.md - 2.dp)
                         )
                     }
                     Box(
                         modifier = Modifier
-                            .size(52.dp)
-                            .clip(RoundedCornerShape(16.dp))
+                            .size(sizes.fab)
+                            .clip(RoundedCornerShape(radii.lg))
                             .background(primaryColor)
                             .clickable { onCreateTracker() },
                         contentAlignment = Alignment.Center
@@ -207,7 +212,7 @@ fun TrackerListScreen(
                         viewModel.deleteTracker(summary.trackerId)
                         deleteTarget = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+                    colors = ButtonDefaults.buttonColors(containerColor = ClearrColors.BrandDanger)
                 ) { Text("Delete") }
             },
             dismissButton = {
@@ -251,11 +256,13 @@ fun TrackerListScreen(
 
 @Composable
 private fun IconPill(icon: String, onClick: () -> Unit) {
+    val radii = ClearrDS.radii
+    val sizes = ClearrDS.sizes
     Box(
         modifier = Modifier
-            .size(36.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFFF4F3FF))
+            .size(sizes.chipHeight)
+            .clip(RoundedCornerShape(radii.sm + 2.dp))
+            .background(ClearrColors.VioletBg)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {

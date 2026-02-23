@@ -46,7 +46,7 @@ fun MemberDetailSheet(
     onDelete: () -> Unit,
     onBulkMarkPaid: (() -> Unit)? = null
 ) {
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
     val context = LocalContext.current
     val currentMonth = currentMonth()
 
@@ -64,8 +64,8 @@ fun MemberDetailSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = C.surface,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = C.muted) }
+        containerColor = colors.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = colors.muted) }
     ) {
         Column(
             modifier = Modifier
@@ -85,29 +85,29 @@ fun MemberDetailSheet(
                         member.name,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = C.text
+                        color = colors.text
                     )
                     if (!member.phone.isNullOrBlank()) {
-                        Text(member.phone, style = MaterialTheme.typography.bodyMedium, color = C.muted)
+                        Text(member.phone, style = MaterialTheme.typography.bodyMedium, color = colors.muted)
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(onClick = onEdit) {
-                        Text("Edit", color = C.accent)
+                        Text("Edit", color = colors.accent)
                     }
                     if (showBulkMarkPaid && onBulkMarkPaid != null) {
                         TextButton(onClick = onBulkMarkPaid) {
-                            Text("Mark Outstanding Paid", color = C.green)
+                            Text("Mark Outstanding Paid", color = colors.green)
                         }
                     }
                     TextButton(onClick = onArchiveToggle) {
                         Text(
                             if (member.isArchived) "Restore" else "Archive",
-                            color = if (member.isArchived) C.green else C.red
+                            color = if (member.isArchived) colors.green else colors.red
                         )
                     }
                     TextButton(onClick = onDelete) {
-                        Text("Delete", color = C.red)
+                        Text("Delete", color = colors.red)
                     }
                 }
             }
@@ -123,15 +123,15 @@ fun MemberDetailSheet(
                     modifier = Modifier.weight(1f),
                     label = "OUTSTANDING $selectedYear",
                     value = formatAmount(outstanding),
-                    valueColor = if (outstanding > 0) C.red else C.green,
-                    C = C
+                    valueColor = if (outstanding > 0) colors.red else colors.green,
+                    colors = colors
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
                     label = "PAID $selectedYear",
                     value = formatAmount(totalPaid),
-                    valueColor = C.green,
-                    C = C
+                    valueColor = colors.green,
+                    colors = colors
                 )
             }
 
@@ -162,7 +162,7 @@ fun MemberDetailSheet(
             Text(
                 "Payment History — $selectedYear",
                 style = MaterialTheme.typography.titleMedium,
-                color = C.text,
+                color = colors.text,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(8.dp))
@@ -171,10 +171,10 @@ fun MemberDetailSheet(
                 .sortedWith(compareBy({ it.monthIndex }, { it.paidAt }))
 
             if (historyEntries.isEmpty()) {
-                Text("No payments recorded for $selectedYear.", color = C.muted, style = MaterialTheme.typography.bodyMedium)
+                Text("No payments recorded for $selectedYear.", color = colors.muted, style = MaterialTheme.typography.bodyMedium)
             } else {
                 historyEntries.forEach { payment ->
-                    HorizontalDivider(color = C.border)
+                    HorizontalDivider(color = colors.border)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -185,19 +185,19 @@ fun MemberDetailSheet(
                             Text(
                                 "${MONTHS[payment.monthIndex]} $selectedYear",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = C.text,
+                                color = colors.text,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 formatTimestamp(payment.paidAt),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = C.muted
+                                color = colors.muted
                             )
                             if (!payment.note.isNullOrBlank()) {
                                 Text(
                                     payment.note,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = C.muted
+                                    color = colors.muted
                                 )
                             }
                         }
@@ -206,15 +206,15 @@ fun MemberDetailSheet(
                                 formatAmount(payment.amountPaid),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (payment.amountPaid >= payment.expectedAmount) C.green else C.amber
+                                color = if (payment.amountPaid >= payment.expectedAmount) colors.green else colors.amber
                             )
                             if (payment.amountPaid < payment.expectedAmount) {
-                                Text("partial", style = MaterialTheme.typography.labelSmall, color = C.amber)
+                                Text("partial", style = MaterialTheme.typography.labelSmall, color = colors.amber)
                             }
                         }
                     }
                 }
-                HorizontalDivider(color = C.border)
+                HorizontalDivider(color = colors.border)
             }
 
             Spacer(Modifier.height(16.dp))
@@ -228,15 +228,15 @@ private fun StatCard(
     label: String,
     value: String,
     valueColor: Color,
-    C: DuesColors
+    colors: DuesColors
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = C.card),
+        colors = CardDefaults.cardColors(containerColor = colors.card),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = C.muted)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = colors.muted)
             Spacer(Modifier.height(4.dp))
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = valueColor)
         }
@@ -247,21 +247,21 @@ private fun StatCard(
 @Composable
 private fun StatCardPreview() {
     ClearrTheme {
-        val C = com.mikeisesele.clearr.ui.theme.LocalDuesColors.current
+        val colors = com.mikeisesele.clearr.ui.theme.LocalDuesColors.current
         Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatCard(
                 modifier = Modifier.weight(1f),
                 label = "OUTSTANDING 2026",
                 value = "₦15,000",
-                valueColor = C.red,
-                C = C
+                valueColor = colors.red,
+                colors = colors
             )
             StatCard(
                 modifier = Modifier.weight(1f),
                 label = "PAID 2026",
                 value = "₦45,000",
-                valueColor = C.green,
-                C = C
+                valueColor = colors.green,
+                colors = colors
             )
         }
     }

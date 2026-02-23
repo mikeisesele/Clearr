@@ -21,6 +21,7 @@ import com.mikeisesele.clearr.ui.commons.util.MONTHS
 import com.mikeisesele.clearr.ui.commons.util.buildWhatsAppLink
 import com.mikeisesele.clearr.ui.commons.util.currentMonth
 import com.mikeisesele.clearr.ui.commons.util.formatAmount
+import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.DuesColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
@@ -32,10 +33,10 @@ internal fun TopDefaultersCard(
     dueAmount: Double,
     year: Int,
     context: android.content.Context,
-    C: DuesColors = LocalDuesColors.current
+    colors: DuesColors = LocalDuesColors.current
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = C.card),
+        colors = CardDefaults.cardColors(containerColor = colors.card),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -44,7 +45,7 @@ internal fun TopDefaultersCard(
                 "🏆 Top Defaulters",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = C.text
+                color = colors.text
             )
             Spacer(Modifier.height(12.dp))
 
@@ -52,11 +53,11 @@ internal fun TopDefaultersCard(
                 Text(
                     "🎉 No defaulters! Everyone is up to date.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = C.green
+                    color = colors.green
                 )
             } else {
                 defaulters.take(5).forEachIndexed { i, (member, unpaidCount) ->
-                    if (i > 0) HorizontalDivider(color = C.border)
+                    if (i > 0) HorizontalDivider(color = colors.border)
                     Row(
                         modifier = Modifier.padding(vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -68,9 +69,9 @@ internal fun TopDefaultersCard(
                                 .clip(CircleShape)
                                 .background(
                                     when (i) {
-                                        0 -> C.red
-                                        1 -> C.amber
-                                        else -> C.dim
+                                        0 -> colors.red
+                                        1 -> colors.amber
+                                        else -> colors.dim
                                     }
                                 ),
                             contentAlignment = Alignment.Center
@@ -79,15 +80,15 @@ internal fun TopDefaultersCard(
                                 "${i + 1}",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = Color(0xFF0F172A)
+                                color = ClearrColors.BrandText
                             )
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(member.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = C.text)
+                            Text(member.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = colors.text)
                             Text(
                                 "$unpaidCount month${if (unpaidCount > 1) "s" else ""} unpaid · ${formatAmount(unpaidCount * dueAmount)} owed",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = C.muted
+                                color = colors.muted
                             )
                         }
                         if (!member.phone.isNullOrBlank()) {
@@ -114,13 +115,13 @@ internal fun TopDefaultersCard(
 @Composable
 private fun TopDefaultersCardPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
+        val colors = LocalDuesColors.current
         TopDefaultersCard(
             defaulters = emptyList(),
             dueAmount = 5000.0,
             year = 2026,
             context = androidx.compose.ui.platform.LocalContext.current,
-            C = C
+            colors = colors
         )
     }
 }

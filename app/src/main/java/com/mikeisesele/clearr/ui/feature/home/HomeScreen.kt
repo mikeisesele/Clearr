@@ -55,7 +55,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
     val context = LocalContext.current
     val view = LocalView.current
 
@@ -119,10 +119,10 @@ fun HomeScreen(
         onCellLongPress = { m, mi -> partialTarget = m to mi },
         onMemberTap = { memberDetail = it },
         onMemberLongPress = { contextTarget = it },
-        C = C
+        colors = colors
     )
 
-    Box(modifier = Modifier.fillMaxSize().background(C.bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
 
         Column(modifier = Modifier.fillMaxSize()) {
 
@@ -135,7 +135,7 @@ fun HomeScreen(
                 onBack = onBack,
                 onLayoutClick = { showLayoutSheet = true },
                 onShareClick = { shareScreenshot(context, view) },
-                C = C
+                colors = colors
             )
 
             // ── Stats ─────────────────────────────────────────────────────────
@@ -144,7 +144,7 @@ fun HomeScreen(
                 totalExpected = totalExpected,
                 outstanding = outstanding,
                 pct = pct,
-                C = C
+                colors = colors
             )
 
             // ── Layout area ───────────────────────────────────────────────────
@@ -173,7 +173,7 @@ fun HomeScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 20.dp),
-            containerColor = C.accent,
+            containerColor = colors.accent,
             contentColor = Color.White,
             shape = CircleShape,
             elevation = FloatingActionButtonDefaults.elevation(4.dp, 6.dp)
@@ -266,7 +266,7 @@ fun HomeScreen(
     }
 
     contextTarget?.let { member ->
-        val C2 = LocalDuesColors.current
+        val previewColors = LocalDuesColors.current
         AlertDialog(
             onDismissRequest = { contextTarget = null },
             containerColor = C2.surface,
@@ -294,7 +294,7 @@ fun HomeScreen(
     }
 
     deleteTarget?.let { member ->
-        val C2 = LocalDuesColors.current
+        val previewColors = LocalDuesColors.current
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
             containerColor = C2.surface,
@@ -314,13 +314,13 @@ fun HomeScreen(
     if (showLayoutSheet) {
         ModalBottomSheet(
             onDismissRequest = { showLayoutSheet = false },
-            containerColor = C.surface
+            containerColor = colors.surface
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Choose Layout", style = MaterialTheme.typography.titleMedium, color = C.text)
+                Text("Choose Layout", style = MaterialTheme.typography.titleMedium, color = colors.text)
                 listOf(
                     LayoutStyle.GRID to "⊞ Grid",
                     LayoutStyle.KANBAN to "🗂 Kanban",
@@ -329,7 +329,7 @@ fun HomeScreen(
                 ).forEach { (style, label) ->
                     val selected = state.layoutStyle == style
                     Surface(
-                        color = if (selected) C.accent.copy(alpha = 0.12f) else C.card,
+                        color = if (selected) colors.accent.copy(alpha = 0.12f) else colors.card,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth().clickable {
                             viewModel.setLayoutStyleForCurrentTracker(style)
@@ -341,8 +341,8 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(label, color = if (selected) C.accent else C.text)
-                            if (selected) Text("✓", color = C.accent)
+                            Text(label, color = if (selected) colors.accent else colors.text)
+                            if (selected) Text("✓", color = colors.accent)
                         }
                     }
                 }
@@ -373,9 +373,9 @@ private fun shareScreenshot(
 @Composable
 private fun HomeScreenPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
-        Box(modifier = Modifier.fillMaxSize().background(C.bg)) {
-            StatsRow(totalCollected = 45000.0, totalExpected = 60000.0, outstanding = 15000.0, pct = 75, C = C)
+        val colors = LocalDuesColors.current
+        Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+            StatsRow(totalCollected = 45000.0, totalExpected = 60000.0, outstanding = 15000.0, pct = 75, colors = colors)
         }
     }
 }

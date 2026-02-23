@@ -21,22 +21,22 @@ internal fun StatsRow(
     totalExpected: Double,
     outstanding: Double,
     pct: Int,
-    C: DuesColors = LocalDuesColors.current
+    colors: DuesColors = LocalDuesColors.current
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             listOf(
-                Triple("COLLECTED", formatAmount(totalCollected), C.green),
-                Triple("EXPECTED", formatAmount(totalExpected), C.text),
-                Triple("OUTSTANDING", formatAmount(outstanding), if (outstanding > 0) C.red else C.green)
+                Triple("COLLECTED", formatAmount(totalCollected), colors.green),
+                Triple("EXPECTED", formatAmount(totalExpected), colors.text),
+                Triple("OUTSTANDING", formatAmount(outstanding), if (outstanding > 0) colors.red else colors.green)
             ).forEach { (label, value, color) ->
                 Card(
                     modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = C.card),
+                    colors = CardDefaults.cardColors(containerColor = colors.card),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(modifier = Modifier.padding(10.dp)) {
-                        Text(label, style = MaterialTheme.typography.labelSmall, color = C.muted)
+                        Text(label, style = MaterialTheme.typography.labelSmall, color = colors.muted)
                         Spacer(Modifier.height(3.dp))
                         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.ExtraBold, color = color)
                     }
@@ -47,13 +47,13 @@ internal fun StatsRow(
         LinearProgressIndicator(
             progress = { pct / 100f },
             modifier = Modifier.fillMaxWidth().height(5.dp).clip(RoundedCornerShape(3.dp)),
-            color = C.green,
-            trackColor = C.border
+            color = colors.green,
+            trackColor = colors.border
         )
         Text(
             "$pct% collected",
             style = MaterialTheme.typography.labelSmall,
-            color = C.muted,
+            color = colors.muted,
             modifier = Modifier.align(Alignment.End).padding(top = 3.dp)
         )
     }
@@ -63,13 +63,13 @@ internal fun StatsRow(
 @Composable
 private fun StatsRowPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
+        val colors = LocalDuesColors.current
         StatsRow(
             totalCollected = 45000.0,
             totalExpected = 60000.0,
             outstanding = 15000.0,
             pct = 75,
-            C = C
+            colors = colors
         )
     }
 }

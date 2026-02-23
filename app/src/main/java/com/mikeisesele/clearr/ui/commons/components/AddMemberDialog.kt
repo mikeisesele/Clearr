@@ -21,7 +21,7 @@ fun AddMemberDialog(
     onDismiss: () -> Unit,
     onAdd: (name: String, phone: String?) -> Unit
 ) {
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
@@ -30,9 +30,9 @@ fun AddMemberDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = C.surface,
+        containerColor = colors.surface,
         title = {
-            Text("Add Member", color = C.text, style = MaterialTheme.typography.titleLarge)
+            Text("Add Member", color = colors.text, style = MaterialTheme.typography.titleLarge)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -67,26 +67,26 @@ fun AddMemberDialog(
                     }
                 },
                 enabled = name.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = C.accent)
+                colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
             ) { Text("Add") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = C.muted) }
+            TextButton(onClick = onDismiss) { Text("Cancel", color = colors.muted) }
         },
         shape = RoundedCornerShape(16.dp)
     )
 }
 
 @Composable
-private fun outlinedTextFieldColors(C: DuesColors) =
+private fun outlinedTextFieldColors(colors: DuesColors) =
     OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = C.accent,
-        unfocusedBorderColor = C.border,
-        focusedLabelColor = C.accent,
-        unfocusedLabelColor = C.muted,
-        focusedTextColor = C.text,
-        unfocusedTextColor = C.text,
-        cursorColor = C.accent
+        focusedBorderColor = colors.accent,
+        unfocusedBorderColor = colors.border,
+        focusedLabelColor = colors.accent,
+        unfocusedLabelColor = colors.muted,
+        focusedTextColor = colors.text,
+        unfocusedTextColor = colors.text,
+        cursorColor = colors.accent
     )
 
 @Preview(showBackground = true)

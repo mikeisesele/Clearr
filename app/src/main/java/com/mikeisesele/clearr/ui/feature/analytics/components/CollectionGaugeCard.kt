@@ -25,10 +25,10 @@ internal fun CollectionGaugeCard(
     pct: Int,
     totalCollected: Double,
     outstanding: Double,
-    C: DuesColors = LocalDuesColors.current
+    colors: DuesColors = LocalDuesColors.current
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = C.card),
+        colors = CardDefaults.cardColors(containerColor = colors.card),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -46,14 +46,14 @@ internal fun CollectionGaugeCard(
                 Canvas(modifier = Modifier.size(90.dp)) {
                     val strokeWidth = 14.dp.toPx()
                     drawArc(
-                        color = C.border,
+                        color = colors.border,
                         startAngle = -90f,
                         sweepAngle = 360f,
                         useCenter = false,
                         style = Stroke(strokeWidth, cap = StrokeCap.Round)
                     )
                     drawArc(
-                        color = C.accent,
+                        color = colors.accent,
                         startAngle = -90f,
                         sweepAngle = sweepAngle,
                         useCenter = false,
@@ -64,19 +64,19 @@ internal fun CollectionGaugeCard(
                     "$pct%",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = C.text
+                    color = colors.text
                 )
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Collection Rate", style = MaterialTheme.typography.labelMedium, color = C.muted)
+                Text("Collection Rate", style = MaterialTheme.typography.labelMedium, color = colors.muted)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(C.green))
-                    Text("Collected: ${formatAmount(totalCollected)}", style = MaterialTheme.typography.bodyMedium, color = C.green)
+                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(colors.green))
+                    Text("Collected: ${formatAmount(totalCollected)}", style = MaterialTheme.typography.bodyMedium, color = colors.green)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(C.red))
-                    Text("Outstanding: ${formatAmount(outstanding)}", style = MaterialTheme.typography.bodyMedium, color = C.red)
+                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(colors.red))
+                    Text("Outstanding: ${formatAmount(outstanding)}", style = MaterialTheme.typography.bodyMedium, color = colors.red)
                 }
             }
         }
@@ -87,7 +87,7 @@ internal fun CollectionGaugeCard(
 @Composable
 private fun CollectionGaugeCardPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
-        CollectionGaugeCard(pct = 75, totalCollected = 45000.0, outstanding = 15000.0, C = C)
+        val colors = LocalDuesColors.current
+        CollectionGaugeCard(pct = 75, totalCollected = 45000.0, outstanding = 15000.0, colors = colors)
     }
 }

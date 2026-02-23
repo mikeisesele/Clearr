@@ -26,7 +26,7 @@ fun PartialPaymentDialog(
     onDismiss: () -> Unit,
     onRecord: (amount: Double, note: String?) -> Unit
 ) {
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
     var amountText by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     val remaining = (dueAmount - alreadyPaid).coerceAtLeast(0.0)
@@ -39,22 +39,22 @@ fun PartialPaymentDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = C.surface,
+        containerColor = colors.surface,
         title = {
-            Text("Partial Payment", color = C.text, style = MaterialTheme.typography.titleLarge)
+            Text("Partial Payment", color = colors.text, style = MaterialTheme.typography.titleLarge)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     "${memberName} · ${MONTHS[monthIndex]} $year",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = C.muted
+                    color = colors.muted
                 )
                 if (alreadyPaid > 0) {
                     Text(
                         "Already paid: ${formatAmount(alreadyPaid)} · Remaining: ${formatAmount(remaining)}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = C.amber
+                        color = colors.amber
                     )
                 }
                 OutlinedTextField(
@@ -67,13 +67,13 @@ fun PartialPaymentDialog(
                         .focusRequester(focusRequester),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = C.accent,
-                        unfocusedBorderColor = C.border,
-                        focusedLabelColor = C.accent,
-                        unfocusedLabelColor = C.muted,
-                        focusedTextColor = C.text,
-                        unfocusedTextColor = C.text,
-                        cursorColor = C.accent
+                        focusedBorderColor = colors.accent,
+                        unfocusedBorderColor = colors.border,
+                        focusedLabelColor = colors.accent,
+                        unfocusedLabelColor = colors.muted,
+                        focusedTextColor = colors.text,
+                        unfocusedTextColor = colors.text,
+                        cursorColor = colors.accent
                     )
                 )
                 OutlinedTextField(
@@ -83,13 +83,13 @@ fun PartialPaymentDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = C.accent,
-                        unfocusedBorderColor = C.border,
-                        focusedLabelColor = C.accent,
-                        unfocusedLabelColor = C.muted,
-                        focusedTextColor = C.text,
-                        unfocusedTextColor = C.text,
-                        cursorColor = C.accent
+                        focusedBorderColor = colors.accent,
+                        unfocusedBorderColor = colors.border,
+                        focusedLabelColor = colors.accent,
+                        unfocusedLabelColor = colors.muted,
+                        focusedTextColor = colors.text,
+                        unfocusedTextColor = colors.text,
+                        cursorColor = colors.accent
                     )
                 )
             }
@@ -103,11 +103,11 @@ fun PartialPaymentDialog(
                     }
                 },
                 enabled = isValid,
-                colors = ButtonDefaults.buttonColors(containerColor = C.accent)
+                colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
             ) { Text("Record") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = C.muted) }
+            TextButton(onClick = onDismiss) { Text("Cancel", color = colors.muted) }
         },
         shape = RoundedCornerShape(16.dp)
     )

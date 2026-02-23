@@ -40,7 +40,7 @@ fun SettingsScreen(
     onThemeChange: (ThemeMode) -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
 
     val currentYearConfig = state.yearConfigs.find { it.year == state.selectedYear }
     val dueAmount = state.currentTrackerDueAmount ?: currentYearConfig?.dueAmountPerMonth ?: 5000.0
@@ -56,52 +56,52 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(C.bg)
+            .background(colors.bg)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = C.text)
+        Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = colors.text)
 
         // ── Active Year ───────────────────────────────────────────────────────
-        SectionCard(title = "Active Year", C = C) {
-            Text("Applies to the tracker, reminders, and analytics.", style = MaterialTheme.typography.bodySmall, color = C.muted)
+        SectionCard(title = "Active Year", colors = colors) {
+            Text("Applies to the tracker, reminders, and analytics.", style = MaterialTheme.typography.bodySmall, color = colors.muted)
             Spacer(Modifier.height(10.dp))
             Box {
                 OutlinedButton(
                     onClick = { yearMenuExpanded = true },
                     modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, C.accent),
+                    border = BorderStroke(1.dp, colors.accent),
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     Text(
                         "${state.selectedYear}${if (state.selectedYear == cy) "  (current)" else ""}",
-                        color = C.text,
+                        color = colors.text,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.weight(1f)
                     )
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = C.accent)
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = colors.accent)
                 }
                 DropdownMenu(
                     expanded = yearMenuExpanded,
                     onDismissRequest = { yearMenuExpanded = false },
-                    modifier = Modifier.background(C.card)
+                    modifier = Modifier.background(colors.card)
                 ) {
                     availableYears.forEach { y ->
                         DropdownMenuItem(
                             text = {
                                 Text(
                                     if (y == cy) "$y  ●" else "$y",
-                                    color = if (y == state.selectedYear) C.accent else C.text,
+                                    color = if (y == state.selectedYear) colors.accent else colors.text,
                                     fontWeight = if (y == state.selectedYear) FontWeight.Bold else FontWeight.Normal
                                 )
                             },
                             onClick = { viewModel.selectYear(y); yearMenuExpanded = false }
                         )
                     }
-                    HorizontalDivider(color = C.border)
+                    HorizontalDivider(color = colors.border)
                     DropdownMenuItem(
-                        text = { Text("＋ Start ${state.selectedYear + 1}", color = C.accent, fontWeight = FontWeight.SemiBold) },
+                        text = { Text("＋ Start ${state.selectedYear + 1}", color = colors.accent, fontWeight = FontWeight.SemiBold) },
                         onClick = { viewModel.startNewYear(state.selectedYear); yearMenuExpanded = false }
                     )
                 }
@@ -109,7 +109,7 @@ fun SettingsScreen(
         }
 
         // ── Due Amount ────────────────────────────────────────────────────────
-        SectionCard(title = "Due Amount", C = C) {
+        SectionCard(title = "Due Amount", colors = colors) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -123,13 +123,13 @@ fun SettingsScreen(
                     modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = C.accent,
-                        unfocusedBorderColor = C.border,
-                        focusedLabelColor = C.accent,
-                        unfocusedLabelColor = C.muted,
-                        focusedTextColor = C.text,
-                        unfocusedTextColor = C.text,
-                        cursorColor = C.accent
+                        focusedBorderColor = colors.accent,
+                        unfocusedBorderColor = colors.border,
+                        focusedLabelColor = colors.accent,
+                        unfocusedLabelColor = colors.muted,
+                        focusedTextColor = colors.text,
+                        unfocusedTextColor = colors.text,
+                        cursorColor = colors.accent
                     )
                 )
                 Button(
@@ -138,24 +138,24 @@ fun SettingsScreen(
                         if (amt != null && amt > 0) viewModel.updateDueAmount(state.selectedYear, amt)
                     },
                     enabled = dueEditable,
-                    colors = ButtonDefaults.buttonColors(containerColor = C.accent)
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
                 ) { Text("Save") }
             }
             Spacer(Modifier.height(4.dp))
-            Text("Current: ${formatAmount(dueAmount)} / member / period", style = MaterialTheme.typography.bodySmall, color = C.muted)
+            Text("Current: ${formatAmount(dueAmount)} / member / period", style = MaterialTheme.typography.bodySmall, color = colors.muted)
             if (dueEditable) {
-                Text("Applies only to the current Dues tracker.", style = MaterialTheme.typography.bodySmall, color = C.dim)
+                Text("Applies only to the current Dues tracker.", style = MaterialTheme.typography.bodySmall, color = colors.dim)
             } else {
-                Text("Open a Dues tracker to edit due amount.", style = MaterialTheme.typography.bodySmall, color = C.dim)
+                Text("Open a Dues tracker to edit due amount.", style = MaterialTheme.typography.bodySmall, color = colors.dim)
             }
         }
 
         // ── Layout Style ──────────────────────────────────────────────────────
-        SectionCard(title = "Tracker Layout", C = C) {
+        SectionCard(title = "Tracker Layout", colors = colors) {
             Text(
                 "Choose how the current tracker screen displays data. Changes apply instantly to that tracker only.",
                 style = MaterialTheme.typography.bodySmall,
-                color = C.muted
+                color = colors.muted
             )
             Spacer(Modifier.height(12.dp))
 
@@ -170,8 +170,8 @@ fun SettingsScreen(
                 layoutOptions.forEach { (style, info) ->
                     val (icon, title, desc) = info
                     val selected = state.layoutStyle == style
-                    val borderColor = if (selected) C.accent else C.border
-                    val bgColor = if (selected) C.accent.copy(alpha = 0.08f) else Color.Transparent
+                    val borderColor = if (selected) colors.accent else colors.border
+                    val bgColor = if (selected) colors.accent.copy(alpha = 0.08f) else Color.Transparent
 
                     Row(
                         modifier = Modifier
@@ -186,11 +186,11 @@ fun SettingsScreen(
                     ) {
                         Text(icon, fontSize = 22.sp)
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = if (selected) C.accent else C.text)
-                            Text(desc, style = MaterialTheme.typography.labelSmall, color = C.muted)
+                            Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = if (selected) colors.accent else colors.text)
+                            Text(desc, style = MaterialTheme.typography.labelSmall, color = colors.muted)
                         }
                         if (selected) {
-                            Icon(Icons.Default.Check, contentDescription = null, tint = C.accent, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Check, contentDescription = null, tint = colors.accent, modifier = Modifier.size(18.dp))
                         }
                     }
                 }
@@ -198,8 +198,8 @@ fun SettingsScreen(
         }
 
         // ── Appearance ────────────────────────────────────────────────────────
-        SectionCard(title = "Appearance", C = C) {
-            Text("Theme", style = MaterialTheme.typography.bodyMedium, color = C.muted)
+        SectionCard(title = "Appearance", colors = colors) {
+            Text("Theme", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ThemeMode.entries.forEach { mode ->
@@ -209,10 +209,10 @@ fun SettingsScreen(
                         onClick = { viewModel.setThemeMode(mode); onThemeChange(mode) },
                         label = { Text(mode.name.lowercase().replaceFirstChar { it.uppercase() }) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = C.accent,
+                            selectedContainerColor = colors.accent,
                             selectedLabelColor = Color.White,
-                            containerColor = C.card,
-                            labelColor = C.muted
+                            containerColor = colors.card,
+                            labelColor = colors.muted
                         )
                     )
                 }
@@ -220,23 +220,23 @@ fun SettingsScreen(
         }
 
         // ── App Info ──────────────────────────────────────────────────────────
-        SectionCard(title = "App Info", C = C) {
+        SectionCard(title = "App Info", colors = colors) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Version", style = MaterialTheme.typography.bodyMedium, color = C.text)
-                Text("1.0", style = MaterialTheme.typography.bodyMedium, color = C.muted)
+                Text("Version", style = MaterialTheme.typography.bodyMedium, color = colors.text)
+                Text("1.0", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
             }
             Spacer(Modifier.height(12.dp))
             OutlinedButton(
                 onClick = { viewModel.resetSetup() },
-                border = BorderStroke(1.dp, C.accent),
+                border = BorderStroke(1.dp, colors.accent),
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("⚙️  Re-run Setup Wizard", color = C.accent) }
+            ) { Text("⚙️  Re-run Setup Wizard", color = colors.accent) }
             Spacer(Modifier.height(8.dp))
             OutlinedButton(
                 onClick = { showResetDialog = true },
-                border = BorderStroke(1.dp, C.red),
+                border = BorderStroke(1.dp, colors.red),
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Reset All Data", color = C.red) }
+            ) { Text("Reset All Data", color = colors.red) }
         }
 
         Spacer(Modifier.height(80.dp))
@@ -245,13 +245,13 @@ fun SettingsScreen(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            containerColor = C.surface,
-            title = { Text("Reset All Data?", color = C.text) },
-            text = { Text("This will permanently delete all members, payments, and configuration. This action cannot be undone.", color = C.muted) },
+            containerColor = colors.surface,
+            title = { Text("Reset All Data?", color = colors.text) },
+            text = { Text("This will permanently delete all members, payments, and configuration. This action cannot be undone.", color = colors.muted) },
             confirmButton = {
-                Button(onClick = { showResetDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = C.red)) { Text("Reset") }
+                Button(onClick = { showResetDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = colors.red)) { Text("Reset") }
             },
-            dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text("Cancel", color = C.muted) } },
+            dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text("Cancel", color = colors.muted) } },
             shape = RoundedCornerShape(16.dp)
         )
     }
@@ -261,14 +261,14 @@ fun SettingsScreen(
 @Composable
 private fun SettingsScreenPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
+        val colors = LocalDuesColors.current
         Column(
-            modifier = Modifier.fillMaxSize().background(C.bg).padding(16.dp),
+            modifier = Modifier.fillMaxSize().background(colors.bg).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = C.text)
-            SectionCard(title = "Active Year", C = C) {
-                Text("2026", color = C.text)
+            Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = colors.text)
+            SectionCard(title = "Active Year", colors = colors) {
+                Text("2026", color = colors.text)
             }
         }
     }

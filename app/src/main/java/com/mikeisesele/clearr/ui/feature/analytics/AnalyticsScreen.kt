@@ -24,7 +24,7 @@ fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
     val context = LocalContext.current
 
     val dueAmount = state.yearConfig?.dueAmountPerMonth ?: 5000.0
@@ -59,7 +59,7 @@ fun AnalyticsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(C.bg)
+            .background(colors.bg)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -68,10 +68,10 @@ fun AnalyticsScreen(
             "Analytics — ${state.selectedYear}",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.ExtraBold,
-            color = C.text
+            color = colors.text
         )
 
-        CollectionGaugeCard(pct = pct, totalCollected = totalCollected, outstanding = outstanding, C = C)
+        CollectionGaugeCard(pct = pct, totalCollected = totalCollected, outstanding = outstanding, colors = colors)
 
         MonthlyBarChartCard(
             selectedYear = state.selectedYear,
@@ -79,7 +79,7 @@ fun AnalyticsScreen(
             paymentMap = paymentMap,
             prevPaymentMap = prevPaymentMap,
             dueAmount = dueAmount,
-            C = C
+            colors = colors
         )
 
         YearSummarySection(
@@ -88,7 +88,7 @@ fun AnalyticsScreen(
             currentExpected = totalExpected,
             currentPct = pct,
             activeMemberCount = activeMembers.size,
-            C = C
+            colors = colors
         )
 
         TopDefaultersCard(
@@ -96,7 +96,7 @@ fun AnalyticsScreen(
             dueAmount = dueAmount,
             year = state.selectedYear,
             context = context,
-            C = C
+            colors = colors
         )
 
         Spacer(Modifier.height(80.dp))
@@ -107,16 +107,16 @@ fun AnalyticsScreen(
 @Composable
 private fun AnalyticsScreenPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
+        val colors = LocalDuesColors.current
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(C.bg)
+                .background(colors.bg)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Analytics — 2026", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = C.text)
-            CollectionGaugeCard(pct = 75, totalCollected = 45000.0, outstanding = 15000.0, C = C)
+            Text("Analytics — 2026", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = colors.text)
+            CollectionGaugeCard(pct = 75, totalCollected = 45000.0, outstanding = 15000.0, colors = colors)
         }
     }
 }

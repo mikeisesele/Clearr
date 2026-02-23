@@ -40,7 +40,7 @@ fun SetupWizardScreen(
     onSetupComplete: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
     val isDues = state.trackerType == TrackerType.DUES
     val totalSteps = if (isDues) 7 else 6
     val displayStep = if (!isDues && state.step >= 5) state.step - 1 else state.step
@@ -53,13 +53,13 @@ fun SetupWizardScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(C.bg)
+            .background(colors.bg)
     ) {
         // ── Progress bar ──────────────────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(C.surface)
+                .background(colors.surface)
                 .padding(horizontal = 24.dp, vertical = 14.dp)
         ) {
             Row(
@@ -71,12 +71,12 @@ fun SetupWizardScreen(
                     "Setup Wizard",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = C.text
+                    color = colors.text
                 )
                 Text(
                     "Step ${displayStep + 1} of $totalSteps",
                     style = MaterialTheme.typography.bodySmall,
-                    color = C.muted
+                    color = colors.muted
                 )
             }
             Spacer(Modifier.height(10.dp))
@@ -86,8 +86,8 @@ fun SetupWizardScreen(
                     .fillMaxWidth()
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp)),
-                color = C.accent,
-                trackColor = C.border
+                color = colors.accent,
+                trackColor = colors.border
             )
             Spacer(Modifier.height(10.dp))
             // Step dots
@@ -97,13 +97,13 @@ fun SetupWizardScreen(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(if (i <= displayStep) C.accent else C.border)
+                            .background(if (i <= displayStep) colors.accent else colors.border)
                     )
                 }
             }
         }
 
-        HorizontalDivider(color = C.border)
+        HorizontalDivider(color = colors.border)
 
         // ── Step content ──────────────────────────────────────────────────────
         Column(
@@ -125,7 +125,7 @@ fun SetupWizardScreen(
                 label = "wizard_step"
             ) { step ->
                 when (step) {
-                    0 -> WelcomeStep(C = C)
+                    0 -> WelcomeStep(colors = colors)
                     1 -> GroupInfoStep(
                         groupName = state.groupName,
                         trackerName = state.trackerName,
@@ -137,29 +137,29 @@ fun SetupWizardScreen(
                         onAdminName = viewModel::setAdminName,
                         onAdminPhone = viewModel::setAdminPhone,
                         onLoadSampleMembers = viewModel::setLoadSampleMembers,
-                        C = C
+                        colors = colors
                     )
                     2 -> TrackerTypeStep(
                         selected = state.trackerType,
                         onSelect = viewModel::setTrackerType,
-                        C = C
+                        colors = colors
                     )
                     3 -> FrequencyStep(
                         selected = state.frequency,
                         onSelect = viewModel::setFrequency,
-                        C = C
+                        colors = colors
                     )
                     4 -> AmountStep(
                         amount = state.defaultAmount,
                         frequency = state.frequency,
                         trackerType = state.trackerType,
                         onAmount = viewModel::setDefaultAmount,
-                        C = C
+                        colors = colors
                     )
                     5 -> LayoutStyleStep(
                         selected = state.layoutStyle,
                         onSelect = viewModel::setLayoutStyle,
-                        C = C
+                        colors = colors
                     )
                     6 -> ReviewStep(
                         groupName = state.groupName,
@@ -169,15 +169,15 @@ fun SetupWizardScreen(
                         layoutStyle = state.layoutStyle,
                         defaultAmount = state.defaultAmount,
                         loadSampleMembers = state.loadSampleMembers,
-                        C = C
+                        colors = colors
                     )
-                    else -> WelcomeStep(C = C)
+                    else -> WelcomeStep(colors = colors)
                 }
             }
         }
 
         // ── Navigation buttons ────────────────────────────────────────────────
-        HorizontalDivider(color = C.border)
+        HorizontalDivider(color = colors.border)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -188,10 +188,10 @@ fun SetupWizardScreen(
             if (state.step > 0) {
                 OutlinedButton(
                     onClick = viewModel::prevStep,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, C.border)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.border)
                 ) {
-                    Icon(Icons.Default.ChevronLeft, contentDescription = null, tint = C.text)
-                    Text("Back", color = C.text)
+                    Icon(Icons.Default.ChevronLeft, contentDescription = null, tint = colors.text)
+                    Text("Back", color = colors.text)
                 }
             } else {
                 Spacer(Modifier.width(1.dp))
@@ -200,7 +200,7 @@ fun SetupWizardScreen(
             if (state.step < finalStep) {
                 Button(
                     onClick = viewModel::nextStep,
-                    colors = ButtonDefaults.buttonColors(containerColor = C.accent)
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
                 ) {
                     Text("Next", color = Color.White)
                     Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.White)
@@ -209,7 +209,7 @@ fun SetupWizardScreen(
                 Button(
                     onClick = { viewModel.finishSetup(onSetupComplete) },
                     enabled = !state.isSaving,
-                    colors = ButtonDefaults.buttonColors(containerColor = C.green)
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.green)
                 ) {
                     if (state.isSaving) {
                         CircularProgressIndicator(
@@ -230,7 +230,7 @@ fun SetupWizardScreen(
 
 // ── Step 0: Welcome ───────────────────────────────────────────────────────────
 @Composable
-private fun WelcomeStep(C: com.mikeisesele.clearr.ui.theme.DuesColors) {
+private fun WelcomeStep(colors: com.mikeisesele.clearr.ui.theme.DuesColors) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -242,13 +242,13 @@ private fun WelcomeStep(C: com.mikeisesele.clearr.ui.theme.DuesColors) {
             "Quick setup",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = C.text,
+            color = colors.text,
             textAlign = TextAlign.Center
         )
         Text(
             "Let's get your group set up in just a few steps. You can always change these settings later.",
             style = MaterialTheme.typography.bodyMedium,
-            color = C.muted,
+            color = colors.muted,
             textAlign = TextAlign.Center
         )
     }
@@ -267,7 +267,7 @@ private fun GroupInfoStep(
     onAdminName: (String) -> Unit,
     onAdminPhone: (String) -> Unit,
     onLoadSampleMembers: (Boolean) -> Unit,
-    C: com.mikeisesele.clearr.ui.theme.DuesColors
+    colors: com.mikeisesele.clearr.ui.theme.DuesColors
 ) {
     Column(
         modifier = Modifier
@@ -276,12 +276,12 @@ private fun GroupInfoStep(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         StepHeader("Group Information", "Tell us about your group.", C)
-        WizardTextField(value = groupName, onValueChange = onGroupName, label = "Group / Organisation Name", C = C)
-        WizardTextField(value = trackerName, onValueChange = onTrackerName, label = "Tracker Name (e.g. Task Tracker, Event Tracker)", C = C)
-        WizardTextField(value = adminName, onValueChange = onAdminName, label = "Admin Name (optional)", C = C)
-        WizardTextField(value = adminPhone, onValueChange = onAdminPhone, label = "Admin Phone (optional)", keyboardType = KeyboardType.Phone, C = C)
+        WizardTextField(value = groupName, onValueChange = onGroupName, label = "Group / Organisation Name", colors = colors)
+        WizardTextField(value = trackerName, onValueChange = onTrackerName, label = "Tracker Name (e.g. Task Tracker, Event Tracker)", colors = colors)
+        WizardTextField(value = adminName, onValueChange = onAdminName, label = "Admin Name (optional)", colors = colors)
+        WizardTextField(value = adminPhone, onValueChange = onAdminPhone, label = "Admin Phone (optional)", keyboardType = KeyboardType.Phone, colors = colors)
         Card(
-            colors = CardDefaults.cardColors(containerColor = C.card),
+            colors = CardDefaults.cardColors(containerColor = colors.card),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -291,13 +291,13 @@ private fun GroupInfoStep(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Load sample members (dev)", color = C.text, fontWeight = FontWeight.SemiBold)
-                    Text("Seeds names like Michael, Simon, Henry into new dues tracker.", style = MaterialTheme.typography.bodySmall, color = C.muted)
+                    Text("Load sample members (dev)", color = colors.text, fontWeight = FontWeight.SemiBold)
+                    Text("Seeds names like Michael, Simon, Henry into new dues tracker.", style = MaterialTheme.typography.bodySmall, color = colors.muted)
                 }
                 Switch(
                     checked = loadSampleMembers,
                     onCheckedChange = onLoadSampleMembers,
-                    colors = SwitchDefaults.colors(checkedTrackColor = C.accent, checkedThumbColor = Color.White)
+                    colors = SwitchDefaults.colors(checkedTrackColor = colors.accent, checkedThumbColor = Color.White)
                 )
             }
         }
@@ -309,7 +309,7 @@ private fun GroupInfoStep(
 private fun TrackerTypeStep(
     selected: TrackerType,
     onSelect: (TrackerType) -> Unit,
-    C: com.mikeisesele.clearr.ui.theme.DuesColors
+    colors: com.mikeisesele.clearr.ui.theme.DuesColors
 ) {
     val options = listOf(
         TrackerType.DUES to Pair("💰", "Financial Dues – Track monthly / periodic payments"),
@@ -328,7 +328,7 @@ private fun TrackerTypeStep(
                 description = desc,
                 selected = selected == type,
                 onClick = { onSelect(type) },
-                C = C
+                colors = colors
             )
         }
     }
@@ -339,7 +339,7 @@ private fun TrackerTypeStep(
 private fun FrequencyStep(
     selected: Frequency,
     onSelect: (Frequency) -> Unit,
-    C: com.mikeisesele.clearr.ui.theme.DuesColors
+    colors: com.mikeisesele.clearr.ui.theme.DuesColors
 ) {
     val options = listOf(
         Frequency.MONTHLY to Pair("📅", "Monthly – 12 periods per year (Jan – Dec)"),
@@ -360,7 +360,7 @@ private fun FrequencyStep(
                 description = desc,
                 selected = selected == freq,
                 onClick = { onSelect(freq) },
-                C = C
+                colors = colors
             )
         }
     }
@@ -373,7 +373,7 @@ private fun AmountStep(
     frequency: Frequency,
     trackerType: TrackerType,
     onAmount: (String) -> Unit,
-    C: com.mikeisesele.clearr.ui.theme.DuesColors
+    colors: com.mikeisesele.clearr.ui.theme.DuesColors
 ) {
     val label = when (trackerType) {
         TrackerType.DUES -> "Amount per ${frequency.name.lowercase().replaceFirstChar { it.uppercase() }} (₦)"
@@ -384,11 +384,11 @@ private fun AmountStep(
     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         StepHeader("Set the Amount", "How much is due per period per member?", C)
         if (skipAmount) {
-            Card(colors = CardDefaults.cardColors(containerColor = C.card), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+            Card(colors = CardDefaults.cardColors(containerColor = colors.card), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Text(
                     "No amount required for ${trackerType.name.lowercase()} tracking. You can skip this step.",
                     modifier = Modifier.padding(16.dp),
-                    color = C.muted,
+                    color = colors.muted,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -401,16 +401,16 @@ private fun AmountStep(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = C.accent,
-                    unfocusedBorderColor = C.border,
-                    focusedLabelColor = C.accent,
-                    unfocusedLabelColor = C.muted,
-                    focusedTextColor = C.text,
-                    unfocusedTextColor = C.text,
-                    cursorColor = C.accent
+                    focusedBorderColor = colors.accent,
+                    unfocusedBorderColor = colors.border,
+                    focusedLabelColor = colors.accent,
+                    unfocusedLabelColor = colors.muted,
+                    focusedTextColor = colors.text,
+                    unfocusedTextColor = colors.text,
+                    cursorColor = colors.accent
                 )
             )
-            Text("This becomes the default. You can override it per year in Settings.", style = MaterialTheme.typography.bodySmall, color = C.muted)
+            Text("This becomes the default. You can override it per year in Settings.", style = MaterialTheme.typography.bodySmall, color = colors.muted)
         }
     }
 }
@@ -420,7 +420,7 @@ private fun AmountStep(
 private fun LayoutStyleStep(
     selected: LayoutStyle,
     onSelect: (LayoutStyle) -> Unit,
-    C: com.mikeisesele.clearr.ui.theme.DuesColors
+    colors: com.mikeisesele.clearr.ui.theme.DuesColors
 ) {
     val options = listOf(
         LayoutStyle.GRID to Triple("⊞", "Grid", "Compact scrollable table – members × periods"),
@@ -432,7 +432,7 @@ private fun LayoutStyleStep(
         StepHeader("Choose a Layout Style", "Pick how you want to view your tracker. You can change this anytime.", C)
         options.forEach { (style, info) ->
             val (icon, title, desc) = info
-            SelectionCard(icon = icon, title = title, description = desc, selected = selected == style, onClick = { onSelect(style) }, C = C)
+            SelectionCard(icon = icon, title = title, description = desc, selected = selected == style, onClick = { onSelect(style) }, colors = colors)
         }
     }
 }
@@ -447,21 +447,21 @@ private fun ReviewStep(
     layoutStyle: LayoutStyle,
     defaultAmount: String,
     loadSampleMembers: Boolean,
-    C: com.mikeisesele.clearr.ui.theme.DuesColors
+    colors: com.mikeisesele.clearr.ui.theme.DuesColors
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         StepHeader("Review", "Confirm your setup before creating the tracker.", C)
-        Card(colors = CardDefaults.cardColors(containerColor = C.card), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+        Card(colors = CardDefaults.cardColors(containerColor = colors.card), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Group: ${groupName.ifBlank { "Unnamed Group" }}", color = C.text)
-                Text("Tracker: ${trackerName.ifBlank { "Unnamed Tracker" }}", color = C.text)
-                Text("Type: ${trackerType.name.lowercase().replaceFirstChar { it.uppercase() }}", color = C.text)
-                Text("Frequency: ${frequency.name.lowercase().replaceFirstChar { it.uppercase() }}", color = C.text)
+                Text("Group: ${groupName.ifBlank { "Unnamed Group" }}", color = colors.text)
+                Text("Tracker: ${trackerName.ifBlank { "Unnamed Tracker" }}", color = colors.text)
+                Text("Type: ${trackerType.name.lowercase().replaceFirstChar { it.uppercase() }}", color = colors.text)
+                Text("Frequency: ${frequency.name.lowercase().replaceFirstChar { it.uppercase() }}", color = colors.text)
                 if (trackerType == TrackerType.DUES) {
-                    Text("Amount: ₦${defaultAmount.ifBlank { "5000" }}", color = C.text)
-                    Text("Seed sample members: ${if (loadSampleMembers) "On" else "Off"}", color = C.text)
+                    Text("Amount: ₦${defaultAmount.ifBlank { "5000" }}", color = colors.text)
+                    Text("Seed sample members: ${if (loadSampleMembers) "On" else "Off"}", color = colors.text)
                 }
-                Text("Layout: ${layoutStyle.name.lowercase().replaceFirstChar { it.uppercase() }}", color = C.text)
+                Text("Layout: ${layoutStyle.name.lowercase().replaceFirstChar { it.uppercase() }}", color = colors.text)
             }
         }
     }
@@ -470,10 +470,10 @@ private fun ReviewStep(
 // ── Shared components ─────────────────────────────────────────────────────────
 
 @Composable
-private fun StepHeader(title: String, subtitle: String, C: com.mikeisesele.clearr.ui.theme.DuesColors) {
+private fun StepHeader(title: String, subtitle: String, colors: com.mikeisesele.clearr.ui.theme.DuesColors) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = C.text)
-        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = C.muted)
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = colors.text)
+        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.muted)
     }
 }
 
@@ -484,10 +484,10 @@ private fun SelectionCard(
     description: String,
     selected: Boolean,
     onClick: () -> Unit,
-    C: com.mikeisesele.clearr.ui.theme.DuesColors
+    colors: com.mikeisesele.clearr.ui.theme.DuesColors
 ) {
-    val borderColor = if (selected) C.accent else C.border
-    val bgColor = if (selected) C.accent.copy(alpha = 0.08f) else C.card
+    val borderColor = if (selected) colors.accent else colors.border
+    val bgColor = if (selected) colors.accent.copy(alpha = 0.08f) else colors.card
     Card(
         colors = CardDefaults.cardColors(containerColor = bgColor),
         shape = RoundedCornerShape(12.dp),
@@ -503,11 +503,11 @@ private fun SelectionCard(
         ) {
             Text(icon, fontSize = 24.sp)
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, fontWeight = FontWeight.SemiBold, color = if (selected) C.accent else C.text)
-                Text(description, style = MaterialTheme.typography.bodySmall, color = C.muted)
+                Text(title, fontWeight = FontWeight.SemiBold, color = if (selected) colors.accent else colors.text)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = colors.muted)
             }
             if (selected) {
-                Icon(Icons.Default.Check, contentDescription = null, tint = C.accent, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Check, contentDescription = null, tint = colors.accent, modifier = Modifier.size(20.dp))
             }
         }
     }
@@ -519,7 +519,7 @@ private fun WizardTextField(
     onValueChange: (String) -> Unit,
     label: String,
     keyboardType: KeyboardType = KeyboardType.Text,
-    C: com.mikeisesele.clearr.ui.theme.DuesColors
+    colors: com.mikeisesele.clearr.ui.theme.DuesColors
 ) {
     OutlinedTextField(
         value = value,
@@ -529,13 +529,13 @@ private fun WizardTextField(
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = C.accent,
-            unfocusedBorderColor = C.border,
-            focusedLabelColor = C.accent,
-            unfocusedLabelColor = C.muted,
-            focusedTextColor = C.text,
-            unfocusedTextColor = C.text,
-            cursorColor = C.accent
+            focusedBorderColor = colors.accent,
+            unfocusedBorderColor = colors.border,
+            focusedLabelColor = colors.accent,
+            unfocusedLabelColor = colors.muted,
+            focusedTextColor = colors.text,
+            unfocusedTextColor = colors.text,
+            cursorColor = colors.accent
         )
     )
 }
@@ -545,9 +545,9 @@ private fun WizardTextField(
 private fun SetupWizardScreenPreview() {
     ClearrTheme {
         // Preview shows the welcome step layout frame only (no ViewModel)
-        val C = LocalDuesColors.current
-        Column(modifier = Modifier.fillMaxSize().background(C.bg)) {
-            WelcomeStep(C = C)
+        val colors = LocalDuesColors.current
+        Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+            WelcomeStep(colors = colors)
         }
     }
 }

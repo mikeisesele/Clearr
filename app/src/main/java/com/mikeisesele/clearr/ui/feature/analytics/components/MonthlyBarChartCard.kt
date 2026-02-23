@@ -26,12 +26,12 @@ internal fun MonthlyBarChartCard(
     paymentMap: Map<String, Double>,
     prevPaymentMap: Map<String, Double>,
     dueAmount: Double,
-    C: DuesColors = LocalDuesColors.current
+    colors: DuesColors = LocalDuesColors.current
 ) {
     var showPrevYear by remember { mutableStateOf(false) }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = C.card),
+        colors = CardDefaults.cardColors(containerColor = colors.card),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -45,12 +45,12 @@ internal fun MonthlyBarChartCard(
                     "Monthly Collection Rate",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = C.text
+                    color = colors.text
                 )
                 TextButton(onClick = { showPrevYear = !showPrevYear }) {
                     Text(
                         if (showPrevYear) "Hide ${selectedYear - 1}" else "vs ${selectedYear - 1}",
-                        color = C.accent,
+                        color = colors.accent,
                         fontSize = 12.sp
                     )
                 }
@@ -89,7 +89,7 @@ internal fun MonthlyBarChartCard(
                                     .fillMaxWidth(0.4f)
                                     .height((prevRate * maxBarHeightDp).dp.coerceAtLeast(3.dp))
                                     .clip(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp))
-                                    .background(C.muted.copy(alpha = 0.5f))
+                                    .background(colors.muted.copy(alpha = 0.5f))
                             )
                         }
                         Box(
@@ -99,17 +99,17 @@ internal fun MonthlyBarChartCard(
                                 .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
                                 .background(
                                     when {
-                                        isFutureMonth -> C.border
-                                        rate >= 1f -> C.green
-                                        rate > 0 -> C.accent
-                                        else -> C.dim
+                                        isFutureMonth -> colors.border
+                                        rate >= 1f -> colors.green
+                                        rate > 0 -> colors.accent
+                                        else -> colors.dim
                                     }
                                 )
                         )
                         Text(
                             month,
                             fontSize = 8.sp,
-                            color = C.muted,
+                            color = colors.muted,
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
@@ -122,12 +122,12 @@ internal fun MonthlyBarChartCard(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(modifier = Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(C.accent))
-                        Text("$selectedYear", fontSize = 11.sp, color = C.muted)
+                        Box(modifier = Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(colors.accent))
+                        Text("$selectedYear", fontSize = 11.sp, color = colors.muted)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(modifier = Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(C.muted.copy(alpha = 0.5f)))
-                        Text("${selectedYear - 1}", fontSize = 11.sp, color = C.muted)
+                        Box(modifier = Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(colors.muted.copy(alpha = 0.5f)))
+                        Text("${selectedYear - 1}", fontSize = 11.sp, color = colors.muted)
                     }
                 }
             }
@@ -139,14 +139,14 @@ internal fun MonthlyBarChartCard(
 @Composable
 private fun MonthlyBarChartCardPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
+        val colors = LocalDuesColors.current
         MonthlyBarChartCard(
             selectedYear = 2026,
             activeMembers = emptyList(),
             paymentMap = emptyMap(),
             prevPaymentMap = emptyMap(),
             dueAmount = 5000.0,
-            C = C
+            colors = colors
         )
     }
 }

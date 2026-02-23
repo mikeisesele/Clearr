@@ -30,9 +30,9 @@ internal fun HomeTopBar(
     onBack: (() -> Unit)?,
     onLayoutClick: () -> Unit,
     onShareClick: () -> Unit,
-    C: DuesColors = LocalDuesColors.current
+    colors: DuesColors = LocalDuesColors.current
 ) {
-    Surface(color = C.surface, shadowElevation = 2.dp) {
+    Surface(color = colors.surface, shadowElevation = 2.dp) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -48,7 +48,7 @@ internal fun HomeTopBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = C.text
+                        tint = colors.text
                     )
                 }
                 Spacer(Modifier.width(4.dp))
@@ -59,21 +59,21 @@ internal fun HomeTopBar(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = C.text
+                    color = colors.text
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Surface(
-                        color = C.accent.copy(alpha = 0.10f),
+                        color = colors.accent.copy(alpha = 0.10f),
                         shape = RoundedCornerShape(4.dp),
                         modifier = Modifier.clickable { onLayoutClick() }
                     ) {
                         Text(
                             layoutLabel(layoutStyle),
                             style = MaterialTheme.typography.labelSmall,
-                            color = C.accent,
+                            color = colors.accent,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 10.sp,
                             modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
@@ -83,7 +83,7 @@ internal fun HomeTopBar(
                         "$selectedYear  ·  ${formatAmount(dueAmount)}/member",
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 11.sp,
-                        color = C.muted
+                        color = colors.muted
                     )
                 }
             }
@@ -113,7 +113,7 @@ private fun layoutLabel(style: LayoutStyle) = when (style) {
 @Composable
 private fun HomeTopBarPreview() {
     ClearrTheme {
-        val C = LocalDuesColors.current
+        val colors = LocalDuesColors.current
         HomeTopBar(
             trackerName = "JSS Monthly Dues",
             layoutStyle = LayoutStyle.GRID,
@@ -122,7 +122,7 @@ private fun HomeTopBarPreview() {
             onBack = {},
             onLayoutClick = {},
             onShareClick = {},
-            C = C
+            colors = colors
         )
     }
 }

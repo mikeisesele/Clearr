@@ -19,7 +19,7 @@ fun DuesSnackbar(
     onUndo: (() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
-    val C = LocalDuesColors.current
+    val colors = LocalDuesColors.current
 
     LaunchedEffect(message) {
         if (message != null) {
@@ -38,7 +38,7 @@ fun DuesSnackbar(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = C.card),
+            colors = CardDefaults.cardColors(containerColor = colors.card),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Row(
@@ -49,7 +49,7 @@ fun DuesSnackbar(
                 Text(
                     text = message ?: "",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = C.text,
+                    color = colors.text,
                     modifier = Modifier.weight(1f)
                 )
                 if (onUndo != null) {
@@ -57,11 +57,11 @@ fun DuesSnackbar(
                         onUndo()
                         onDismiss()
                     }) {
-                        Text("UNDO", color = C.accent, style = MaterialTheme.typography.labelLarge)
+                        Text("UNDO", color = colors.accent, style = MaterialTheme.typography.labelLarge)
                     }
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("×", color = C.muted, style = MaterialTheme.typography.titleLarge)
+                    Text("×", color = colors.muted, style = MaterialTheme.typography.titleLarge)
                 }
             }
         }
