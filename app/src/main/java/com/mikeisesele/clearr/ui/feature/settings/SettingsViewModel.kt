@@ -1,7 +1,6 @@
 package com.mikeisesele.clearr.ui.feature.settings
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
@@ -11,8 +10,13 @@ import com.mikeisesele.clearr.domain.repository.DuesRepository
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -20,53 +24,73 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val repository: DuesRepository,
     private val appState: AppStateHolder
-) : ViewModel() {
+) : BaseViewModel<SettingsUiState, SettingsAction, SettingsEvent>(
+    initialState = SettingsUiState()
+) {
 
-    private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
+    private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
 
-    val uiState: StateFlow<SettingsUiState> = combine(
-        appState.selectedYear,
-        repository.getAllMembers(),
-        repository.getAllYearConfigs(),
-        _themeMode,
-        appState.appConfig,
-        appState.currentTrackerId
-    ) { arr ->
-        @Suppress("UNCHECKED_CAST")
-        Sextuple(
-            selectedYear = arr[0] as Int,
-            allMembers = arr[1] as List<com.mikeisesele.clearr.data.model.Member>,
-            yearConfigs = arr[2] as List<com.mikeisesele.clearr.data.model.YearConfig>,
-            themeMode = arr[3] as ThemeMode,
-            appConfig = arr[4] as AppConfig?,
-            trackerId = arr[5] as Long?
-        )
-    }.flatMapLatest { p ->
-        val trackerFlow: Flow<Tracker?> = p.trackerId?.let { repository.getTrackerByIdFlow(it) } ?: flowOf(null)
-        trackerFlow.map { tracker ->
-            SettingsUiState(
-                selectedYear = p.selectedYear,
-                allMembers = p.allMembers,
-                yearConfigs = p.yearConfigs,
-                themeMode = p.themeMode,
-                layoutStyle = tracker?.layoutStyle ?: p.appConfig?.layoutStyle ?: LayoutStyle.GRID,
-                currentTrackerType = tracker?.type,
-                currentTrackerDueAmount = tracker?.defaultAmount
-            )
+    init {
+        launch {
+            combine(
+                appState.selectedYear,
+                repository.getAllMembers(),
+                repository.getAllYearConfigs(),
+                themeModeFlow,
+                appState.appConfig,
+                appState.currentTrackerId
+            ) { arr ->
+                @Suppress("UNCHECKED_CAST")
+                Sextuple(
+                    selectedYear = arr[0] as Int,
+                    allMembers = arr[1] as List<com.mikeisesele.clearr.data.model.Member>,
+                    yearConfigs = arr[2] as List<com.mikeisesele.clearr.data.model.YearConfig>,
+                    themeMode = arr[3] as ThemeMode,
+                    appConfig = arr[4] as AppConfig?,
+                    trackerId = arr[5] as Long?
+                )
+            }.flatMapLatest { p ->
+                val trackerFlow: Flow<Tracker?> = p.trackerId?.let { repository.getTrackerByIdFlow(it) } ?: flowOf(null)
+                trackerFlow.map { tracker ->
+                    SettingsUiState(
+                        selectedYear = p.selectedYear,
+                        allMembers = p.allMembers,
+                        yearConfigs = p.yearConfigs,
+                        themeMode = p.themeMode,
+                        layoutStyle = tracker?.layoutStyle ?: p.appConfig?.layoutStyle ?: LayoutStyle.GRID,
+                        currentTrackerType = tracker?.type,
+                        currentTrackerDueAmount = tracker?.defaultAmount
+                    )
+                }
+            }.collectLatest { newState ->
+                updateState { newState }
+            }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
-
-    val themeMode: StateFlow<ThemeMode> = _themeMode
-
-    fun selectYear(year: Int) {
-        appState.setYear(year)
-        viewModelScope.launch { repository.ensureYearConfig(year) }
     }
 
-    fun setThemeMode(mode: ThemeMode) { _themeMode.value = mode }
+    override fun onAction(action: SettingsAction) {
+        when (action) {
+            is SettingsAction.SelectYear -> handleSelectYear(action.year)
+            is SettingsAction.SetThemeMode -> handleSetThemeMode(action.mode)
+            is SettingsAction.UpdateDueAmount -> handleUpdateDueAmount(action.amount)
+            is SettingsAction.SetMemberArchived -> handleSetMemberArchived(action.id, action.archived)
+            is SettingsAction.StartNewYear -> handleStartNewYear(action.fromYear)
+            is SettingsAction.SetLayoutStyle -> handleSetLayoutStyle(action.style)
+            SettingsAction.ResetSetup -> handleResetSetup()
+        }
+    }
 
-    fun updateDueAmount(year: Int, amount: Double) {
-        viewModelScope.launch {
+    private fun handleSelectYear(year: Int) {
+        appState.setYear(year)
+        launch { repository.ensureYearConfig(year) }
+    }
+
+    private fun handleSetThemeMode(mode: ThemeMode) {
+        themeModeFlow.value = mode
+    }
+
+    private fun handleUpdateDueAmount(amount: Double) {
+        launch {
             val trackerId = appState.currentTrackerId.value
             if (trackerId != null) {
                 val tracker = repository.getTrackerById(trackerId) ?: return@launch
@@ -77,12 +101,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setMemberArchived(id: Long, archived: Boolean) {
-        viewModelScope.launch { repository.setMemberArchived(id, archived) }
+    private fun handleSetMemberArchived(id: Long, archived: Boolean) {
+        launch { repository.setMemberArchived(id, archived) }
     }
 
-    fun startNewYear(fromYear: Int) {
-        viewModelScope.launch {
+    private fun handleStartNewYear(fromYear: Int) {
+        launch {
             val currentConfig = repository.getYearConfig(fromYear)
             val nextYear = fromYear + 1
             repository.ensureYearConfig(nextYear, currentConfig?.dueAmountPerMonth ?: 5000.0)
@@ -90,18 +114,13 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Saves the chosen layout style to DB and immediately pushes it to
-     * AppStateHolder so HomeScreen reacts without any navigation needed.
-     */
-    fun setLayoutStyle(style: LayoutStyle) {
-        viewModelScope.launch {
+    private fun handleSetLayoutStyle(style: LayoutStyle) {
+        launch {
             val trackerId = appState.currentTrackerId.value
             if (trackerId != null) {
                 val tracker = repository.getTrackerById(trackerId) ?: return@launch
                 repository.updateTracker(tracker.copy(layoutStyle = style))
             } else {
-                // Fallback default if no tracker is currently selected.
                 val existing = repository.getAppConfig() ?: AppConfig()
                 val updated = existing.copy(layoutStyle = style)
                 repository.upsertAppConfig(updated)
@@ -110,9 +129,8 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    /** Marks setupComplete = false so the wizard shows on next recompose. */
-    fun resetSetup() {
-        viewModelScope.launch {
+    private fun handleResetSetup() {
+        launch {
             val existing = repository.getAppConfig()
             val config = existing?.copy(setupComplete = false)
                 ?: AppConfig(setupComplete = false)
@@ -120,7 +138,6 @@ class SettingsViewModel @Inject constructor(
             appState.setAppConfig(config)
         }
     }
-
     private data class Sextuple(
         val selectedYear: Int,
         val allMembers: List<com.mikeisesele.clearr.data.model.Member>,

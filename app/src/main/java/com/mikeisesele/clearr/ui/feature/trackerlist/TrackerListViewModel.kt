@@ -1,7 +1,6 @@
 package com.mikeisesele.clearr.ui.feature.trackerlist
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
@@ -12,71 +11,91 @@ import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.domain.repository.DuesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class TrackerListViewModel @Inject constructor(
     private val repository: DuesRepository
-) : ViewModel() {
+) : BaseViewModel<TrackerListUiState, TrackerListAction, TrackerListEvent>(
+    initialState = TrackerListUiState(isLoading = true)
+) {
 
     private val refreshSignal = MutableStateFlow(0)
 
-    val uiState: StateFlow<TrackerListUiState> = refreshSignal
-        .flatMapLatest {
-            repository.getAllTrackers()
-        }
-        .flatMapLatest { trackers ->
-            if (trackers.isEmpty()) {
-                flowOf(TrackerListUiState(summaries = emptyList(), isLoading = false))
-            } else {
-                // For each tracker, build a summary flow that reacts to member and period changes
-                val summaryFlows: List<Flow<TrackerSummary>> = trackers.map { tracker ->
-                    repository.getActiveMembersForTracker(tracker.id)
-                        .flatMapLatest { members ->
-                            repository.getCurrentPeriodFlow(tracker.id)
-                                .flatMapLatest { period ->
-                                    if (period == null) {
-                                        flowOf(buildSummary(tracker, members, period, 0))
-                                    } else {
-                                        repository.getRecordsForPeriod(tracker.id, period.id)
-                                            .map { records ->
-                                                val completedCount = records.count { r ->
-                                                    r.status.name in completedStatuses(tracker.type)
-                                                }
-                                                buildSummary(tracker, members, period, completedCount)
+    init {
+        launch {
+            refreshSignal
+                .flatMapLatest { repository.getAllTrackers() }
+                .flatMapLatest { trackers ->
+                    if (trackers.isEmpty()) {
+                        flowOf(TrackerListUiState(summaries = emptyList(), isLoading = false))
+                    } else {
+                        val summaryFlows = trackers.map { tracker ->
+                            repository.getActiveMembersForTracker(tracker.id)
+                                .flatMapLatest { members ->
+                                    repository.getCurrentPeriodFlow(tracker.id)
+                                        .flatMapLatest { period ->
+                                            if (period == null) {
+                                                flowOf(buildSummary(tracker, members, period, 0))
+                                            } else {
+                                                repository.getRecordsForPeriod(tracker.id, period.id)
+                                                    .map { records ->
+                                                        val completedCount = records.count { r ->
+                                                            r.status.name in completedStatuses(tracker.type)
+                                                        }
+                                                        buildSummary(tracker, members, period, completedCount)
+                                                    }
                                             }
-                                    }
+                                        }
                                 }
                         }
+                        combine(summaryFlows) { arr ->
+                            TrackerListUiState(
+                                summaries = arr.toList(),
+                                isLoading = false
+                            )
+                        }
+                    }
                 }
-                combine(summaryFlows) { arr ->
-                    TrackerListUiState(
-                        summaries = arr.toList(),
-                        isLoading = false
-                    )
-                }
-            }
+                .collectLatest { newState -> updateState { newState } }
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = TrackerListUiState(isLoading = true)
-        )
+    }
 
-    /** Create a new tracker and immediately ensure a current period exists for it */
-    fun createTracker(
+    override fun onAction(action: TrackerListAction) {
+        when (action) {
+            is TrackerListAction.CreateTracker -> handleCreateTracker(
+                name = action.name,
+                type = action.type,
+                frequency = action.frequency,
+                defaultAmount = action.defaultAmount,
+                initialMembers = action.initialMembers
+            )
+            is TrackerListAction.ClearNewFlag -> handleClearNewFlag(action.trackerId)
+            is TrackerListAction.DeleteTracker -> handleDeleteTracker(action.trackerId)
+            is TrackerListAction.RenameTracker -> handleRenameTracker(action.trackerId, action.newName)
+            TrackerListAction.Refresh -> handleRefresh()
+        }
+    }
+
+    private fun handleCreateTracker(
         name: String,
         type: TrackerType,
         frequency: Frequency,
         defaultAmount: Double,
         initialMembers: List<String>
     ) {
-        viewModelScope.launch {
+        launch {
             val now = System.currentTimeMillis()
             val trackerId = repository.insertTracker(
                 Tracker(
@@ -89,7 +108,6 @@ class TrackerListViewModel @Inject constructor(
                     createdAt = now
                 )
             )
-            // Insert initial members
             initialMembers.forEach { memberName ->
                 if (memberName.isNotBlank()) {
                     repository.insertTrackerMember(
@@ -101,35 +119,30 @@ class TrackerListViewModel @Inject constructor(
                     )
                 }
             }
-            // Create and mark the current period
             val period = buildCurrentPeriod(trackerId, frequency, now)
             val periodId = repository.insertPeriod(period)
             repository.setCurrentPeriod(trackerId, periodId)
         }
     }
 
-    /** Called when the user taps a tracker card for the first time (clears NEW badge) */
-    fun clearNewFlag(trackerId: Long) {
-        viewModelScope.launch { repository.clearTrackerNewFlag(trackerId) }
+    private fun handleClearNewFlag(trackerId: Long) {
+        launch { repository.clearTrackerNewFlag(trackerId) }
     }
 
-    fun deleteTracker(trackerId: Long) {
-        viewModelScope.launch { repository.deleteTracker(trackerId) }
+    private fun handleDeleteTracker(trackerId: Long) {
+        launch { repository.deleteTracker(trackerId) }
     }
 
-    fun renameTracker(trackerId: Long, newName: String) {
-        viewModelScope.launch {
+    private fun handleRenameTracker(trackerId: Long, newName: String) {
+        launch {
             val tracker = repository.getTrackerById(trackerId) ?: return@launch
             repository.updateTracker(tracker.copy(name = newName.trim()))
         }
     }
 
-    fun refresh() {
+    private fun handleRefresh() {
         refreshSignal.update { it + 1 }
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     private fun buildSummary(
         tracker: Tracker,
         members: List<TrackerMember>,
@@ -153,28 +166,26 @@ class TrackerListViewModel @Inject constructor(
     }
 
     private fun completedStatuses(type: TrackerType): Set<String> = when (type) {
-        TrackerType.DUES       -> setOf("PAID")
+        TrackerType.DUES -> setOf("PAID")
         TrackerType.ATTENDANCE -> setOf("PRESENT")
-        TrackerType.TASKS      -> setOf("DONE")
-        TrackerType.EVENTS     -> setOf("PRESENT")
-        TrackerType.CUSTOM     -> setOf("PAID", "PRESENT", "DONE")
+        TrackerType.TASKS -> setOf("DONE")
+        TrackerType.EVENTS -> setOf("PRESENT")
+        TrackerType.CUSTOM -> setOf("PAID", "PRESENT", "DONE")
     }
 
-    /** Generate a human-readable label for the current period based on frequency */
     private fun currentPeriodLabel(frequency: Frequency): String {
         val cal = Calendar.getInstance()
         return when (frequency) {
-            Frequency.MONTHLY    -> SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
-            Frequency.WEEKLY     -> "Week ${cal.get(Calendar.WEEK_OF_YEAR)}, ${cal.get(Calendar.YEAR)}"
-            Frequency.QUARTERLY  -> "Q${(cal.get(Calendar.MONTH) / 3) + 1} ${cal.get(Calendar.YEAR)}"
-            Frequency.TERMLY     -> "Term ${(cal.get(Calendar.MONTH) / 4) + 1} ${cal.get(Calendar.YEAR)}"
-            Frequency.BIANNUAL   -> "H${if (cal.get(Calendar.MONTH) < 6) 1 else 2} ${cal.get(Calendar.YEAR)}"
-            Frequency.ANNUAL     -> "${cal.get(Calendar.YEAR)}"
-            Frequency.CUSTOM     -> "Current Period"
+            Frequency.MONTHLY -> SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
+            Frequency.WEEKLY -> "Week ${cal.get(Calendar.WEEK_OF_YEAR)}, ${cal.get(Calendar.YEAR)}"
+            Frequency.QUARTERLY -> "Q${(cal.get(Calendar.MONTH) / 3) + 1} ${cal.get(Calendar.YEAR)}"
+            Frequency.TERMLY -> "Term ${(cal.get(Calendar.MONTH) / 4) + 1} ${cal.get(Calendar.YEAR)}"
+            Frequency.BIANNUAL -> "H${if (cal.get(Calendar.MONTH) < 6) 1 else 2} ${cal.get(Calendar.YEAR)}"
+            Frequency.ANNUAL -> "${cal.get(Calendar.YEAR)}"
+            Frequency.CUSTOM -> "Current Period"
         }
     }
 
-    /** Build a TrackerPeriod for the current cycle, not yet inserted */
     private fun buildCurrentPeriod(trackerId: Long, frequency: Frequency, now: Long): TrackerPeriod {
         val cal = Calendar.getInstance()
         val (start, end) = when (frequency) {

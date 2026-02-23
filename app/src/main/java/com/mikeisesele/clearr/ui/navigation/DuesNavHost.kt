@@ -22,6 +22,7 @@ import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import com.mikeisesele.clearr.ui.feature.analytics.AnalyticsScreen
 import com.mikeisesele.clearr.ui.feature.home.HomeScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
+import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingAction
 import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingViewModel
 import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
@@ -58,9 +59,11 @@ fun DuesNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val appConfigVm: AppConfigViewModel   = hiltViewModel()
 
     // null = still loading DataStore
-    val onboardingComplete by onboardingVm.isOnboardingComplete.collectAsStateWithLifecycle()
-    val appConfig          by appConfigVm.appConfig.collectAsStateWithLifecycle()
-    val appConfigLoading   by appConfigVm.isLoading.collectAsStateWithLifecycle()
+    val onboardingState by onboardingVm.uiState.collectAsStateWithLifecycle()
+    val appConfigState by appConfigVm.uiState.collectAsStateWithLifecycle()
+    val onboardingComplete = onboardingState.isComplete
+    val appConfig = appConfigState.appConfig
+    val appConfigLoading = appConfigState.isLoading
 
     val colors = LocalDuesColors.current
 
@@ -112,13 +115,13 @@ private fun OnboardingNavHost(onboardingVm: OnboardingViewModel) {
             OnboardingScreen(
                 initialSlide = initialSlide,
                 onComplete = {
-                    onboardingVm.completeOnboarding()
+                    onboardingVm.onAction(OnboardingAction.CompleteOnboarding)
                     navController.navigate("onboarding_complete") {
                         popUpTo("splash") { inclusive = true }
                     }
                 },
                 onSkip = {
-                    onboardingVm.completeOnboarding()
+                    onboardingVm.onAction(OnboardingAction.CompleteOnboarding)
                     navController.navigate("onboarding_complete") {
                         popUpTo("splash") { inclusive = true }
                     }

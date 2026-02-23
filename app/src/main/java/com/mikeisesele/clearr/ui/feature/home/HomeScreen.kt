@@ -64,7 +64,7 @@ fun HomeScreen(
     val dueAmount = state.yearConfig?.dueAmountPerMonth ?: 5000.0
 
     LaunchedEffect(trackerId) {
-        viewModel.setCurrentTrackerId(trackerId.takeIf { it > 0 })
+        viewModel.onAction(HomeAction.SetCurrentTrackerId(trackerId.takeIf { it > 0 }))
     }
 
     val visibleMembers = remember(state.members, state.showArchived) {
@@ -102,7 +102,7 @@ fun HomeScreen(
     LaunchedEffect(state.confettiMonth) {
         if (state.confettiMonth != null) {
             kotlinx.coroutines.delay(3000)
-            viewModel.dismissConfetti()
+            viewModel.onAction(HomeAction.DismissConfetti)
         }
     }
 
@@ -115,7 +115,7 @@ fun HomeScreen(
         isFullPaid = ::isFullPaid,
         isPartial = ::isPartial,
         paidForMonth = ::paidForMonth,
-        onCellTap = { m, mi -> viewModel.togglePayment(m, state.selectedYear, mi, dueAmount) },
+        onCellTap = { m, mi -> viewModel.onAction(HomeAction.TogglePayment(m, state.selectedYear, mi, dueAmount)) },
         onCellLongPress = { m, mi -> partialTarget = m to mi },
         onMemberTap = { memberDetail = it },
         onMemberLongPress = { contextTarget = it },
@@ -188,16 +188,16 @@ fun HomeScreen(
                     message = snack.message,
                     onUndo = snack.undoPaymentId?.let { pid ->
                         {
-                            viewModel.undoLastRemoval(
+                            viewModel.onAction(HomeAction.UndoLastRemoval(
                                 pid,
                                 snack.undoMemberId ?: 0,
                                 snack.undoYear ?: state.selectedYear,
                                 snack.undoMonthIndex ?: 0,
                                 dueAmount
-                            )
+                            ))
                         }
                     },
-                    onDismiss = viewModel::dismissSnackbar
+                    onDismiss = { viewModel.onAction(HomeAction.DismissSnackbar) }
                 )
             }
         }
@@ -209,7 +209,7 @@ fun HomeScreen(
     if (showAddMember) {
         AddMemberDialog(
             onDismiss = { showAddMember = false },
-            onAdd = { name, phone -> viewModel.addMember(name, phone) }
+            onAdd = { name, phone -> viewModel.onAction(HomeAction.AddMember(name, phone)) }
         )
     }
 
@@ -222,7 +222,7 @@ fun HomeScreen(
             dueAmount = dueAmount,
             onDismiss = { partialTarget = null },
             onRecord = { amount, note ->
-                viewModel.recordPartialPayment(member.id, state.selectedYear, mi, amount, note, dueAmount)
+                viewModel.onAction(HomeAction.RecordPartialPayment(member.id, state.selectedYear, mi, amount, note, dueAmount))
             }
         )
     }
@@ -237,7 +237,7 @@ fun HomeScreen(
             onDismiss = { memberDetail = null },
             onEdit = { editTarget = member; memberDetail = null },
             onArchiveToggle = {
-                viewModel.setMemberArchived(member.id, !member.isArchived)
+                viewModel.onAction(HomeAction.SetMemberArchived(member.id, !member.isArchived))
                 memberDetail = null
             },
             onDelete = {
@@ -245,12 +245,12 @@ fun HomeScreen(
                 memberDetail = null
             },
             onBulkMarkPaid = {
-                viewModel.markOutstandingMonthsPaid(
+                viewModel.onAction(HomeAction.MarkOutstandingMonthsPaid(
                     memberId = member.id,
                     year = state.selectedYear,
                     dueAmount = dueAmount,
                     trackerIdOverride = trackerId.takeIf { it > 0 }
-                )
+                ))
                 memberDetail = null
             }
         )
@@ -261,7 +261,7 @@ fun HomeScreen(
             initialName = member.name,
             initialPhone = member.phone,
             onDismiss = { editTarget = null },
-            onSave = { name, phone -> viewModel.updateMember(member.copy(name = name, phone = phone)) }
+            onSave = { name, phone -> viewModel.onAction(HomeAction.UpdateMember(member.copy(name = name, phone = phone))) }
         )
     }
 
@@ -269,26 +269,26 @@ fun HomeScreen(
         val previewColors = LocalDuesColors.current
         AlertDialog(
             onDismissRequest = { contextTarget = null },
-            containerColor = C2.surface,
-            title = { Text(member.name, color = C2.text, style = MaterialTheme.typography.titleMedium) },
+            containerColor = previewColors.surface,
+            title = { Text(member.name, color = previewColors.text, style = MaterialTheme.typography.titleMedium) },
             text = {
                 Column {
                     TextButton(onClick = { editTarget = member; contextTarget = null }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Edit", color = C2.accent)
+                        Text("Edit", color = previewColors.accent)
                     }
                     TextButton(
-                        onClick = { viewModel.setMemberArchived(member.id, !member.isArchived); contextTarget = null },
+                        onClick = { viewModel.onAction(HomeAction.SetMemberArchived(member.id, !member.isArchived)); contextTarget = null },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(if (member.isArchived) "Restore" else "Archive", color = if (member.isArchived) C2.green else C2.red)
+                        Text(if (member.isArchived) "Restore" else "Archive", color = if (member.isArchived) previewColors.green else previewColors.red)
                     }
                     TextButton(onClick = { deleteTarget = member; contextTarget = null }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Delete", color = C2.red)
+                        Text("Delete", color = previewColors.red)
                     }
                 }
             },
             confirmButton = {},
-            dismissButton = { TextButton(onClick = { contextTarget = null }) { Text("Cancel", color = C2.muted) } },
+            dismissButton = { TextButton(onClick = { contextTarget = null }) { Text("Cancel", color = previewColors.muted) } },
             shape = RoundedCornerShape(16.dp)
         )
     }
@@ -297,16 +297,16 @@ fun HomeScreen(
         val previewColors = LocalDuesColors.current
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
-            containerColor = C2.surface,
-            title = { Text("Delete ${member.name}?", color = C2.text) },
-            text = { Text("This removes the member and all their payment history. This cannot be undone.", color = C2.muted) },
+            containerColor = previewColors.surface,
+            title = { Text("Delete ${member.name}?", color = previewColors.text) },
+            text = { Text("This removes the member and all their payment history. This cannot be undone.", color = previewColors.muted) },
             confirmButton = {
                 Button(
-                    onClick = { viewModel.deleteMember(member.id, trackerId.takeIf { it > 0 }); deleteTarget = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = C2.red)
+                    onClick = { viewModel.onAction(HomeAction.DeleteMember(member.id, trackerId.takeIf { it > 0 })); deleteTarget = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = previewColors.red)
                 ) { Text("Delete") }
             },
-            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Cancel", color = C2.muted) } },
+            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Cancel", color = previewColors.muted) } },
             shape = RoundedCornerShape(16.dp)
         )
     }
@@ -332,7 +332,7 @@ fun HomeScreen(
                         color = if (selected) colors.accent.copy(alpha = 0.12f) else colors.card,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth().clickable {
-                            viewModel.setLayoutStyleForCurrentTracker(style)
+                            viewModel.onAction(HomeAction.SetLayoutStyleForCurrentTracker(style))
                             showLayoutSheet = false
                         }
                     ) {

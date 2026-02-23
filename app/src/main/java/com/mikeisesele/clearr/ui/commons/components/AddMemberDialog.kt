@@ -45,7 +45,7 @@ fun AddMemberDialog(
                         .fillMaxWidth()
                         .focusRequester(focusRequester),
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                    colors = outlinedTextFieldColors(C)
+                    colors = outlinedTextFieldColors(colors)
                 )
                 OutlinedTextField(
                     value = phone,
@@ -54,7 +54,7 @@ fun AddMemberDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    colors = outlinedTextFieldColors(C)
+                    colors = outlinedTextFieldColors(colors)
                 )
             }
         },

@@ -1,53 +1,56 @@
 package com.mikeisesele.clearr.ui.feature.onboarding
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.repository.OnboardingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository
-) : ViewModel() {
+) : BaseViewModel<OnboardingState, OnboardingAction, OnboardingEvent>(
+    initialState = OnboardingState()
+) {
 
-    val totalSlides = 3
-
-    private val _currentSlide = MutableStateFlow(0)
-    val currentSlide: StateFlow<Int> = _currentSlide
-
-    /**
-     * Observed at the root NavHost to decide whether to show onboarding or go
-     * straight to TrackerListScreen.
-     * Starts as null (loading) — renders nothing until first emission.
-     */
-    val isOnboardingComplete: StateFlow<Boolean?> = onboardingRepository
-        .isOnboardingComplete
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = null   // null = still loading from DataStore
-        )
-
-    fun nextSlide() {
-        if (_currentSlide.value < totalSlides - 1) _currentSlide.value++
+    init {
+        observeOnboardingCompletion()
     }
 
-    fun prevSlide() {
-        if (_currentSlide.value > 0) _currentSlide.value--
+    override fun onAction(action: OnboardingAction) {
+        when (action) {
+            OnboardingAction.NextSlide -> handleNextSlide()
+            OnboardingAction.PrevSlide -> handlePrevSlide()
+            is OnboardingAction.GoToSlide -> handleGoToSlide(action.index)
+            OnboardingAction.CompleteOnboarding -> handleCompleteOnboarding()
+        }
     }
 
-    fun goToSlide(index: Int) {
-        _currentSlide.value = index.coerceIn(0, totalSlides - 1)
+    private fun observeOnboardingCompletion() {
+        launch {
+            onboardingRepository.isOnboardingComplete.collectLatest { complete ->
+                updateState { it.copy(isComplete = complete) }
+            }
+        }
     }
 
-    /** Persist flag and mark onboarding complete. */
-    fun completeOnboarding() {
-        viewModelScope.launch { onboardingRepository.markComplete() }
+    private fun handleNextSlide() {
+        if (currentState.currentSlide < currentState.totalSlides - 1) {
+            updateState { it.copy(currentSlide = it.currentSlide + 1) }
+        }
+    }
+
+    private fun handlePrevSlide() {
+        if (currentState.currentSlide > 0) {
+            updateState { it.copy(currentSlide = it.currentSlide - 1) }
+        }
+    }
+
+    private fun handleGoToSlide(index: Int) {
+        updateState { it.copy(currentSlide = index.coerceIn(0, it.totalSlides - 1)) }
+    }
+
+    private fun handleCompleteOnboarding() {
+        launch { onboardingRepository.markComplete() }
     }
 }

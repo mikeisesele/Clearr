@@ -1,7 +1,6 @@
 package com.mikeisesele.clearr.ui.feature.setup
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.LayoutStyle
@@ -12,12 +11,8 @@ import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.di.AppStateHolder
 import com.mikeisesele.clearr.domain.repository.DuesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -27,29 +22,47 @@ import javax.inject.Inject
 class SetupViewModel @Inject constructor(
     private val repository: DuesRepository,
     private val appState: AppStateHolder
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(SetupWizardState())
-    val state: StateFlow<SetupWizardState> = _state
+) : BaseViewModel<SetupWizardState, SetupAction, SetupEvent>(
+    initialState = SetupWizardState()
+) {
 
     init {
-        viewModelScope.launch {
+        launch {
             val hasTrackers = repository.getAllTrackers().first().isNotEmpty()
             if (hasTrackers) {
-                // Skip the intro-only quick setup step for subsequent tracker creation.
-                _state.update { it.copy(step = 1) }
+                updateState { it.copy(step = 1) }
             }
         }
     }
 
-    fun nextStep() = _state.update { s ->
+    override fun onAction(action: SetupAction) {
+        when (action) {
+            SetupAction.NextStep -> handleNextStep()
+            SetupAction.PrevStep -> handlePrevStep()
+            is SetupAction.SetGroupName -> handleSetGroupName(action.value)
+            is SetupAction.SetTrackerName -> handleSetTrackerName(action.value)
+            is SetupAction.SetAdminName -> handleSetAdminName(action.value)
+            is SetupAction.SetAdminPhone -> handleSetAdminPhone(action.value)
+            is SetupAction.SetTrackerType -> handleSetTrackerType(action.value)
+            is SetupAction.SetFrequency -> handleSetFrequency(action.value)
+            is SetupAction.SetDefaultAmount -> handleSetDefaultAmount(action.value)
+            is SetupAction.SetLayoutStyle -> handleSetLayoutStyle(action.value)
+            is SetupAction.SetLoadSampleMembers -> handleSetLoadSampleMembers(action.value)
+            is SetupAction.GoToStep -> handleGoToStep(action.step)
+            is SetupAction.FinishSetup -> finishSetupInternal(action.onDone)
+            is SetupAction.LoadExistingConfig -> handleLoadExistingConfig(action.config)
+        }
+    }
+
+    private fun handleNextStep() = updateState { s ->
         val next = when {
             s.step == 3 && s.trackerType != TrackerType.DUES -> 5
             else -> s.step + 1
         }.coerceAtMost(6)
         s.copy(step = next)
     }
-    fun prevStep() = _state.update { s ->
+
+    private fun handlePrevStep() = updateState { s ->
         val prev = when {
             s.step == 5 && s.trackerType != TrackerType.DUES -> 3
             else -> s.step - 1
@@ -57,28 +70,42 @@ class SetupViewModel @Inject constructor(
         s.copy(step = prev)
     }
 
-    fun setGroupName(v: String) = _state.update { it.copy(groupName = v) }
-    fun setTrackerName(v: String) = _state.update { it.copy(trackerName = v) }
-    fun setAdminName(v: String) = _state.update { it.copy(adminName = v) }
-    fun setAdminPhone(v: String) = _state.update { it.copy(adminPhone = v) }
-    fun setTrackerType(v: TrackerType) = _state.update { s ->
+    private fun handleSetGroupName(value: String) = updateState { it.copy(groupName = value) }
+    private fun handleSetTrackerName(value: String) = updateState { it.copy(trackerName = value) }
+    private fun handleSetAdminName(value: String) = updateState { it.copy(adminName = value) }
+    private fun handleSetAdminPhone(value: String) = updateState { it.copy(adminPhone = value) }
+
+    private fun handleSetTrackerType(value: TrackerType) = updateState { s ->
         val oldDefault = defaultTrackerName(s.trackerType)
         val shouldAutoRename = s.trackerName.isBlank() || s.trackerName == oldDefault
         s.copy(
-            trackerType = v,
-            trackerName = if (shouldAutoRename) defaultTrackerName(v) else s.trackerName
+            trackerType = value,
+            trackerName = if (shouldAutoRename) defaultTrackerName(value) else s.trackerName
         )
     }
-    fun setFrequency(v: Frequency) = _state.update { it.copy(frequency = v) }
-    fun setDefaultAmount(v: String) = _state.update { it.copy(defaultAmount = v) }
-    fun setLayoutStyle(v: LayoutStyle) = _state.update { it.copy(layoutStyle = v) }
-    fun setLoadSampleMembers(v: Boolean) = _state.update { it.copy(loadSampleMembers = v) }
 
-    fun goToStep(step: Int) = _state.update { it.copy(step = step.coerceIn(0, 6)) }
+    private fun handleSetFrequency(value: Frequency) = updateState { it.copy(frequency = value) }
+    private fun handleSetDefaultAmount(value: String) = updateState { it.copy(defaultAmount = value) }
+    private fun handleSetLayoutStyle(value: LayoutStyle) = updateState { it.copy(layoutStyle = value) }
+    private fun handleSetLoadSampleMembers(value: Boolean) = updateState { it.copy(loadSampleMembers = value) }
+    private fun handleGoToStep(step: Int) = updateState { it.copy(step = step.coerceIn(0, 6)) }
 
-    /** Called from the Review step – saves AppConfig and creates a tracker from wizard selections. */
-    fun finishSetup(onDone: () -> Unit) {
-        val s = _state.value
+    private fun handleLoadExistingConfig(config: AppConfig) = updateState {
+        it.copy(
+            groupName = config.groupName,
+            trackerName = defaultTrackerName(config.trackerType),
+            adminName = config.adminName,
+            adminPhone = config.adminPhone,
+            trackerType = config.trackerType,
+            frequency = config.frequency,
+            defaultAmount = config.defaultAmount.toInt().toString(),
+            layoutStyle = config.layoutStyle,
+            loadSampleMembers = true
+        )
+    }
+
+    private fun finishSetupInternal(onDone: () -> Unit) {
+        val s = currentState
         val amount = s.defaultAmount.toDoubleOrNull()?.takeIf { it > 0 } ?: 5000.0
         val now = System.currentTimeMillis()
         val config = AppConfig(
@@ -93,8 +120,8 @@ class SetupViewModel @Inject constructor(
             remindersEnabled = false,
             setupComplete = true
         )
-        _state.update { it.copy(isSaving = true) }
-        viewModelScope.launch {
+        updateState { it.copy(isSaving = true) }
+        launch {
             val trackerId = repository.insertTracker(
                 Tracker(
                     name = s.trackerName.trim().ifBlank { defaultTrackerName(s.trackerType) },
@@ -121,37 +148,16 @@ class SetupViewModel @Inject constructor(
                 }
             }
 
-            // Persist setupComplete only after tracker creation so the app doesn't
-            // navigate to TrackerList before data is ready.
             repeat(6) {
                 if (repository.getTrackerById(trackerId) != null) return@repeat
                 delay(50)
             }
             repository.upsertAppConfig(config)
-            // Flip app state after tracker creation so TrackerList can render fresh data immediately.
             appState.setAppConfig(config)
-            _state.update { it.copy(isSaving = false) }
+            updateState { it.copy(isSaving = false) }
             onDone()
         }
     }
-
-    /** Loads existing config into the wizard state (for "Edit Settings" use-case). */
-    fun loadExistingConfig(config: AppConfig) {
-        _state.update {
-            it.copy(
-                groupName = config.groupName,
-                trackerName = defaultTrackerName(config.trackerType),
-                adminName = config.adminName,
-                adminPhone = config.adminPhone,
-                trackerType = config.trackerType,
-                frequency = config.frequency,
-                defaultAmount = config.defaultAmount.toInt().toString(),
-                layoutStyle = config.layoutStyle,
-                loadSampleMembers = true
-            )
-        }
-    }
-
     private fun defaultTrackerName(type: TrackerType): String = when (type) {
         TrackerType.DUES -> "Dues Tracker"
         TrackerType.ATTENDANCE -> "Attendance Tracker"

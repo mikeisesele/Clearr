@@ -1,48 +1,44 @@
 package com.mikeisesele.clearr.ui.navigation
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.mikeisesele.clearr.data.model.AppConfig
+import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.di.AppStateHolder
 import com.mikeisesele.clearr.domain.repository.DuesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 
 /**
- * Lightweight ViewModel that lives at the root NavHost level.
- * It watches the DB's app_config row so the nav graph can switch
- * between the Setup Wizard and the main bottom-nav app.
+ * Root-level ViewModel that exposes app config/loading state for nav decisions.
  */
 @HiltViewModel
 class AppConfigViewModel @Inject constructor(
     private val repository: DuesRepository,
     private val appState: AppStateHolder
-) : ViewModel() {
+) : BaseViewModel<AppConfigUiState, AppConfigAction, AppConfigEvent>(
+    initialState = AppConfigUiState()
+) {
 
-    /** null = loading, AppConfig = loaded (may have setupComplete = false) */
-    val appConfig: StateFlow<AppConfig?> = repository
-        .getAppConfigFlow()
-        .onEach { config -> appState.setAppConfig(config) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = null
-        )
+    init {
+        onAction(AppConfigAction.Observe)
+    }
 
-    /**
-     * True only during the very first DB emit (null).
-     * Once the flow emits (even null from an empty table) this flips to false.
-     */
-    val isLoading: StateFlow<Boolean> = appConfig
-        .map { false }     // any emission means we're done loading
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = true   // start as loading
-        )
+    override fun onAction(action: AppConfigAction) {
+        when (action) {
+            AppConfigAction.Observe -> observeConfig()
+        }
+    }
+
+    private fun observeConfig() {
+        launch {
+            repository.getAppConfigFlow().collectLatest { config ->
+                appState.setAppConfig(config)
+                updateState {
+                    it.copy(
+                        appConfig = config,
+                        isLoading = false
+                    )
+                }
+            }
+        }
+    }
 }

@@ -39,7 +39,7 @@ fun SetupWizardScreen(
     viewModel: SetupViewModel = hiltViewModel(),
     onSetupComplete: () -> Unit
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = LocalDuesColors.current
     val isDues = state.trackerType == TrackerType.DUES
     val totalSteps = if (isDues) 7 else 6
@@ -47,7 +47,7 @@ fun SetupWizardScreen(
     val finalStep = 6
 
     LaunchedEffect(isDues, state.step) {
-        if (!isDues && state.step == 4) viewModel.nextStep()
+        if (!isDues && state.step == 4) viewModel.onAction(SetupAction.NextStep)
     }
 
     Column(
@@ -132,33 +132,33 @@ fun SetupWizardScreen(
                         adminName = state.adminName,
                         adminPhone = state.adminPhone,
                         loadSampleMembers = state.loadSampleMembers,
-                        onGroupName = viewModel::setGroupName,
-                        onTrackerName = viewModel::setTrackerName,
-                        onAdminName = viewModel::setAdminName,
-                        onAdminPhone = viewModel::setAdminPhone,
-                        onLoadSampleMembers = viewModel::setLoadSampleMembers,
+                            onGroupName = { viewModel.onAction(SetupAction.SetGroupName(it)) },
+                            onTrackerName = { viewModel.onAction(SetupAction.SetTrackerName(it)) },
+                            onAdminName = { viewModel.onAction(SetupAction.SetAdminName(it)) },
+                            onAdminPhone = { viewModel.onAction(SetupAction.SetAdminPhone(it)) },
+                            onLoadSampleMembers = { viewModel.onAction(SetupAction.SetLoadSampleMembers(it)) },
                         colors = colors
                     )
                     2 -> TrackerTypeStep(
                         selected = state.trackerType,
-                        onSelect = viewModel::setTrackerType,
+                            onSelect = { viewModel.onAction(SetupAction.SetTrackerType(it)) },
                         colors = colors
                     )
                     3 -> FrequencyStep(
                         selected = state.frequency,
-                        onSelect = viewModel::setFrequency,
+                            onSelect = { viewModel.onAction(SetupAction.SetFrequency(it)) },
                         colors = colors
                     )
                     4 -> AmountStep(
                         amount = state.defaultAmount,
                         frequency = state.frequency,
                         trackerType = state.trackerType,
-                        onAmount = viewModel::setDefaultAmount,
+                            onAmount = { viewModel.onAction(SetupAction.SetDefaultAmount(it)) },
                         colors = colors
                     )
                     5 -> LayoutStyleStep(
                         selected = state.layoutStyle,
-                        onSelect = viewModel::setLayoutStyle,
+                            onSelect = { viewModel.onAction(SetupAction.SetLayoutStyle(it)) },
                         colors = colors
                     )
                     6 -> ReviewStep(
@@ -186,8 +186,8 @@ fun SetupWizardScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (state.step > 0) {
-                OutlinedButton(
-                    onClick = viewModel::prevStep,
+                    OutlinedButton(
+                        onClick = { viewModel.onAction(SetupAction.PrevStep) },
                     border = androidx.compose.foundation.BorderStroke(1.dp, colors.border)
                 ) {
                     Icon(Icons.Default.ChevronLeft, contentDescription = null, tint = colors.text)
@@ -198,16 +198,16 @@ fun SetupWizardScreen(
             }
 
             if (state.step < finalStep) {
-                Button(
-                    onClick = viewModel::nextStep,
+                    Button(
+                        onClick = { viewModel.onAction(SetupAction.NextStep) },
                     colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
                 ) {
                     Text("Next", color = Color.White)
                     Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.White)
                 }
             } else {
-                Button(
-                    onClick = { viewModel.finishSetup(onSetupComplete) },
+                    Button(
+                        onClick = { viewModel.onAction(SetupAction.FinishSetup(onSetupComplete)) },
                     enabled = !state.isSaving,
                     colors = ButtonDefaults.buttonColors(containerColor = colors.green)
                 ) {
@@ -275,7 +275,7 @@ private fun GroupInfoStep(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        StepHeader("Group Information", "Tell us about your group.", C)
+        StepHeader("Group Information", "Tell us about your group.", colors)
         WizardTextField(value = groupName, onValueChange = onGroupName, label = "Group / Organisation Name", colors = colors)
         WizardTextField(value = trackerName, onValueChange = onTrackerName, label = "Tracker Name (e.g. Task Tracker, Event Tracker)", colors = colors)
         WizardTextField(value = adminName, onValueChange = onAdminName, label = "Admin Name (optional)", colors = colors)
@@ -319,7 +319,7 @@ private fun TrackerTypeStep(
         TrackerType.CUSTOM to Pair("✨", "Custom – Use your own labels")
     )
     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        StepHeader("What are you tracking?", "Choose the type that best describes your group's needs.", C)
+        StepHeader("What are you tracking?", "Choose the type that best describes your group's needs.", colors)
         options.forEach { (type, info) ->
             val (icon, desc) = info
             SelectionCard(
@@ -351,7 +351,7 @@ private fun FrequencyStep(
         Frequency.CUSTOM to Pair("🛠️", "Custom – Define your own period labels")
     )
     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        StepHeader("How often do you meet / collect?", "This determines how many periods appear in your tracker.", C)
+        StepHeader("How often do you meet / collect?", "This determines how many periods appear in your tracker.", colors)
         options.forEach { (freq, info) ->
             val (icon, desc) = info
             SelectionCard(
@@ -382,7 +382,7 @@ private fun AmountStep(
     }
     val skipAmount = trackerType == TrackerType.ATTENDANCE || trackerType == TrackerType.TASKS
     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        StepHeader("Set the Amount", "How much is due per period per member?", C)
+        StepHeader("Set the Amount", "How much is due per period per member?", colors)
         if (skipAmount) {
             Card(colors = CardDefaults.cardColors(containerColor = colors.card), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Text(
@@ -429,7 +429,7 @@ private fun LayoutStyleStep(
         LayoutStyle.RECEIPT to Triple("🧾", "Receipt / Ledger", "Detailed financial ledger style")
     )
     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        StepHeader("Choose a Layout Style", "Pick how you want to view your tracker. You can change this anytime.", C)
+        StepHeader("Choose a Layout Style", "Pick how you want to view your tracker. You can change this anytime.", colors)
         options.forEach { (style, info) ->
             val (icon, title, desc) = info
             SelectionCard(icon = icon, title = title, description = desc, selected = selected == style, onClick = { onSelect(style) }, colors = colors)
@@ -450,7 +450,7 @@ private fun ReviewStep(
     colors: com.mikeisesele.clearr.ui.theme.DuesColors
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        StepHeader("Review", "Confirm your setup before creating the tracker.", C)
+        StepHeader("Review", "Confirm your setup before creating the tracker.", colors)
         Card(colors = CardDefaults.cardColors(containerColor = colors.card), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Group: ${groupName.ifBlank { "Unnamed Group" }}", color = colors.text)

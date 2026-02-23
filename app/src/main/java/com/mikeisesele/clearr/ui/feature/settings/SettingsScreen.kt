@@ -96,13 +96,13 @@ fun SettingsScreen(
                                     fontWeight = if (y == state.selectedYear) FontWeight.Bold else FontWeight.Normal
                                 )
                             },
-                            onClick = { viewModel.selectYear(y); yearMenuExpanded = false }
+                            onClick = { viewModel.onAction(SettingsAction.SelectYear(y)); yearMenuExpanded = false }
                         )
                     }
                     HorizontalDivider(color = colors.border)
                     DropdownMenuItem(
                         text = { Text("＋ Start ${state.selectedYear + 1}", color = colors.accent, fontWeight = FontWeight.SemiBold) },
-                        onClick = { viewModel.startNewYear(state.selectedYear); yearMenuExpanded = false }
+                        onClick = { viewModel.onAction(SettingsAction.StartNewYear(state.selectedYear)); yearMenuExpanded = false }
                     )
                 }
             }
@@ -135,7 +135,7 @@ fun SettingsScreen(
                 Button(
                     onClick = {
                         val amt = localDue.toDoubleOrNull()
-                        if (amt != null && amt > 0) viewModel.updateDueAmount(state.selectedYear, amt)
+                        if (amt != null && amt > 0) viewModel.onAction(SettingsAction.UpdateDueAmount(state.selectedYear, amt))
                     },
                     enabled = dueEditable,
                     colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
@@ -179,7 +179,7 @@ fun SettingsScreen(
                             .clip(RoundedCornerShape(10.dp))
                             .background(bgColor)
                             .border(width = if (selected) 2.dp else 1.dp, color = borderColor, shape = RoundedCornerShape(10.dp))
-                            .clickable { viewModel.setLayoutStyle(style) }
+                            .clickable { viewModel.onAction(SettingsAction.SetLayoutStyle(style)) }
                             .padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -206,7 +206,7 @@ fun SettingsScreen(
                     val selected = state.themeMode == mode
                     FilterChip(
                         selected = selected,
-                        onClick = { viewModel.setThemeMode(mode); onThemeChange(mode) },
+                        onClick = { viewModel.onAction(SettingsAction.SetThemeMode(mode)); onThemeChange(mode) },
                         label = { Text(mode.name.lowercase().replaceFirstChar { it.uppercase() }) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = colors.accent,
@@ -227,7 +227,7 @@ fun SettingsScreen(
             }
             Spacer(Modifier.height(12.dp))
             OutlinedButton(
-                onClick = { viewModel.resetSetup() },
+                onClick = { viewModel.onAction(SettingsAction.ResetSetup) },
                 border = BorderStroke(1.dp, colors.accent),
                 modifier = Modifier.fillMaxWidth()
             ) { Text("⚙️  Re-run Setup Wizard", color = colors.accent) }

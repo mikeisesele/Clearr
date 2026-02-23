@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.TrackerSummary
+import com.mikeisesele.clearr.ui.feature.trackerlist.TrackerListAction
 import com.mikeisesele.clearr.ui.feature.trackerlist.components.EmptyTrackerState
 import com.mikeisesele.clearr.ui.feature.trackerlist.components.TrackerCard
 import com.mikeisesele.clearr.ui.feature.trackerlist.components.primaryColor
@@ -52,7 +53,7 @@ fun TrackerListScreen(
     var isRefreshing by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        viewModel.refresh()
+        viewModel.onAction(TrackerListAction.Refresh)
     }
 
     Box(
@@ -65,7 +66,7 @@ fun TrackerListScreen(
             onRefresh = {
                 scope.launch {
                     isRefreshing = true
-                    viewModel.refresh()
+                    viewModel.onAction(TrackerListAction.Refresh)
                     delay(350)
                     isRefreshing = false
                 }
@@ -149,7 +150,9 @@ fun TrackerListScreen(
                                     TrackerCard(
                                         summary = summary,
                                         onClick = {
-                                            if (summary.isNew) viewModel.clearNewFlag(summary.trackerId)
+                                            if (summary.isNew) {
+                                                viewModel.onAction(TrackerListAction.ClearNewFlag(summary.trackerId))
+                                            }
                                             onTrackerClick(summary.trackerId)
                                         },
                                         onLongPress = {
@@ -209,7 +212,7 @@ fun TrackerListScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.deleteTracker(summary.trackerId)
+                        viewModel.onAction(TrackerListAction.DeleteTracker(summary.trackerId))
                         deleteTarget = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ClearrColors.BrandDanger)
@@ -238,7 +241,7 @@ fun TrackerListScreen(
                 Button(
                     enabled = renameValue.isNotBlank(),
                     onClick = {
-                        viewModel.renameTracker(summary.trackerId, renameValue)
+                        viewModel.onAction(TrackerListAction.RenameTracker(summary.trackerId, renameValue))
                         renameTarget = null
                     }
                 ) { Text("Save") }

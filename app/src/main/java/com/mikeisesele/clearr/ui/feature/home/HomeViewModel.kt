@@ -1,7 +1,6 @@
 package com.mikeisesele.clearr.ui.feature.home
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Member
@@ -17,23 +16,28 @@ import com.mikeisesele.clearr.di.AppStateHolder
 import com.mikeisesele.clearr.domain.repository.DuesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.collectLatest
+import javax.inject.Inject
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: DuesRepository,
     private val appState: AppStateHolder
-) : ViewModel() {
+) : BaseViewModel<HomeUiState, HomeAction, HomeEvent>(
+    initialState = HomeUiState()
+) {
 
-    private val _showArchived = MutableStateFlow(false)
-    private val _confettiMonth = MutableStateFlow<Int?>(null)
-    private val _snackbar = MutableStateFlow<SnackbarData?>(null)
+    private val showArchivedFlow = MutableStateFlow(false)
+    private val confettiMonthFlow = MutableStateFlow<Int?>(null)
+    private val snackbarFlow = MutableStateFlow<SnackbarData?>(null)
 
     private data class UiParams(
         val year: Int,
@@ -44,98 +48,118 @@ class HomeViewModel @Inject constructor(
         val trackerId: Long?
     )
 
-    val uiState: StateFlow<HomeUiState> = combine(
-        appState.selectedYear,
-        _showArchived,
-        _confettiMonth,
-        _snackbar,
-        appState.appConfig,
-        appState.currentTrackerId
-    ) { arr ->
-        @Suppress("UNCHECKED_CAST")
-        UiParams(
-            year = arr[0] as Int,
-            showArchived = arr[1] as Boolean,
-            confettiMonth = arr[2] as? Int,
-            snackbar = arr[3] as? SnackbarData,
-            appConfig = arr[4] as AppConfig?,
-            trackerId = arr[5] as Long?
-        )
-    }.flatMapLatest { p ->
-        val trackerId = p.trackerId
-        if (trackerId != null) {
-            val trackerFlow: Flow<Tracker?> = repository.getTrackerByIdFlow(trackerId)
-            val membersFlow = repository.getAllMembersForTracker(trackerId)
-            val periodsFlow = repository.getPeriodsForTracker(trackerId)
-            val recordsFlow = repository.getRecordsForTracker(trackerId)
-
-            combine(trackerFlow, membersFlow, periodsFlow, recordsFlow) { tracker, members, periods, records ->
-                val mappedMembers = members.map { it.asUiMember() }
-                val periodById = periods.associateBy { it.id }
-                val mappedPayments = records.mapNotNull { rec ->
-                    val period = periodById[rec.periodId] ?: return@mapNotNull null
-                    val monthIndex = monthIndexFromLabel(period.label, p.year) ?: return@mapNotNull null
-                    PaymentRecord(
-                        memberId = rec.memberId,
-                        year = p.year,
-                        monthIndex = monthIndex,
-                        amountPaid = rec.amountPaid,
-                        expectedAmount = tracker?.defaultAmount ?: 5000.0,
-                        paidAt = rec.updatedAt,
-                        note = rec.note
-                    )
-                }
-                val syntheticYearConfig = YearConfig(
-                    year = p.year,
-                    dueAmountPerMonth = tracker?.defaultAmount ?: 5000.0
-                )
-                HomeUiState(
-                    selectedYear = p.year,
-                    members = mappedMembers,
-                    payments = mappedPayments,
-                    yearConfig = syntheticYearConfig,
-                    showArchived = p.showArchived,
-                    confettiMonth = p.confettiMonth,
-                    snackbarMessage = p.snackbar,
-                    layoutStyle = tracker?.layoutStyle ?: p.appConfig?.layoutStyle ?: LayoutStyle.GRID,
-                    trackerName = tracker?.name ?: "Tracker",
-                    trackerType = tracker?.type ?: TrackerType.DUES,
-                    currentPeriodId = periods.firstOrNull { it.isCurrent }?.id
-                )
-            }
-        } else {
-            combine(
-                repository.getAllMembers(),
-                repository.getPaymentsForYear(p.year),
-                repository.getYearConfigFlow(p.year)
-            ) { members, payments, config ->
-                HomeUiState(
-                    selectedYear = p.year,
-                    members = members,
-                    payments = payments,
-                    yearConfig = config,
-                    showArchived = p.showArchived,
-                    confettiMonth = p.confettiMonth,
-                    snackbarMessage = p.snackbar,
-                    layoutStyle = p.appConfig?.layoutStyle ?: LayoutStyle.GRID,
-                    trackerName = "Dues Tracker",
-                    trackerType = TrackerType.DUES
-                )
-            }
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState())
-
     init {
-        viewModelScope.launch {
+        launch {
+            combine(
+                appState.selectedYear,
+                showArchivedFlow,
+                confettiMonthFlow,
+                snackbarFlow,
+                appState.appConfig,
+                appState.currentTrackerId
+            ) { arr ->
+                @Suppress("UNCHECKED_CAST")
+                UiParams(
+                    year = arr[0] as Int,
+                    showArchived = arr[1] as Boolean,
+                    confettiMonth = arr[2] as? Int,
+                    snackbar = arr[3] as? SnackbarData,
+                    appConfig = arr[4] as AppConfig?,
+                    trackerId = arr[5] as Long?
+                )
+            }.flatMapLatest { p ->
+                val trackerId = p.trackerId
+                if (trackerId != null) {
+                    val trackerFlow = repository.getTrackerByIdFlow(trackerId)
+                    val membersFlow = repository.getAllMembersForTracker(trackerId)
+                    val periodsFlow = repository.getPeriodsForTracker(trackerId)
+                    val recordsFlow = repository.getRecordsForTracker(trackerId)
+
+                    combine(trackerFlow, membersFlow, periodsFlow, recordsFlow) { tracker, members, periods, records ->
+                        val mappedMembers = members.map { it.asUiMember() }
+                        val periodById = periods.associateBy { it.id }
+                        val mappedPayments = records.mapNotNull { rec ->
+                            val period = periodById[rec.periodId] ?: return@mapNotNull null
+                            val monthIndex = monthIndexFromLabel(period.label, p.year) ?: return@mapNotNull null
+                            PaymentRecord(
+                                memberId = rec.memberId,
+                                year = p.year,
+                                monthIndex = monthIndex,
+                                amountPaid = rec.amountPaid,
+                                expectedAmount = tracker?.defaultAmount ?: 5000.0,
+                                paidAt = rec.updatedAt,
+                                note = rec.note
+                            )
+                        }
+                        val syntheticYearConfig = YearConfig(
+                            year = p.year,
+                            dueAmountPerMonth = tracker?.defaultAmount ?: 5000.0
+                        )
+                        HomeUiState(
+                            selectedYear = p.year,
+                            members = mappedMembers,
+                            payments = mappedPayments,
+                            yearConfig = syntheticYearConfig,
+                            showArchived = p.showArchived,
+                            confettiMonth = p.confettiMonth,
+                            snackbarMessage = p.snackbar,
+                            layoutStyle = tracker?.layoutStyle ?: p.appConfig?.layoutStyle ?: LayoutStyle.GRID,
+                            trackerName = tracker?.name ?: "Tracker",
+                            trackerType = tracker?.type ?: TrackerType.DUES,
+                            currentPeriodId = periods.firstOrNull { it.isCurrent }?.id
+                        )
+                    }
+                } else {
+                    combine(
+                        repository.getAllMembers(),
+                        repository.getPaymentsForYear(p.year),
+                        repository.getYearConfigFlow(p.year)
+                    ) { members, payments, config ->
+                        HomeUiState(
+                            selectedYear = p.year,
+                            members = members,
+                            payments = payments,
+                            yearConfig = config,
+                            showArchived = p.showArchived,
+                            confettiMonth = p.confettiMonth,
+                            snackbarMessage = p.snackbar,
+                            layoutStyle = p.appConfig?.layoutStyle ?: LayoutStyle.GRID,
+                            trackerName = "Dues Tracker",
+                            trackerType = TrackerType.DUES
+                        )
+                    }
+                }
+            }.collectLatest { newState -> updateState { newState } }
+        }
+
+        launch {
             val currentYear = Calendar.getInstance().get(Calendar.YEAR)
             repository.ensureYearConfig(currentYear)
         }
     }
 
-    fun setShowArchived(show: Boolean) { _showArchived.value = show }
+    override fun onAction(action: HomeAction) {
+        when (action) {
+            is HomeAction.SetShowArchived -> setShowArchived(action.show)
+            is HomeAction.TogglePayment -> togglePayment(action.member, action.year, action.monthIndex, action.dueAmount)
+            is HomeAction.RecordPartialPayment -> recordPartialPayment(action.memberId, action.year, action.monthIndex, action.amount, action.note, action.dueAmount)
+            HomeAction.DismissConfetti -> dismissConfetti()
+            is HomeAction.UndoLastRemoval -> undoLastRemoval(action.paymentId, action.memberId, action.year, action.monthIndex, action.dueAmount)
+            HomeAction.DismissSnackbar -> dismissSnackbar()
+            is HomeAction.AddMember -> addMember(action.name, action.phone)
+            is HomeAction.UpdateMember -> updateMember(action.member)
+            is HomeAction.SetMemberArchived -> setMemberArchived(action.id, action.archived)
+            is HomeAction.DeleteMember -> deleteMember(action.id, action.trackerIdOverride)
+            is HomeAction.SetCurrentTrackerId -> setCurrentTrackerId(action.trackerId)
+            is HomeAction.SetLayoutStyleForCurrentTracker -> setLayoutStyleForCurrentTracker(action.style)
+            is HomeAction.MarkOutstandingMonthsPaid -> markOutstandingMonthsPaid(action.memberId, action.year, action.dueAmount, action.trackerIdOverride)
+        }
+    }
 
-    fun togglePayment(member: Member, year: Int, monthIndex: Int, dueAmount: Double) {
-        viewModelScope.launch {
+    private fun setShowArchived(show: Boolean) { showArchivedFlow.value = show }
+
+    private fun togglePayment(member: Member, year: Int, monthIndex: Int, dueAmount: Double) {
+        launch {
             val trackerId = appState.currentTrackerId.value
             if (trackerId == null) {
                 val totalPaid = repository.getTotalPaidForMonth(member.id, year, monthIndex)
@@ -143,7 +167,7 @@ class HomeViewModel @Inject constructor(
                     val latest = repository.getLatestPayment(member.id, year, monthIndex)
                     if (latest != null) {
                         repository.undoPayment(latest.id)
-                        _snackbar.value = SnackbarData(
+                        snackbarFlow.value = SnackbarData(
                             message = "Payment removed for ${member.name}",
                             undoPaymentId = latest.id,
                             undoMemberId = member.id,
@@ -216,8 +240,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun recordPartialPayment(memberId: Long, year: Int, monthIndex: Int, amount: Double, note: String?, dueAmount: Double) {
-        viewModelScope.launch {
+    private fun recordPartialPayment(memberId: Long, year: Int, monthIndex: Int, amount: Double, note: String?, dueAmount: Double) {
+        launch {
             val trackerId = appState.currentTrackerId.value
             if (trackerId == null) {
                 repository.insertPayment(
@@ -262,13 +286,13 @@ class HomeViewModel @Inject constructor(
         val allPaid = allMembers.isNotEmpty() && allMembers.all { m ->
             repository.getTotalPaidForMonth(m.id, year, monthIndex) >= dueAmount
         }
-        if (allPaid) _confettiMonth.value = monthIndex
+        if (allPaid) confettiMonthFlow.value = monthIndex
     }
 
-    fun dismissConfetti() { _confettiMonth.value = null }
+    private fun dismissConfetti() { confettiMonthFlow.value = null }
 
-    fun undoLastRemoval(paymentId: Long, memberId: Long, year: Int, monthIndex: Int, dueAmount: Double) {
-        viewModelScope.launch {
+    private fun undoLastRemoval(paymentId: Long, memberId: Long, year: Int, monthIndex: Int, dueAmount: Double) {
+        launch {
             repository.insertPayment(
                 PaymentRecord(
                     memberId = memberId,
@@ -279,14 +303,14 @@ class HomeViewModel @Inject constructor(
                     paidAt = System.currentTimeMillis()
                 )
             )
-            _snackbar.value = null
+            snackbarFlow.value = null
         }
     }
 
-    fun dismissSnackbar() { _snackbar.value = null }
+    private fun dismissSnackbar() { snackbarFlow.value = null }
 
-    fun addMember(name: String, phone: String?) {
-        viewModelScope.launch {
+    private fun addMember(name: String, phone: String?) {
+        launch {
             val trackerId = appState.currentTrackerId.value
             if (trackerId != null) {
                 repository.insertTrackerMember(
@@ -309,8 +333,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun updateMember(member: Member) {
-        viewModelScope.launch {
+    private fun updateMember(member: Member) {
+        launch {
             val trackerId = appState.currentTrackerId.value
             if (trackerId != null) {
                 repository.updateTrackerMember(
@@ -329,8 +353,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun setMemberArchived(id: Long, archived: Boolean) {
-        viewModelScope.launch {
+    private fun setMemberArchived(id: Long, archived: Boolean) {
+        launch {
             val trackerId = appState.currentTrackerId.value
             if (trackerId != null) {
                 repository.setTrackerMemberArchived(id, archived)
@@ -340,8 +364,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun deleteMember(id: Long, trackerIdOverride: Long? = null) {
-        viewModelScope.launch {
+    private fun deleteMember(id: Long, trackerIdOverride: Long? = null) {
+        launch {
             val trackerId = trackerIdOverride ?: appState.currentTrackerId.value
             if (trackerId != null) {
                 repository.deleteTrackerMember(trackerId, id)
@@ -351,12 +375,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun setCurrentTrackerId(trackerId: Long?) {
+    private fun setCurrentTrackerId(trackerId: Long?) {
         appState.setCurrentTrackerId(trackerId)
     }
 
-    fun setLayoutStyleForCurrentTracker(style: LayoutStyle) {
-        viewModelScope.launch {
+    private fun setLayoutStyleForCurrentTracker(style: LayoutStyle) {
+        launch {
             val trackerId = appState.currentTrackerId.value ?: return@launch
             val tracker = repository.getTrackerById(trackerId) ?: return@launch
             repository.updateTracker(tracker.copy(layoutStyle = style))
@@ -378,7 +402,7 @@ class HomeViewModel @Inject constructor(
             val status = recordByMember[m.id]?.status
             status != null && status in completed
         }
-        if (allDone) _confettiMonth.value = Calendar.getInstance().get(Calendar.MONTH)
+        if (allDone) confettiMonthFlow.value = Calendar.getInstance().get(Calendar.MONTH)
     }
 
     private fun TrackerMember.asUiMember(): Member = Member(
@@ -450,13 +474,13 @@ class HomeViewModel @Inject constructor(
         return SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
     }
 
-    fun markOutstandingMonthsPaid(
+    private fun markOutstandingMonthsPaid(
         memberId: Long,
         year: Int,
         dueAmount: Double,
         trackerIdOverride: Long? = null
     ) {
-        viewModelScope.launch {
+        launch {
             val trackerId = trackerIdOverride ?: appState.currentTrackerId.value
             val current = Calendar.getInstance()
             val endMonth = when {
