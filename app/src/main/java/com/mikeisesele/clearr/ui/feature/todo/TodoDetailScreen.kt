@@ -2,8 +2,8 @@ package com.mikeisesele.clearr.ui.feature.todo
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateColorAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -32,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -442,11 +442,11 @@ private fun StatusPill(label: String, bg: Color, fg: Color) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun AddTodoSheet(
     onDismiss: () -> Unit,
-    onConfirm: (title: String, note: String?, priority: TodoPriority, dueDate: LocalDate?) -> Unit
+    onConfirm: (String, String?, TodoPriority, LocalDate?) -> Unit
 ) {
     var title by rememberSaveable { mutableStateOf("") }
     var note by rememberSaveable { mutableStateOf("") }
@@ -470,10 +470,10 @@ private fun AddTodoSheet(
                     enabled = title.trim().isNotEmpty(),
                     onClick = {
                         onConfirm(
-                            title = title.trim(),
-                            note = note.trim().ifBlank { null },
-                            priority = priority,
-                            dueDate = dueDateFromOption(dueOption)
+                            title.trim(),
+                            note.trim().ifBlank { null },
+                            priority,
+                            dueDateFromOption(dueOption)
                         )
                     }
                 ) {
@@ -559,6 +559,7 @@ private fun AddTodoSheet(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TodoDetailSheet(
     todo: TodoItem,
