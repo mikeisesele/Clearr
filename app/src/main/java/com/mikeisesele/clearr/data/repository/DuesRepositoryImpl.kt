@@ -1,11 +1,16 @@
 package com.mikeisesele.clearr.data.repository
 
 import com.mikeisesele.clearr.data.dao.AppConfigDao
+import com.mikeisesele.clearr.data.dao.BudgetDao
 import com.mikeisesele.clearr.data.dao.MemberDao
 import com.mikeisesele.clearr.data.dao.PaymentRecordDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
 import com.mikeisesele.clearr.data.dao.YearConfigDao
 import com.mikeisesele.clearr.data.model.AppConfig
+import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.data.model.BudgetEntry
+import com.mikeisesele.clearr.data.model.BudgetFrequency
+import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.Member
 import com.mikeisesele.clearr.data.model.PaymentRecord
 import com.mikeisesele.clearr.data.model.Tracker
@@ -15,6 +20,9 @@ import com.mikeisesele.clearr.data.model.TrackerRecord
 import com.mikeisesele.clearr.data.model.YearConfig
 import com.mikeisesele.clearr.domain.repository.DuesRepository
 import kotlinx.coroutines.flow.Flow
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,7 +32,8 @@ class DuesRepositoryImpl @Inject constructor(
     private val paymentRecordDao: PaymentRecordDao,
     private val yearConfigDao: YearConfigDao,
     private val appConfigDao: AppConfigDao,
-    private val trackerDao: TrackerDao
+    private val trackerDao: TrackerDao,
+    private val budgetDao: BudgetDao
 ) : DuesRepository {
 
     // ── App Config ────────────────────────────────────────────────────────────
@@ -157,4 +166,115 @@ class DuesRepositoryImpl @Inject constructor(
 
     override suspend fun getCompletedCountForPeriod(trackerId: Long, periodId: Long): Int =
         trackerDao.getCompletedCountForPeriod(trackerId, periodId)
+
+    // ── Budget tracker ────────────────────────────────────────────────────────
+    override fun getBudgetPeriods(trackerId: Long, frequency: BudgetFrequency): Flow<List<BudgetPeriod>> =
+        budgetDao.getPeriods(trackerId, frequency)
+
+    override suspend fun ensureBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) {
+        val existing = budgetDao.getLatestPeriod(trackerId, frequency)
+        if (existing != null) return
+        val periods = when (frequency) {
+            BudgetFrequency.MONTHLY -> generateMonthlyPeriods(trackerId)
+            BudgetFrequency.WEEKLY -> generateWeeklyPeriods(trackerId)
+        }
+        budgetDao.insertPeriods(periods)
+    }
+
+    override fun getBudgetCategories(trackerId: Long, frequency: BudgetFrequency): Flow<List<BudgetCategory>> =
+        budgetDao.getCategories(trackerId, frequency)
+
+    override suspend fun getBudgetMaxSortOrder(trackerId: Long, frequency: BudgetFrequency): Int =
+        budgetDao.getMaxSortOrder(trackerId, frequency)
+
+    override suspend fun addBudgetCategory(category: BudgetCategory): Long =
+        budgetDao.insertCategory(category)
+
+    override suspend fun updateBudgetCategory(category: BudgetCategory) =
+        budgetDao.updateCategory(category)
+
+    override suspend fun deleteBudgetCategory(categoryId: Long) {
+        budgetDao.deleteEntriesByCategory(categoryId)
+        budgetDao.deleteCategory(categoryId)
+    }
+
+    override suspend fun reorderBudgetCategories(
+        trackerId: Long,
+        frequency: BudgetFrequency,
+        orderedIds: List<Long>
+    ) {
+        orderedIds.forEachIndexed { index, id ->
+            budgetDao.updateCategorySortOrder(id, index)
+        }
+    }
+
+    override fun getBudgetEntriesForTracker(trackerId: Long): Flow<List<BudgetEntry>> =
+        budgetDao.getEntriesForTracker(trackerId)
+
+    override suspend fun addBudgetEntry(entry: BudgetEntry): Long =
+        budgetDao.insertEntry(entry)
+
+    private fun generateMonthlyPeriods(trackerId: Long): List<BudgetPeriod> {
+        val cal = Calendar.getInstance().apply { add(Calendar.MONTH, -4) }
+        return (0 until 5).map {
+            val periodCal = cal.clone() as Calendar
+            periodCal.add(Calendar.MONTH, it)
+            val label = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(periodCal.time)
+            val start = (periodCal.clone() as Calendar).apply {
+                set(Calendar.DAY_OF_MONTH, 1)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            val end = (periodCal.clone() as Calendar).apply {
+                set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH))
+                set(Calendar.HOUR_OF_DAY, 23)
+                set(Calendar.MINUTE, 59)
+                set(Calendar.SECOND, 59)
+                set(Calendar.MILLISECOND, 999)
+            }.timeInMillis
+            BudgetPeriod(
+                trackerId = trackerId,
+                frequency = BudgetFrequency.MONTHLY,
+                label = label,
+                startDate = start,
+                endDate = end
+            )
+        }
+    }
+
+    private fun generateWeeklyPeriods(trackerId: Long): List<BudgetPeriod> {
+        val base = Calendar.getInstance().apply {
+            firstDayOfWeek = Calendar.MONDAY
+            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            add(Calendar.WEEK_OF_YEAR, -4)
+        }
+        return (0 until 5).map {
+            val periodCal = base.clone() as Calendar
+            periodCal.add(Calendar.WEEK_OF_YEAR, it)
+            val week = periodCal.get(Calendar.WEEK_OF_YEAR)
+            val label = "Week $week"
+            val start = (periodCal.clone() as Calendar).apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            val end = (periodCal.clone() as Calendar).apply {
+                add(Calendar.DAY_OF_YEAR, 6)
+                set(Calendar.HOUR_OF_DAY, 23)
+                set(Calendar.MINUTE, 59)
+                set(Calendar.SECOND, 59)
+                set(Calendar.MILLISECOND, 999)
+            }.timeInMillis
+            BudgetPeriod(
+                trackerId = trackerId,
+                frequency = BudgetFrequency.WEEKLY,
+                label = label,
+                startDate = start,
+                endDate = end
+            )
+        }
+    }
 }

@@ -39,11 +39,11 @@ data class AppConfig(
 )
 
 enum class TrackerType {
-    DUES,        // Monthly financial dues
-    ATTENDANCE,  // Meeting / event attendance
-    TASKS,       // Task completion tracking
-    EVENTS,      // Event participation
-    CUSTOM       // Fully custom labels
+    DUES,       // Group financial obligations
+    GOALS,      // Personal goals / recurring habits
+    TODO,       // Personal to-do / task list
+    BUDGET,     // Planned vs actual spending
+    EXPENSES    // Shared/group expenses tracking
 }
 
 enum class Frequency {

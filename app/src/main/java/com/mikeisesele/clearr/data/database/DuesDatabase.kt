@@ -5,11 +5,15 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.mikeisesele.clearr.data.dao.AppConfigDao
+import com.mikeisesele.clearr.data.dao.BudgetDao
 import com.mikeisesele.clearr.data.dao.MemberDao
 import com.mikeisesele.clearr.data.dao.PaymentRecordDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
 import com.mikeisesele.clearr.data.dao.YearConfigDao
 import com.mikeisesele.clearr.data.model.AppConfig
+import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.data.model.BudgetEntry
+import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.Member
 import com.mikeisesele.clearr.data.model.PaymentRecord
 import com.mikeisesele.clearr.data.model.Tracker
@@ -28,8 +32,11 @@ import com.mikeisesele.clearr.data.model.YearConfig
         TrackerMember::class,
         TrackerPeriod::class,
         TrackerRecord::class,
+        BudgetPeriod::class,
+        BudgetCategory::class,
+        BudgetEntry::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class DuesDatabase : RoomDatabase() {
@@ -38,6 +45,7 @@ abstract class DuesDatabase : RoomDatabase() {
     abstract fun yearConfigDao(): YearConfigDao
     abstract fun appConfigDao(): AppConfigDao
     abstract fun trackerDao(): TrackerDao
+    abstract fun budgetDao(): BudgetDao
 
     companion object {
         /**

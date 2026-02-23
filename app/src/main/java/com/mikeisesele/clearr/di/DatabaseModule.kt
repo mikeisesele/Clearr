@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.mikeisesele.clearr.data.dao.AppConfigDao
+import com.mikeisesele.clearr.data.dao.BudgetDao
 import com.mikeisesele.clearr.data.dao.MemberDao
 import com.mikeisesele.clearr.data.dao.PaymentRecordDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
@@ -80,4 +81,7 @@ object DatabaseModule {
 
     @Provides
     fun provideTrackerDao(db: DuesDatabase): TrackerDao = db.trackerDao()
+
+    @Provides
+    fun provideBudgetDao(db: DuesDatabase): BudgetDao = db.budgetDao()
 }

@@ -1,6 +1,10 @@
 package com.mikeisesele.clearr.domain.repository
 
 import com.mikeisesele.clearr.data.model.AppConfig
+import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.data.model.BudgetEntry
+import com.mikeisesele.clearr.data.model.BudgetFrequency
+import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.Member
 import com.mikeisesele.clearr.data.model.PaymentRecord
 import com.mikeisesele.clearr.data.model.Tracker
@@ -78,4 +82,16 @@ interface DuesRepository {
     suspend fun updateRecord(record: TrackerRecord)
     suspend fun deleteRecord(id: Long)
     suspend fun getCompletedCountForPeriod(trackerId: Long, periodId: Long): Int
+
+    // ── Budget tracker (personal planned vs actual) ──────────────────────────
+    fun getBudgetPeriods(trackerId: Long, frequency: BudgetFrequency): Flow<List<BudgetPeriod>>
+    suspend fun ensureBudgetPeriods(trackerId: Long, frequency: BudgetFrequency)
+    fun getBudgetCategories(trackerId: Long, frequency: BudgetFrequency): Flow<List<BudgetCategory>>
+    suspend fun getBudgetMaxSortOrder(trackerId: Long, frequency: BudgetFrequency): Int
+    suspend fun addBudgetCategory(category: BudgetCategory): Long
+    suspend fun updateBudgetCategory(category: BudgetCategory)
+    suspend fun deleteBudgetCategory(categoryId: Long)
+    suspend fun reorderBudgetCategories(trackerId: Long, frequency: BudgetFrequency, orderedIds: List<Long>)
+    fun getBudgetEntriesForTracker(trackerId: Long): Flow<List<BudgetEntry>>
+    suspend fun addBudgetEntry(entry: BudgetEntry): Long
 }
