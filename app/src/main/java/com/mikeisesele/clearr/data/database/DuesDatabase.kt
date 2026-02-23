@@ -6,6 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.mikeisesele.clearr.data.dao.AppConfigDao
 import com.mikeisesele.clearr.data.dao.BudgetDao
+import com.mikeisesele.clearr.data.dao.GoalsDao
 import com.mikeisesele.clearr.data.dao.MemberDao
 import com.mikeisesele.clearr.data.dao.PaymentRecordDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
@@ -17,6 +18,8 @@ import com.mikeisesele.clearr.data.model.BudgetEntry
 import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.Member
 import com.mikeisesele.clearr.data.model.PaymentRecord
+import com.mikeisesele.clearr.data.model.GoalCompletionEntity
+import com.mikeisesele.clearr.data.model.GoalEntity
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerMember
 import com.mikeisesele.clearr.data.model.TrackerPeriod
@@ -38,8 +41,10 @@ import com.mikeisesele.clearr.data.model.YearConfig
         BudgetCategory::class,
         BudgetEntry::class,
         TodoEntity::class,
+        GoalEntity::class,
+        GoalCompletionEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class DuesDatabase : RoomDatabase() {
@@ -50,6 +55,7 @@ abstract class DuesDatabase : RoomDatabase() {
     abstract fun trackerDao(): TrackerDao
     abstract fun budgetDao(): BudgetDao
     abstract fun todoDao(): TodoDao
+    abstract fun goalsDao(): GoalsDao
 
     companion object {
         /**

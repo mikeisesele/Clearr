@@ -5,6 +5,8 @@ import com.mikeisesele.clearr.data.model.BudgetCategory
 import com.mikeisesele.clearr.data.model.BudgetEntry
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.BudgetPeriod
+import com.mikeisesele.clearr.data.model.Goal
+import com.mikeisesele.clearr.data.model.GoalCompletion
 import com.mikeisesele.clearr.data.model.Member
 import com.mikeisesele.clearr.data.model.PaymentRecord
 import com.mikeisesele.clearr.data.model.Tracker
@@ -103,4 +105,11 @@ interface DuesRepository {
     suspend fun updateTodo(todo: TodoItem)
     suspend fun markTodoDone(id: String, completedAt: Long)
     suspend fun deleteTodo(id: String)
+
+    // ── Goals tracker ────────────────────────────────────────────────────────
+    fun getGoalsForTracker(trackerId: Long): Flow<List<Goal>>
+    fun getGoalCompletionsForTracker(trackerId: Long): Flow<List<GoalCompletion>>
+    suspend fun insertGoal(goal: Goal)
+    suspend fun addGoalCompletion(completion: GoalCompletion)
+    suspend fun deleteGoal(goalId: String)
 }

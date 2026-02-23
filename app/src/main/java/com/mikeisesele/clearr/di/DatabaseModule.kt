@@ -6,6 +6,7 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.mikeisesele.clearr.data.dao.AppConfigDao
 import com.mikeisesele.clearr.data.dao.BudgetDao
+import com.mikeisesele.clearr.data.dao.GoalsDao
 import com.mikeisesele.clearr.data.dao.MemberDao
 import com.mikeisesele.clearr.data.dao.PaymentRecordDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
@@ -88,4 +89,7 @@ object DatabaseModule {
 
     @Provides
     fun provideTodoDao(db: DuesDatabase): TodoDao = db.todoDao()
+
+    @Provides
+    fun provideGoalsDao(db: DuesDatabase): GoalsDao = db.goalsDao()
 }

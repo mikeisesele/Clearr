@@ -2,6 +2,7 @@ package com.mikeisesele.clearr.data.repository
 
 import com.mikeisesele.clearr.data.dao.AppConfigDao
 import com.mikeisesele.clearr.data.dao.BudgetDao
+import com.mikeisesele.clearr.data.dao.GoalsDao
 import com.mikeisesele.clearr.data.dao.MemberDao
 import com.mikeisesele.clearr.data.dao.PaymentRecordDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
@@ -12,6 +13,8 @@ import com.mikeisesele.clearr.data.model.BudgetCategory
 import com.mikeisesele.clearr.data.model.BudgetEntry
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.BudgetPeriod
+import com.mikeisesele.clearr.data.model.Goal
+import com.mikeisesele.clearr.data.model.GoalCompletion
 import com.mikeisesele.clearr.data.model.Member
 import com.mikeisesele.clearr.data.model.PaymentRecord
 import com.mikeisesele.clearr.data.model.Tracker
@@ -39,7 +42,8 @@ class DuesRepositoryImpl @Inject constructor(
     private val appConfigDao: AppConfigDao,
     private val trackerDao: TrackerDao,
     private val budgetDao: BudgetDao,
-    private val todoDao: TodoDao
+    private val todoDao: TodoDao,
+    private val goalsDao: GoalsDao
 ) : DuesRepository {
 
     // ── App Config ────────────────────────────────────────────────────────────
@@ -238,6 +242,22 @@ class DuesRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTodo(id: String) =
         todoDao.delete(id)
+
+    // ── Goals tracker ────────────────────────────────────────────────────────
+    override fun getGoalsForTracker(trackerId: Long): Flow<List<Goal>> =
+        goalsDao.getGoals(trackerId).map { list -> list.map { it.toDomain() } }
+
+    override fun getGoalCompletionsForTracker(trackerId: Long): Flow<List<GoalCompletion>> =
+        goalsDao.getAllCompletions(trackerId).map { list -> list.map { it.toDomain() } }
+
+    override suspend fun insertGoal(goal: Goal) =
+        goalsDao.insertGoal(goal.toEntity())
+
+    override suspend fun addGoalCompletion(completion: GoalCompletion) =
+        goalsDao.insertCompletion(completion.toEntity())
+
+    override suspend fun deleteGoal(goalId: String) =
+        goalsDao.deleteGoal(goalId)
 
     private fun generateMonthlyPeriods(trackerId: Long): List<BudgetPeriod> {
         val cal = Calendar.getInstance().apply { add(Calendar.MONTH, -4) }

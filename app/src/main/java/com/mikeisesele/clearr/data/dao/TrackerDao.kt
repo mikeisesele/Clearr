@@ -52,6 +52,12 @@ interface TrackerDao {
     @Query("DELETE FROM todos WHERE trackerId = :trackerId")
     suspend fun deleteTodosForTracker(trackerId: Long)
 
+    @Query("DELETE FROM goal_completions WHERE goalId IN (SELECT id FROM goals WHERE trackerId = :trackerId)")
+    suspend fun deleteGoalCompletionsForTracker(trackerId: Long)
+
+    @Query("DELETE FROM goals WHERE trackerId = :trackerId")
+    suspend fun deleteGoalsForTracker(trackerId: Long)
+
     @Transaction
     suspend fun deleteTracker(trackerId: Long) {
         deleteRecordsForTracker(trackerId)
@@ -61,6 +67,8 @@ interface TrackerDao {
         deleteBudgetCategoriesForTracker(trackerId)
         deleteBudgetPeriodsForTracker(trackerId)
         deleteTodosForTracker(trackerId)
+        deleteGoalCompletionsForTracker(trackerId)
+        deleteGoalsForTracker(trackerId)
         deleteTrackerRow(trackerId)
     }
 
