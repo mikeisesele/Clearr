@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.onboarding
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,10 +15,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mikeisesele.clearr.R
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import kotlinx.coroutines.delay
@@ -80,7 +83,7 @@ fun SplashScreen(onGetStarted: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClearrColors.Violet),
+            .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
         // ── Decorative background circles ─────────────────────────────────────
@@ -90,7 +93,7 @@ fun SplashScreen(onGetStarted: () -> Unit) {
                 .align(Alignment.TopEnd)
                 .offset(x = 60.dp, y = (-60).dp)
                 .clip(RoundedCornerShape(percent = 50))
-                .background(Color.White.copy(alpha = 0.06f))
+                .background(ClearrColors.Violet.copy(alpha = 0.08f))
         )
         Box(
             modifier = Modifier
@@ -98,7 +101,7 @@ fun SplashScreen(onGetStarted: () -> Unit) {
                 .align(Alignment.BottomStart)
                 .offset(x = (-60).dp, y = 60.dp)
                 .clip(RoundedCornerShape(percent = 50))
-                .background(Color.White.copy(alpha = 0.06f))
+                .background(ClearrColors.Violet.copy(alpha = 0.06f))
         )
 
         // ── Phase 1: Large centred splash logo ────────────────────────────────
@@ -109,34 +112,24 @@ fun SplashScreen(onGetStarted: () -> Unit) {
                 .scale(splashScale),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Icon container
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(Color.White.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "✦",
-                    fontSize = 32.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.clear_icon_vector),
+                contentDescription = "Clearr icon",
+                modifier = Modifier.size(200.dp)
+            )
             Spacer(Modifier.height(20.dp))
             Text(
                 "Clearr",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Black,
-                color = Color.White,
+                color = ClearrColors.Violet,
                 letterSpacing = (-1).sp
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                "Know who's cleared.",
+                "Know what's cleared.",
                 fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.6f)
+                color = ClearrColors.Violet.copy(alpha = 0.72f)
             )
         }
 
@@ -151,34 +144,24 @@ fun SplashScreen(onGetStarted: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            // Compact icon
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "✦",
-                    fontSize = 22.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.clear_icon_vector),
+                contentDescription = "Clearr icon",
+                modifier = Modifier.size(56.dp)
+            )
             Spacer(Modifier.height(12.dp))
             Text(
                 "Clearr",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Black,
-                color = Color.White,
+                color = ClearrColors.Violet,
                 letterSpacing = (-0.5).sp
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "Know who's cleared.",
+                "Know what's cleared.",
                 fontSize = 13.sp,
-                color = Color.White.copy(alpha = 0.6f)
+                color = ClearrColors.Violet.copy(alpha = 0.72f)
             )
             Spacer(Modifier.height(36.dp))
             Button(
@@ -186,8 +169,8 @@ fun SplashScreen(onGetStarted: () -> Unit) {
                 enabled = ctaVisible,
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = ClearrColors.Violet
+                    containerColor = ClearrColors.Violet,
+                    contentColor = Color.White
                 ),
                 contentPadding = PaddingValues(horizontal = 40.dp, vertical = 16.dp)
             ) {
@@ -195,7 +178,7 @@ fun SplashScreen(onGetStarted: () -> Unit) {
                     "Get Started",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = ClearrColors.Violet
+                    color = Color.White
                 )
             }
         }

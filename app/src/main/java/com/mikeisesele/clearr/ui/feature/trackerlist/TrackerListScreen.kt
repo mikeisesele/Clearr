@@ -124,7 +124,7 @@ fun TrackerListScreen(
                                     confirmValueChange = { value ->
                                         if (value == SwipeToDismissBoxValue.EndToStart) {
                                             deleteTarget = summary
-                                            true
+                                            false
                                         } else {
                                             false
                                         }

@@ -8,9 +8,12 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,11 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mikeisesele.clearr.R
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
@@ -49,7 +54,7 @@ private val slides = listOf(
         icon = "◎",
         accentColor = ClearrColors.Violet,
         bgColor = ClearrColors.VioletBg,
-        headline = "Know who's cleared.",
+        headline = "Know what's's cleared.",
         subtext = "Track dues, attendance, tasks and events across all your groups — in one place."
     ),
     SlideData(
@@ -172,10 +177,18 @@ fun OnboardingScreen(
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(RoundedCornerShape(18.dp))
-                                .background(s.accentColor.copy(alpha = 0.12f)),
+                                .background(if (idx == 0) Color.Transparent else s.accentColor.copy(alpha = 0.12f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(s.icon, fontSize = 28.sp, color = s.accentColor)
+                            if (idx == 0) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.clear_icon_vector),
+                                    contentDescription = "Clearr icon",
+                                    modifier = Modifier.size(200.dp)
+                                )
+                            } else {
+                                Text(s.icon, fontSize = 28.sp, color = s.accentColor)
+                            }
                         }
                         Spacer(Modifier.height(20.dp))
                         Text(
@@ -521,10 +534,11 @@ private fun Slide2Visual() {
 // Slide 3 Visual
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val slide3Names = listOf("Henry", "Simon", "Dare", "Tobi", "Michael", "Faruk", "Chidi", "Olu", "Michael I.")
-private val slide3Cleared = setOf(0, 2, 3, 5, 6, 8)
+private val slide3Names = listOf("John", "Simon", "Jessy", "Chelsea", "Mike", "Ola.")
+private val slide3Cleared = setOf(0, 1, 3, 5)
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun Slide3Visual() {
     val clearedCount = slide3Cleared.size
     val totalCount = slide3Names.size
@@ -570,28 +584,25 @@ private fun Slide3Visual() {
                 )
             }
             Spacer(Modifier.height(12.dp))
-            val rows = slide3Names.chunked(3)
-            rows.forEach { rowNames ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.padding(bottom = 5.dp)
-                ) {
-                    rowNames.forEachIndexed { i, name ->
-                        val globalIdx = slide3Names.indexOf(name)
-                        val cleared = globalIdx in slide3Cleared
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(if (cleared) ClearrColors.EmeraldBg else ClearrColors.CoralBg)
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                name,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (cleared) ClearrColors.Emerald else ClearrColors.Coral
-                            )
-                        }
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                slide3Names.forEachIndexed { index, name ->
+                    val cleared = index in slide3Cleared
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(if (cleared) ClearrColors.EmeraldBg else ClearrColors.CoralBg)
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            name,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (cleared) ClearrColors.Emerald else ClearrColors.Coral
+                        )
                     }
                 }
             }
