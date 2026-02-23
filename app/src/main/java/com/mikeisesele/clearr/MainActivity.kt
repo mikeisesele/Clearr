@@ -10,7 +10,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.*
 import dagger.hilt.android.AndroidEntryPoint
 import com.mikeisesele.clearr.ui.navigation.DuesNavHost
-import com.mikeisesele.clearr.ui.state.ThemeMode
+import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 
 @AndroidEntryPoint

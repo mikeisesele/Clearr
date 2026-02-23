@@ -18,12 +18,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.mikeisesele.clearr.ui.screen.*
-import com.mikeisesele.clearr.ui.state.ThemeMode
+import com.mikeisesele.clearr.ui.commons.state.ThemeMode
+import com.mikeisesele.clearr.ui.feature.analytics.AnalyticsScreen
+import com.mikeisesele.clearr.ui.feature.home.HomeScreen
+import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
+import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingScreen
+import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingViewModel
+import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
+import com.mikeisesele.clearr.ui.feature.settings.SettingsScreen
+import com.mikeisesele.clearr.ui.feature.setup.SetupWizardScreen
+import com.mikeisesele.clearr.ui.feature.trackerlist.TrackerListScreen
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
-import com.mikeisesele.clearr.ui.viewmodel.AppConfigViewModel
-import com.mikeisesele.clearr.ui.viewmodel.OnboardingViewModel
 
 data class BottomNavItem(
     val route: String,
@@ -59,8 +65,6 @@ fun DuesNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val C = LocalDuesColors.current
 
     // Show blank until both DataStore and Room have emitted at least once.
-    // Use violet background when coming from splash (onboarding still null)
-    // so there's no jarring white flash.
     if (onboardingComplete == null || appConfigLoading) {
         Box(
             modifier = Modifier
@@ -123,9 +127,6 @@ private fun OnboardingNavHost(onboardingVm: OnboardingViewModel) {
         }
 
         composable("onboarding_complete") {
-            // CompletionScreen marks persistence already done by onboardingVm.completeOnboarding()
-            // above. Tapping CTA navigates into setup_wizard within this sub-graph.
-            // Once SetupWizard writes setupComplete=true, DuesNavHost recomposes → MainNavHost.
             CompletionScreen(
                 onCreateTracker = {
                     navController.navigate("setup_wizard") {
@@ -152,7 +153,6 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
 
-    // Hide bottom bar in full-flow screens where vertical space is critical.
     val showBottomBar = currentRoute?.startsWith("tracker_detail") != true &&
         currentRoute != NavRoutes.Setup.route
 

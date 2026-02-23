@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.viewmodel
+package com.mikeisesele.clearr.ui.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
