@@ -177,18 +177,24 @@ fun OnboardingScreen(
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(RoundedCornerShape(18.dp))
-                                .background(if (idx == 0) Color.Transparent else s.accentColor.copy(alpha = 0.12f)),
+                                .background(s.accentColor.copy(alpha = 0.12f)),
+//                                .background(if (idx == 0) Color.Transparent else s.accentColor.copy(alpha = 0.12f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (idx == 0) {
-                                Image(
+                            Image(
                                     painter = painterResource(id = R.drawable.clear_icon_vector),
                                     contentDescription = "Clearr icon",
                                     modifier = Modifier.size(200.dp)
                                 )
-                            } else {
-                                Text(s.icon, fontSize = 28.sp, color = s.accentColor)
-                            }
+//                            if (idx == 0) {
+//                                Image(
+//                                    painter = painterResource(id = R.drawable.clear_icon_vector),
+//                                    contentDescription = "Clearr icon",
+//                                    modifier = Modifier.size(200.dp)
+//                                )
+//                            } else {
+//                                Text(s.icon, fontSize = 28.sp, color = s.accentColor)
+//                            }
                         }
                         Spacer(Modifier.height(20.dp))
                         Text(
