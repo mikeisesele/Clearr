@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.components
+package com.mikeisesele.clearr.ui.commons.components
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
@@ -7,7 +7,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import kotlinx.coroutines.delay
 
@@ -63,5 +65,17 @@ fun DuesSnackbar(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DuesSnackbarPreview() {
+    ClearrTheme {
+        DuesSnackbar(
+            message = "Payment recorded for Henry Nwazuru",
+            onUndo = {},
+            onDismiss = {}
+        )
     }
 }

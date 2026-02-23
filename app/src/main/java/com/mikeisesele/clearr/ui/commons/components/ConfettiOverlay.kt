@@ -1,8 +1,10 @@
-package com.mikeisesele.clearr.ui.components
+package com.mikeisesele.clearr.ui.commons.components
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -26,4 +28,13 @@ fun ConfettiOverlay(show: Boolean) {
             )
         )
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ConfettiOverlayPreview() {
+    ClearrTheme {
+        // Preview shows nothing because show=false; set to true to render confetti
+        ConfettiOverlay(show = false)
+    }
 }

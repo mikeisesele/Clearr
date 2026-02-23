@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.components
+package com.mikeisesele.clearr.ui.commons.components
 
 import android.content.Intent
 import android.net.Uri
@@ -16,13 +16,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.data.model.Member
 import com.mikeisesele.clearr.data.model.PaymentRecord
+import com.mikeisesele.clearr.ui.commons.util.MONTHS
+import com.mikeisesele.clearr.ui.commons.util.buildWhatsAppLink
+import com.mikeisesele.clearr.ui.commons.util.currentMonth
+import com.mikeisesele.clearr.ui.commons.util.formatAmount
+import com.mikeisesele.clearr.ui.commons.util.formatTimestamp
+import com.mikeisesele.clearr.ui.commons.util.isFuture
+import com.mikeisesele.clearr.ui.theme.ClearrTheme
+import com.mikeisesele.clearr.ui.theme.DuesColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import com.mikeisesele.clearr.ui.theme.WhatsAppGreen
-import com.mikeisesele.clearr.ui.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -220,7 +228,7 @@ private fun StatCard(
     label: String,
     value: String,
     valueColor: Color,
-    C: com.mikeisesele.clearr.ui.theme.DuesColors
+    C: DuesColors
 ) {
     Card(
         modifier = modifier,
@@ -231,6 +239,30 @@ private fun StatCard(
             Text(label, style = MaterialTheme.typography.labelSmall, color = C.muted)
             Spacer(Modifier.height(4.dp))
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = valueColor)
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun StatCardPreview() {
+    ClearrTheme {
+        val C = com.mikeisesele.clearr.ui.theme.LocalDuesColors.current
+        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatCard(
+                modifier = Modifier.weight(1f),
+                label = "OUTSTANDING 2026",
+                value = "₦15,000",
+                valueColor = C.red,
+                C = C
+            )
+            StatCard(
+                modifier = Modifier.weight(1f),
+                label = "PAID 2026",
+                value = "₦45,000",
+                valueColor = C.green,
+                C = C
+            )
         }
     }
 }

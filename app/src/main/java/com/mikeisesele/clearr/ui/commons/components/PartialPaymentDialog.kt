@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.components
+package com.mikeisesele.clearr.ui.commons.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,10 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.mikeisesele.clearr.ui.commons.util.MONTHS
+import com.mikeisesele.clearr.ui.commons.util.formatAmount
+import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
-import com.mikeisesele.clearr.ui.util.MONTHS
-import com.mikeisesele.clearr.ui.util.formatAmount
 
 @Composable
 fun PartialPaymentDialog(
@@ -109,4 +111,20 @@ fun PartialPaymentDialog(
         },
         shape = RoundedCornerShape(16.dp)
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PartialPaymentDialogPreview() {
+    ClearrTheme {
+        PartialPaymentDialog(
+            memberName = "Henry Nwazuru",
+            monthIndex = 1,
+            year = 2026,
+            alreadyPaid = 2500.0,
+            dueAmount = 5000.0,
+            onDismiss = {},
+            onRecord = { _, _ -> }
+        )
+    }
 }

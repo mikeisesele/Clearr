@@ -8,7 +8,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.mikeisesele.clearr.ui.state.ThemeMode
+import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 
 private val DarkColorScheme = darkColorScheme(
     primary          = ClearrColors.Violet,

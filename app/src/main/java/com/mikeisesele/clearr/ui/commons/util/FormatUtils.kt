@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.util
+package com.mikeisesele.clearr.ui.commons.util
 
 import java.text.SimpleDateFormat
 import java.util.*
