@@ -17,6 +17,14 @@ object ClearrColors {
     val Amber   = Color(0xFFF59E0B)  // Caution / Tasks / Pending
     val Coral   = Color(0xFFEF4444)  // Danger / Events / Unpaid / Absent
 
+    // ── BRAND TOKENS (for logo/marketing + app-level theming) ───────────────
+    val BrandPrimary   = Violet
+    val BrandSecondary = Emerald
+    val BrandAccent    = Amber
+    val BrandDanger    = Coral
+    val BrandBackground = Color(0xFFF7F7FB)
+    val BrandText      = Color(0xFF1A1A2E)
+
     // ── TINTED BACKGROUNDS (12% opacity on white) ─────────────────────────────
     val VioletBg  = Color(0xFFEEF0FF)
     val EmeraldBg = Color(0xFFE6F7F3)

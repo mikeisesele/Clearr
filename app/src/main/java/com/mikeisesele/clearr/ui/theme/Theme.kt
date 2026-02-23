@@ -2,6 +2,7 @@ package com.mikeisesele.clearr.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -11,11 +12,11 @@ import androidx.compose.ui.platform.LocalContext
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 
 private val DarkColorScheme = darkColorScheme(
-    primary          = ClearrColors.Violet,
+    primary          = ClearrColors.BrandPrimary,
     onPrimary        = Color.White,
     primaryContainer = Indigo600,
     onPrimaryContainer = Color.White,
-    secondary        = ClearrColors.Emerald,
+    secondary        = ClearrColors.BrandSecondary,
     onSecondary      = Color.White,
     background       = ClearrColors.DarkBackground,
     onBackground     = ClearrColors.DarkTextPrimary,
@@ -24,25 +25,25 @@ private val DarkColorScheme = darkColorScheme(
     surfaceVariant   = ClearrColors.DarkCard,
     onSurfaceVariant = ClearrColors.DarkTextMuted,
     outline          = ClearrColors.DarkBorder,
-    error            = ClearrColors.Coral,
+    error            = ClearrColors.BrandDanger,
     onError          = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary          = ClearrColors.Violet,
+    primary          = ClearrColors.BrandPrimary,
     onPrimary        = Color.White,
     primaryContainer = ClearrColors.VioletBg,
-    onPrimaryContainer = ClearrColors.Violet,
-    secondary        = ClearrColors.Emerald,
+    onPrimaryContainer = ClearrColors.BrandPrimary,
+    secondary        = ClearrColors.BrandSecondary,
     onSecondary      = Color.White,
-    background       = ClearrColors.Background,
-    onBackground     = ClearrColors.TextPrimary,
+    background       = ClearrColors.BrandBackground,
+    onBackground     = ClearrColors.BrandText,
     surface          = ClearrColors.Surface,
-    onSurface        = ClearrColors.TextPrimary,
+    onSurface        = ClearrColors.BrandText,
     surfaceVariant   = LightCard,
     onSurfaceVariant = ClearrColors.TextSecondary,
     outline          = ClearrColors.Border,
-    error            = ClearrColors.Coral,
+    error            = ClearrColors.BrandDanger,
     onError          = Color.White
 )
 
@@ -75,10 +76,10 @@ val LocalDuesColors = staticCompositionLocalOf {
         surface = ClearrColors.DarkSurface,
         card    = ClearrColors.DarkCard,
         border  = ClearrColors.DarkBorder,
-        accent  = ClearrColors.Violet,
-        green   = ClearrColors.Emerald,
-        amber   = ClearrColors.Amber,
-        red     = ClearrColors.Coral,
+        accent  = ClearrColors.BrandPrimary,
+        green   = ClearrColors.BrandSecondary,
+        amber   = ClearrColors.BrandAccent,
+        red     = ClearrColors.BrandDanger,
         text    = ClearrColors.DarkTextPrimary,
         muted   = ClearrColors.DarkTextMuted,
         dim     = ClearrColors.DarkInactive,
@@ -88,15 +89,15 @@ val LocalDuesColors = staticCompositionLocalOf {
 
 /** Light-mode DuesColors instance using Clearr tokens */
 private fun lightDuesColors() = DuesColors(
-    bg      = ClearrColors.Background,
+    bg      = ClearrColors.BrandBackground,
     surface = ClearrColors.Surface,
     card    = LightCard,
     border  = ClearrColors.Border,
-    accent  = ClearrColors.Violet,
-    green   = ClearrColors.Emerald,
-    amber   = ClearrColors.Amber,
-    red     = ClearrColors.Coral,
-    text    = ClearrColors.TextPrimary,
+    accent  = ClearrColors.BrandPrimary,
+    green   = ClearrColors.BrandSecondary,
+    amber   = ClearrColors.BrandAccent,
+    red     = ClearrColors.BrandDanger,
+    text    = ClearrColors.BrandText,
     muted   = ClearrColors.TextSecondary,
     dim     = ClearrColors.Inactive,
     isDark  = false
@@ -108,10 +109,10 @@ private fun darkDuesColors() = DuesColors(
     surface = ClearrColors.DarkSurface,
     card    = ClearrColors.DarkCard,
     border  = ClearrColors.DarkBorder,
-    accent  = ClearrColors.Violet,
-    green   = ClearrColors.Emerald,
-    amber   = ClearrColors.Amber,
-    red     = ClearrColors.Coral,
+    accent  = ClearrColors.BrandPrimary,
+    green   = ClearrColors.BrandSecondary,
+    amber   = ClearrColors.BrandAccent,
+    red     = ClearrColors.BrandDanger,
     text    = ClearrColors.DarkTextPrimary,
     muted   = ClearrColors.DarkTextMuted,
     dim     = ClearrColors.DarkInactive,
@@ -122,6 +123,7 @@ private fun darkDuesColors() = DuesColors(
 @Composable
 fun ClearrTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
+    useDynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val darkTheme = when (themeMode) {
@@ -132,7 +134,7 @@ fun ClearrTheme(
 
     // Dynamic color on API 31+ (Material You), falls back to Clearr palette
     val colorScheme = when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
@@ -142,10 +144,22 @@ fun ClearrTheme(
 
     val duesColors = if (darkTheme) darkDuesColors() else lightDuesColors()
 
-    CompositionLocalProvider(LocalDuesColors provides duesColors) {
+    CompositionLocalProvider(
+        LocalDuesColors provides duesColors,
+        LocalClearrSpacing provides ClearrSpacing(),
+        LocalClearrRadii provides ClearrRadii(),
+        LocalClearrSizes provides ClearrSizes()
+    ) {
+        val radii = ClearrRadii()
+        val shapes = Shapes(
+            small = RoundedCornerShape(radii.sm),
+            medium = RoundedCornerShape(radii.md),
+            large = RoundedCornerShape(radii.lg)
+        )
         MaterialTheme(
             colorScheme = colorScheme,
             typography  = Typography,
+            shapes = shapes,
             content     = content
         )
     }
