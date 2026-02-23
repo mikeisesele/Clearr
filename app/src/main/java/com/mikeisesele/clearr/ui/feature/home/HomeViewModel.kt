@@ -210,7 +210,7 @@ class HomeViewModel @Inject constructor(
                         memberId = member.id
                     )).copy(status = newStatus, amountPaid = newAmount, updatedAt = now)
                 }
-                TrackerType.ATTENDANCE, TrackerType.EVENTS -> {
+                TrackerType.EXPENSES -> {
                     val next = if (existing?.status == RecordStatus.PRESENT) RecordStatus.ABSENT else RecordStatus.PRESENT
                     (existing ?: TrackerRecord(
                         trackerId = trackerId,
@@ -218,7 +218,7 @@ class HomeViewModel @Inject constructor(
                         memberId = member.id
                     )).copy(status = next, amountPaid = 0.0, updatedAt = now)
                 }
-                TrackerType.TASKS -> {
+                TrackerType.GOALS, TrackerType.TODO -> {
                     val next = if (existing?.status == RecordStatus.DONE) RecordStatus.PENDING else RecordStatus.DONE
                     (existing ?: TrackerRecord(
                         trackerId = trackerId,
@@ -226,8 +226,8 @@ class HomeViewModel @Inject constructor(
                         memberId = member.id
                     )).copy(status = next, amountPaid = 0.0, updatedAt = now)
                 }
-                TrackerType.CUSTOM -> {
-                    val next = if (existing?.status == RecordStatus.DONE) RecordStatus.PENDING else RecordStatus.DONE
+                TrackerType.BUDGET -> {
+                    val next = if (existing?.status == RecordStatus.PAID) RecordStatus.UNPAID else RecordStatus.PAID
                     (existing ?: TrackerRecord(
                         trackerId = trackerId,
                         periodId = period.id,
@@ -392,10 +392,10 @@ class HomeViewModel @Inject constructor(
         val records = repository.getRecordsForPeriod(trackerId, periodId).first()
         val completed = when (type) {
             TrackerType.DUES -> setOf(RecordStatus.PAID)
-            TrackerType.ATTENDANCE -> setOf(RecordStatus.PRESENT)
-            TrackerType.TASKS -> setOf(RecordStatus.DONE)
-            TrackerType.EVENTS -> setOf(RecordStatus.PRESENT)
-            TrackerType.CUSTOM -> setOf(RecordStatus.DONE, RecordStatus.PAID, RecordStatus.PRESENT)
+            TrackerType.GOALS -> setOf(RecordStatus.DONE)
+            TrackerType.TODO -> setOf(RecordStatus.DONE)
+            TrackerType.BUDGET -> setOf(RecordStatus.PAID)
+            TrackerType.EXPENSES -> setOf(RecordStatus.DONE, RecordStatus.PAID, RecordStatus.PRESENT)
         }
         val recordByMember = records.associateBy { it.memberId }
         val allDone = allMembers.isNotEmpty() && allMembers.all { m ->

@@ -15,6 +15,7 @@ object ClearrColors {
     val Violet  = Color(0xFF6C63FF)  // Primary / Dues
     val Emerald = Color(0xFF00A67E)  // Success / Attendance / Cleared
     val Amber   = Color(0xFFF59E0B)  // Caution / Tasks / Pending
+    val Blue    = Color(0xFF3B82F6)  // Info / Budget
     val Coral   = Color(0xFFEF4444)  // Danger / Events / Unpaid / Absent
 
     // ── BRAND TOKENS (for logo/marketing + app-level theming) ───────────────
@@ -29,12 +30,14 @@ object ClearrColors {
     val VioletBg  = Color(0xFFEEF0FF)
     val EmeraldBg = Color(0xFFE6F7F3)
     val AmberBg   = Color(0xFFFEF3C7)
+    val BlueBg    = Color(0xFFEFF6FF)
     val CoralBg   = Color(0xFFFEE2E2)
 
     // ── TINTED SURFACES (18% opacity — chips, badges, icon containers) ────────
     val VioletSurface  = Color(0xFFE8E6FF)
     val EmeraldSurface = Color(0xFFD1F5EA)
     val AmberSurface   = Color(0xFFFEF3C7)
+    val BlueSurface    = Color(0xFFDCEEFF)
     val CoralSurface   = Color(0xFFFFE4E4)
 
     // ── NEUTRALS ──────────────────────────────────────────────────────────────
@@ -63,35 +66,51 @@ object ClearrColors {
 // ── TrackerType extensions ────────────────────────────────────────────────────
 
 fun TrackerType.brandColor(): Color = when (this) {
-    TrackerType.DUES       -> ClearrColors.Violet
-    TrackerType.ATTENDANCE -> ClearrColors.Emerald
-    TrackerType.TASKS      -> ClearrColors.Amber
-    TrackerType.EVENTS     -> ClearrColors.Coral
-    TrackerType.CUSTOM     -> ClearrColors.Violet
+    TrackerType.DUES     -> ClearrColors.Violet
+    TrackerType.GOALS    -> ClearrColors.Emerald
+    TrackerType.TODO     -> ClearrColors.Amber
+    TrackerType.BUDGET   -> ClearrColors.Blue
+    TrackerType.EXPENSES -> ClearrColors.Coral
 }
 
 fun TrackerType.brandBackground(): Color = when (this) {
-    TrackerType.DUES       -> ClearrColors.VioletBg
-    TrackerType.ATTENDANCE -> ClearrColors.EmeraldBg
-    TrackerType.TASKS      -> ClearrColors.AmberBg
-    TrackerType.EVENTS     -> ClearrColors.CoralBg
-    TrackerType.CUSTOM     -> ClearrColors.VioletBg
+    TrackerType.DUES     -> ClearrColors.VioletBg
+    TrackerType.GOALS    -> ClearrColors.EmeraldBg
+    TrackerType.TODO     -> ClearrColors.AmberBg
+    TrackerType.BUDGET   -> ClearrColors.BlueBg
+    TrackerType.EXPENSES -> ClearrColors.CoralBg
 }
 
 fun TrackerType.brandSurface(): Color = when (this) {
-    TrackerType.DUES       -> ClearrColors.VioletSurface
-    TrackerType.ATTENDANCE -> ClearrColors.EmeraldSurface
-    TrackerType.TASKS      -> ClearrColors.AmberSurface
-    TrackerType.EVENTS     -> ClearrColors.CoralSurface
-    TrackerType.CUSTOM     -> ClearrColors.VioletSurface
+    TrackerType.DUES     -> ClearrColors.VioletSurface
+    TrackerType.GOALS    -> ClearrColors.EmeraldSurface
+    TrackerType.TODO     -> ClearrColors.AmberSurface
+    TrackerType.BUDGET   -> ClearrColors.BlueSurface
+    TrackerType.EXPENSES -> ClearrColors.CoralSurface
 }
 
 fun TrackerType.brandIcon(): String = when (this) {
-    TrackerType.DUES       -> "₦"
-    TrackerType.ATTENDANCE -> "✓"
-    TrackerType.TASKS      -> "⬡"
-    TrackerType.EVENTS     -> "◈"
-    TrackerType.CUSTOM     -> "☰"
+    TrackerType.DUES     -> "₦"
+    TrackerType.GOALS    -> "🎯"
+    TrackerType.TODO     -> "☑"
+    TrackerType.BUDGET   -> "💳"
+    TrackerType.EXPENSES -> "🧾"
+}
+
+data class BudgetColorScheme(
+    val color: Color,
+    val background: Color
+)
+
+fun ClearrColors.fromToken(token: String): BudgetColorScheme = when (token.lowercase()) {
+    "teal" -> BudgetColorScheme(Emerald, EmeraldBg)
+    "coral" -> BudgetColorScheme(Coral, CoralBg)
+    "amber" -> BudgetColorScheme(Amber, AmberBg)
+    "violet" -> BudgetColorScheme(Violet, VioletBg)
+    "blue" -> BudgetColorScheme(Blue, BlueBg)
+    "purple" -> BudgetColorScheme(Violet, VioletBg)
+    "orange" -> BudgetColorScheme(Color(0xFFF97316), Color(0xFFFFF3E8))
+    else -> BudgetColorScheme(Violet, VioletBg)
 }
 
 // ── RecordStatus extensions ───────────────────────────────────────────────────
@@ -123,22 +142,28 @@ fun RecordStatus.brandLabel(type: TrackerType): String = when (type) {
         RecordStatus.PARTIAL -> "Partial"
         else -> name.lowercase().replaceFirstChar { it.uppercase() }
     }
-    TrackerType.ATTENDANCE -> when (this) {
-        RecordStatus.PRESENT -> "Present"
-        RecordStatus.ABSENT  -> "Absent"
-        else -> name.lowercase().replaceFirstChar { it.uppercase() }
-    }
-    TrackerType.TASKS -> when (this) {
+    TrackerType.GOALS -> when (this) {
         RecordStatus.DONE    -> "Done"
         RecordStatus.PENDING -> "Pending"
         else -> name.lowercase().replaceFirstChar { it.uppercase() }
     }
-    TrackerType.EVENTS -> when (this) {
-        RecordStatus.PRESENT -> "Attended"
-        RecordStatus.ABSENT  -> "Absent"
+    TrackerType.TODO -> when (this) {
+        RecordStatus.DONE    -> "Done"
+        RecordStatus.PENDING -> "Pending"
         else -> name.lowercase().replaceFirstChar { it.uppercase() }
     }
-    TrackerType.CUSTOM -> name.lowercase().replaceFirstChar { it.uppercase() }
+    TrackerType.BUDGET -> when (this) {
+        RecordStatus.PAID -> "On Track"
+        RecordStatus.PARTIAL -> "Near Limit"
+        RecordStatus.UNPAID -> "Over"
+        else -> name.lowercase().replaceFirstChar { it.uppercase() }
+    }
+    TrackerType.EXPENSES -> when (this) {
+        RecordStatus.PAID    -> "Settled"
+        RecordStatus.PARTIAL -> "Partial"
+        RecordStatus.UNPAID  -> "Outstanding"
+        else -> name.lowercase().replaceFirstChar { it.uppercase() }
+    }
 }
 
 // ── Legacy aliases kept for backward compatibility with existing screens ───────

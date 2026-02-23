@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.trackerlist
 
 import com.mikeisesele.clearr.core.base.BaseViewModel
+import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
@@ -42,23 +43,64 @@ class TrackerListViewModel @Inject constructor(
                         flowOf(TrackerListUiState(summaries = emptyList(), isLoading = false))
                     } else {
                         val summaryFlows = trackers.map { tracker ->
-                            repository.getActiveMembersForTracker(tracker.id)
-                                .flatMapLatest { members ->
-                                    repository.getCurrentPeriodFlow(tracker.id)
-                                        .flatMapLatest { period ->
-                                            if (period == null) {
-                                                flowOf(buildSummary(tracker, members, period, 0))
-                                            } else {
-                                                repository.getRecordsForPeriod(tracker.id, period.id)
-                                                    .map { records ->
-                                                        val completedCount = records.count { r ->
-                                                            r.status.name in completedStatuses(tracker.type)
+                            if (tracker.type == TrackerType.BUDGET) {
+                                val budgetFrequency = when (tracker.frequency) {
+                                    Frequency.WEEKLY -> BudgetFrequency.WEEKLY
+                                    else -> BudgetFrequency.MONTHLY
+                                }
+                                repository.getBudgetPeriods(tracker.id, budgetFrequency)
+                                    .flatMapLatest { periods ->
+                                        repository.getBudgetCategories(tracker.id, budgetFrequency)
+                                            .flatMapLatest { categories ->
+                                                repository.getBudgetEntriesForTracker(tracker.id)
+                                                    .map { entries ->
+                                                        val latestPeriod = periods.lastOrNull()
+                                                        val periodEntries = entries.filter { it.periodId == latestPeriod?.id }
+                                                        val clearedCount = categories.count { category ->
+                                                            val spent = periodEntries
+                                                                .asSequence()
+                                                                .filter { it.categoryId == category.id }
+                                                                .sumOf { it.amountKobo }
+                                                            spent >= category.plannedAmountKobo
                                                         }
-                                                        buildSummary(tracker, members, period, completedCount)
+                                                        TrackerSummary(
+                                                            trackerId = tracker.id,
+                                                            name = tracker.name,
+                                                            type = tracker.type,
+                                                            frequency = tracker.frequency,
+                                                            currentPeriodLabel = latestPeriod?.label ?: currentPeriodLabel(tracker.frequency),
+                                                            totalMembers = categories.size,
+                                                            completedCount = clearedCount,
+                                                            completionPercent = if (categories.isNotEmpty()) {
+                                                                ((clearedCount.toDouble() / categories.size) * 100).toInt().coerceIn(0, 100)
+                                                            } else {
+                                                                0
+                                                            },
+                                                            isNew = tracker.isNew,
+                                                            createdAt = tracker.createdAt
+                                                        )
                                                     }
                                             }
-                                        }
-                                }
+                                    }
+                            } else {
+                                repository.getActiveMembersForTracker(tracker.id)
+                                    .flatMapLatest { members ->
+                                        repository.getCurrentPeriodFlow(tracker.id)
+                                            .flatMapLatest { period ->
+                                                if (period == null) {
+                                                    flowOf(buildSummary(tracker, members, period, 0))
+                                                } else {
+                                                    repository.getRecordsForPeriod(tracker.id, period.id)
+                                                        .map { records ->
+                                                            val completedCount = records.count { r ->
+                                                                r.status.name in completedStatuses(tracker.type)
+                                                            }
+                                                            buildSummary(tracker, members, period, completedCount)
+                                                        }
+                                                }
+                                            }
+                                    }
+                            }
                         }
                         combine(summaryFlows) { arr ->
                             TrackerListUiState(
@@ -122,6 +164,11 @@ class TrackerListViewModel @Inject constructor(
             val period = buildCurrentPeriod(trackerId, frequency, now)
             val periodId = repository.insertPeriod(period)
             repository.setCurrentPeriod(trackerId, periodId)
+            if (type == TrackerType.BUDGET) {
+                listOf(BudgetFrequency.MONTHLY, BudgetFrequency.WEEKLY).forEach { budgetFrequency ->
+                    repository.ensureBudgetPeriods(trackerId, budgetFrequency)
+                }
+            }
         }
     }
 
@@ -167,10 +214,10 @@ class TrackerListViewModel @Inject constructor(
 
     private fun completedStatuses(type: TrackerType): Set<String> = when (type) {
         TrackerType.DUES -> setOf("PAID")
-        TrackerType.ATTENDANCE -> setOf("PRESENT")
-        TrackerType.TASKS -> setOf("DONE")
-        TrackerType.EVENTS -> setOf("PRESENT")
-        TrackerType.CUSTOM -> setOf("PAID", "PRESENT", "DONE")
+        TrackerType.GOALS -> setOf("DONE")
+        TrackerType.TODO -> setOf("DONE")
+        TrackerType.BUDGET -> emptySet()
+        TrackerType.EXPENSES -> setOf("PAID", "DONE", "PRESENT")
     }
 
     private fun currentPeriodLabel(frequency: Frequency): String {

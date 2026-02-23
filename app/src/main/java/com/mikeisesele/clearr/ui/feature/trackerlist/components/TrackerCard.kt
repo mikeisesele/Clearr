@@ -39,11 +39,11 @@ internal data class TypeStyle(
 )
 
 internal val typeStyles = mapOf(
-    TrackerType.DUES       to TypeStyle("₦", TrackerType.DUES.brandColor(), TrackerType.DUES.brandBackground(), "Dues"),
-    TrackerType.ATTENDANCE to TypeStyle("✓", TrackerType.ATTENDANCE.brandColor(), TrackerType.ATTENDANCE.brandBackground(), "Attendance"),
-    TrackerType.TASKS      to TypeStyle("⬡", TrackerType.TASKS.brandColor(), TrackerType.TASKS.brandBackground(), "Tasks"),
-    TrackerType.EVENTS     to TypeStyle("◈", TrackerType.EVENTS.brandColor(), TrackerType.EVENTS.brandBackground(), "Events"),
-    TrackerType.CUSTOM     to TypeStyle("☰", TrackerType.CUSTOM.brandColor(), TrackerType.CUSTOM.brandBackground(), "Custom"),
+    TrackerType.DUES to TypeStyle("₦", TrackerType.DUES.brandColor(), TrackerType.DUES.brandBackground(), "Dues"),
+    TrackerType.GOALS to TypeStyle("🎯", TrackerType.GOALS.brandColor(), TrackerType.GOALS.brandBackground(), "Goals"),
+    TrackerType.TODO to TypeStyle("☑", TrackerType.TODO.brandColor(), TrackerType.TODO.brandBackground(), "To-do"),
+    TrackerType.BUDGET to TypeStyle("💳", TrackerType.BUDGET.brandColor(), TrackerType.BUDGET.brandBackground(), "Budget"),
+    TrackerType.EXPENSES to TypeStyle("🧾", TrackerType.EXPENSES.brandColor(), TrackerType.EXPENSES.brandBackground(), "Expenses"),
 )
 
 internal val primaryColor = ClearrColors.BrandPrimary

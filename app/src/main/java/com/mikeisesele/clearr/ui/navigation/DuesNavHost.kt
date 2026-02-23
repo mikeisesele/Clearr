@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import com.mikeisesele.clearr.ui.feature.analytics.AnalyticsScreen
+import com.mikeisesele.clearr.ui.feature.budget.BudgetDetailScreen
 import com.mikeisesele.clearr.ui.feature.home.HomeScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingAction
@@ -29,6 +30,7 @@ import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
 import com.mikeisesele.clearr.ui.feature.settings.SettingsScreen
 import com.mikeisesele.clearr.ui.feature.setup.SetupWizardScreen
 import com.mikeisesele.clearr.ui.feature.trackerlist.TrackerListScreen
+import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 
@@ -235,10 +237,28 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                 arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
             ) { backStackEntry ->
                 val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
-                HomeScreen(
-                    trackerId = trackerId,
-                    onBack = { navController.popBackStack() }
-                )
+                val detailVm: TrackerDetailHostViewModel = hiltViewModel()
+                val detailState by detailVm.uiState.collectAsStateWithLifecycle()
+                if (detailState.isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(colors.bg),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = colors.accent)
+                    }
+                } else if (detailState.trackerType == TrackerType.BUDGET) {
+                    BudgetDetailScreen(
+                        trackerId = trackerId,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                } else {
+                    HomeScreen(
+                        trackerId = trackerId,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
             }
 
             composable(NavRoutes.Analytics.route)  { AnalyticsScreen() }

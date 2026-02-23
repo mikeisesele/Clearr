@@ -2,6 +2,8 @@ package com.mikeisesele.clearr.ui.feature.setup
 
 import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.AppConfig
+import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
@@ -152,21 +154,60 @@ class SetupViewModel @Inject constructor(
                 if (repository.getTrackerById(trackerId) != null) return@repeat
                 delay(50)
             }
+            if (s.trackerType == TrackerType.BUDGET) {
+                seedBudgetTracker(trackerId)
+            }
             repository.upsertAppConfig(config)
             appState.setAppConfig(config)
             updateState { it.copy(isSaving = false) }
             onDone()
         }
     }
+
+    private suspend fun seedBudgetTracker(trackerId: Long) {
+        listOf(BudgetFrequency.MONTHLY, BudgetFrequency.WEEKLY).forEach { frequency ->
+            repository.ensureBudgetPeriods(trackerId, frequency)
+            if (repository.getBudgetMaxSortOrder(trackerId, frequency) >= 0) return@forEach
+            defaultBudgetCategories.forEachIndexed { index, preset ->
+                repository.addBudgetCategory(
+                    BudgetCategory(
+                        trackerId = trackerId,
+                        frequency = frequency,
+                        name = preset.name,
+                        icon = preset.icon,
+                        colorToken = preset.colorToken,
+                        plannedAmountKobo = preset.plannedAmountKobo,
+                        sortOrder = index
+                    )
+                )
+            }
+        }
+    }
     private fun defaultTrackerName(type: TrackerType): String = when (type) {
         TrackerType.DUES -> "Dues Tracker"
-        TrackerType.ATTENDANCE -> "Attendance Tracker"
-        TrackerType.TASKS -> "Task Tracker"
-        TrackerType.EVENTS -> "Event Tracker"
-        TrackerType.CUSTOM -> "Custom Tracker"
+        TrackerType.GOALS -> "Goals Tracker"
+        TrackerType.TODO -> "To-do Tracker"
+        TrackerType.BUDGET -> "Budget Tracker"
+        TrackerType.EXPENSES -> "Expenses Tracker"
     }
 
     private companion object {
+        data class BudgetCategoryPreset(
+            val name: String,
+            val icon: String,
+            val colorToken: String,
+            val plannedAmountKobo: Long
+        )
+
+        val defaultBudgetCategories = listOf(
+            BudgetCategoryPreset("Housing", "🏠", "Violet", 150_000_00),
+            BudgetCategoryPreset("Food", "🍔", "Orange", 60_000_00),
+            BudgetCategoryPreset("Transport", "🚗", "Blue", 30_000_00),
+            BudgetCategoryPreset("Savings", "💰", "Teal", 50_000_00),
+            BudgetCategoryPreset("Entertainment", "🎬", "Purple", 20_000_00),
+            BudgetCategoryPreset("Health", "💊", "Teal", 15_000_00)
+        )
+
         val SAMPLE_MEMBERS = listOf(
             "Henry Nwazuru",
             "Chidubem",

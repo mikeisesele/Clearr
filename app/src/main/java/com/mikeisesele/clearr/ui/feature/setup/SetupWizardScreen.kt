@@ -315,10 +315,10 @@ private fun TrackerTypeStep(
 ) {
     val options = listOf(
         TrackerType.DUES to Pair("💰", "Financial Dues – Track monthly / periodic payments"),
-        TrackerType.ATTENDANCE to Pair("✅", "Attendance – Track who showed up to meetings"),
-        TrackerType.TASKS to Pair("📝", "Tasks – Track completion of assigned duties"),
-        TrackerType.EVENTS to Pair("🎉", "Events – Track participation in events"),
-        TrackerType.CUSTOM to Pair("✨", "Custom – Use your own labels")
+        TrackerType.GOALS to Pair("🎯", "Goals – Track recurring habits or targets"),
+        TrackerType.TODO to Pair("📝", "To-do – Track completion of personal tasks"),
+        TrackerType.BUDGET to Pair("💳", "Budget – Planned vs actual spending"),
+        TrackerType.EXPENSES to Pair("🧾", "Expenses – Shared or personal expense planning")
     )
     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         StepHeader("What are you tracking?", "Choose the type that best describes your group's needs.", colors)
@@ -379,10 +379,9 @@ private fun AmountStep(
 ) {
     val label = when (trackerType) {
         TrackerType.DUES -> "Amount per ${frequency.name.lowercase().replaceFirstChar { it.uppercase() }} (₦)"
-        TrackerType.ATTENDANCE, TrackerType.TASKS, TrackerType.EVENTS -> "Not applicable for this tracker type"
-        TrackerType.CUSTOM -> "Default amount (₦)"
+        TrackerType.GOALS, TrackerType.TODO, TrackerType.BUDGET, TrackerType.EXPENSES -> "Not applicable for this tracker type"
     }
-    val skipAmount = trackerType == TrackerType.ATTENDANCE || trackerType == TrackerType.TASKS
+    val skipAmount = trackerType != TrackerType.DUES
     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         StepHeader("Set the Amount", "How much is due per period per member?", colors)
         if (skipAmount) {
