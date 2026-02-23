@@ -47,6 +47,7 @@ data class TrackerLayoutData(
     val onCellLongPress: (Member, Int) -> Unit,
     val onMemberTap: (Member) -> Unit,
     val onMemberLongPress: (Member) -> Unit,
+    val blurMemberNames: Boolean,
     val colors: DuesColors
 )
 
@@ -142,7 +143,7 @@ fun KanbanLayout(d: TrackerLayoutData) {
                                         color = if (full || partial) ClearrColors.BrandText else d.colors.dim
                                     )
                                     Text(
-                                        member.name,
+                                        privacyName(member.name, d.blurMemberNames),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = if (full || partial) ClearrColors.BrandText else if (future) d.colors.dim else d.colors.text,
                                         maxLines = 1,
@@ -195,7 +196,7 @@ fun CardsLayout(d: TrackerLayoutData) {
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                member.name,
+                                privacyName(member.name, d.blurMemberNames),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = if (member.isArchived) d.colors.muted else d.colors.text,
@@ -339,7 +340,12 @@ fun ReceiptLayout(d: TrackerLayoutData) {
                     }
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text(member.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = d.colors.text)
+                    Text(
+                        privacyName(member.name, d.blurMemberNames),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = d.colors.text
+                    )
                     Spacer(Modifier.height(8.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Text("Month", modifier = Modifier.weight(1.5f), style = MaterialTheme.typography.labelSmall, color = d.colors.muted)
@@ -419,6 +425,12 @@ private fun EmptyState(colors: DuesColors) {
     }
 }
 
+private fun privacyName(name: String, blurred: Boolean): String {
+    if (!blurred) return name
+    val length = name.count { !it.isWhitespace() }.coerceIn(4, 12)
+    return "•".repeat(length)
+}
+
 @Composable
 private fun LedgerStat(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -446,6 +458,7 @@ private fun KanbanLayoutPreview() {
                 onCellLongPress = { _, _ -> },
                 onMemberTap = {},
                 onMemberLongPress = {},
+                blurMemberNames = false,
                 colors = colors
             )
         )

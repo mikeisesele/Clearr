@@ -89,7 +89,7 @@ internal fun TrackerGrid(d: TrackerLayoutData) {
                 ) {
                     Column {
                         Text(
-                            member.name,
+                            privacyName(member.name, d.blurMemberNames),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
                             color = if (member.isArchived) colors.muted else colors.text,
@@ -218,8 +218,15 @@ private fun TrackerGridPreview() {
                 onCellLongPress = { _, _ -> },
                 onMemberTap = {},
                 onMemberLongPress = {},
+                blurMemberNames = false,
                 colors = colors
             )
         )
     }
+}
+
+private fun privacyName(name: String, blurred: Boolean): String {
+    if (!blurred) return name
+    val length = name.count { !it.isWhitespace() }.coerceIn(4, 12)
+    return "•".repeat(length)
 }

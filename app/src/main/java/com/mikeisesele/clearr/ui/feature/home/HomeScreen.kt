@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -98,6 +99,7 @@ fun HomeScreen(
     var contextTarget by remember { mutableStateOf<Member?>(null) }
     var deleteTarget by remember { mutableStateOf<Member?>(null) }
     var showLayoutSheet by remember { mutableStateOf(false) }
+    var blurMemberNames by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(state.confettiMonth) {
         if (state.confettiMonth != null) {
@@ -119,6 +121,7 @@ fun HomeScreen(
         onCellLongPress = { m, mi -> partialTarget = m to mi },
         onMemberTap = { memberDetail = it },
         onMemberLongPress = { contextTarget = it },
+        blurMemberNames = blurMemberNames,
         colors = colors
     )
 
@@ -132,6 +135,9 @@ fun HomeScreen(
                 layoutStyle = state.layoutStyle,
                 selectedYear = state.selectedYear,
                 dueAmount = dueAmount,
+                showBlurToggle = state.trackerType == com.mikeisesele.clearr.data.model.TrackerType.DUES,
+                blurMemberNames = blurMemberNames,
+                onBlurToggle = { blurMemberNames = !blurMemberNames },
                 onBack = onBack,
                 onLayoutClick = { showLayoutSheet = true },
                 onShareClick = { shareScreenshot(context, view) },
