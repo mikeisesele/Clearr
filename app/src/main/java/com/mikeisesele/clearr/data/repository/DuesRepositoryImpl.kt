@@ -5,6 +5,7 @@ import com.mikeisesele.clearr.data.dao.BudgetDao
 import com.mikeisesele.clearr.data.dao.MemberDao
 import com.mikeisesele.clearr.data.dao.PaymentRecordDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
+import com.mikeisesele.clearr.data.dao.TodoDao
 import com.mikeisesele.clearr.data.dao.YearConfigDao
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.BudgetCategory
@@ -17,9 +18,13 @@ import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerMember
 import com.mikeisesele.clearr.data.model.TrackerPeriod
 import com.mikeisesele.clearr.data.model.TrackerRecord
+import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.YearConfig
+import com.mikeisesele.clearr.data.model.toDomain
+import com.mikeisesele.clearr.data.model.toEntity
 import com.mikeisesele.clearr.domain.repository.DuesRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -33,7 +38,8 @@ class DuesRepositoryImpl @Inject constructor(
     private val yearConfigDao: YearConfigDao,
     private val appConfigDao: AppConfigDao,
     private val trackerDao: TrackerDao,
-    private val budgetDao: BudgetDao
+    private val budgetDao: BudgetDao,
+    private val todoDao: TodoDao
 ) : DuesRepository {
 
     // ── App Config ────────────────────────────────────────────────────────────
@@ -213,6 +219,25 @@ class DuesRepositoryImpl @Inject constructor(
 
     override suspend fun addBudgetEntry(entry: BudgetEntry): Long =
         budgetDao.insertEntry(entry)
+
+    // ── Todo tracker ─────────────────────────────────────────────────────────
+    override fun getTodosForTracker(trackerId: Long): Flow<List<TodoItem>> =
+        todoDao.getTodos(trackerId).map { list -> list.map { it.toDomain() } }
+
+    override suspend fun getTodoById(id: String): TodoItem? =
+        todoDao.getTodoById(id)?.toDomain()
+
+    override suspend fun insertTodo(todo: TodoItem) =
+        todoDao.insert(todo.toEntity())
+
+    override suspend fun updateTodo(todo: TodoItem) =
+        todoDao.insert(todo.toEntity())
+
+    override suspend fun markTodoDone(id: String, completedAt: Long) =
+        todoDao.markDone(id = id, completedAt = completedAt)
+
+    override suspend fun deleteTodo(id: String) =
+        todoDao.delete(id)
 
     private fun generateMonthlyPeriods(trackerId: Long): List<BudgetPeriod> {
         val cal = Calendar.getInstance().apply { add(Calendar.MONTH, -4) }

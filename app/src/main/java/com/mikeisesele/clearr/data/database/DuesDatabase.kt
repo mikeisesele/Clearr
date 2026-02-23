@@ -9,6 +9,7 @@ import com.mikeisesele.clearr.data.dao.BudgetDao
 import com.mikeisesele.clearr.data.dao.MemberDao
 import com.mikeisesele.clearr.data.dao.PaymentRecordDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
+import com.mikeisesele.clearr.data.dao.TodoDao
 import com.mikeisesele.clearr.data.dao.YearConfigDao
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.BudgetCategory
@@ -20,6 +21,7 @@ import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerMember
 import com.mikeisesele.clearr.data.model.TrackerPeriod
 import com.mikeisesele.clearr.data.model.TrackerRecord
+import com.mikeisesele.clearr.data.model.TodoEntity
 import com.mikeisesele.clearr.data.model.YearConfig
 
 @Database(
@@ -35,8 +37,9 @@ import com.mikeisesele.clearr.data.model.YearConfig
         BudgetPeriod::class,
         BudgetCategory::class,
         BudgetEntry::class,
+        TodoEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class DuesDatabase : RoomDatabase() {
@@ -46,6 +49,7 @@ abstract class DuesDatabase : RoomDatabase() {
     abstract fun appConfigDao(): AppConfigDao
     abstract fun trackerDao(): TrackerDao
     abstract fun budgetDao(): BudgetDao
+    abstract fun todoDao(): TodoDao
 
     companion object {
         /**

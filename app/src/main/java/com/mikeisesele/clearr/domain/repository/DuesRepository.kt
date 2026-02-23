@@ -11,6 +11,7 @@ import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerMember
 import com.mikeisesele.clearr.data.model.TrackerPeriod
 import com.mikeisesele.clearr.data.model.TrackerRecord
+import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.YearConfig
 import kotlinx.coroutines.flow.Flow
 
@@ -94,4 +95,12 @@ interface DuesRepository {
     suspend fun reorderBudgetCategories(trackerId: Long, frequency: BudgetFrequency, orderedIds: List<Long>)
     fun getBudgetEntriesForTracker(trackerId: Long): Flow<List<BudgetEntry>>
     suspend fun addBudgetEntry(entry: BudgetEntry): Long
+
+    // ── Todo tracker ─────────────────────────────────────────────────────────
+    fun getTodosForTracker(trackerId: Long): Flow<List<TodoItem>>
+    suspend fun getTodoById(id: String): TodoItem?
+    suspend fun insertTodo(todo: TodoItem)
+    suspend fun updateTodo(todo: TodoItem)
+    suspend fun markTodoDone(id: String, completedAt: Long)
+    suspend fun deleteTodo(id: String)
 }

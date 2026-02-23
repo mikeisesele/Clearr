@@ -9,6 +9,7 @@ import com.mikeisesele.clearr.data.dao.BudgetDao
 import com.mikeisesele.clearr.data.dao.MemberDao
 import com.mikeisesele.clearr.data.dao.PaymentRecordDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
+import com.mikeisesele.clearr.data.dao.TodoDao
 import com.mikeisesele.clearr.data.dao.YearConfigDao
 import com.mikeisesele.clearr.data.database.DuesDatabase
 import dagger.Module
@@ -84,4 +85,7 @@ object DatabaseModule {
 
     @Provides
     fun provideBudgetDao(db: DuesDatabase): BudgetDao = db.budgetDao()
+
+    @Provides
+    fun provideTodoDao(db: DuesDatabase): TodoDao = db.todoDao()
 }
