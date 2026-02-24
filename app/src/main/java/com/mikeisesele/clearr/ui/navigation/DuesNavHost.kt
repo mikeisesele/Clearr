@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import com.mikeisesele.clearr.ui.feature.budget.BudgetDetailScreen
+import com.mikeisesele.clearr.ui.feature.goals.AddGoalScreen
 import com.mikeisesele.clearr.ui.feature.goals.GoalsDetailScreen
 import com.mikeisesele.clearr.ui.feature.home.HomeScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
@@ -32,6 +33,7 @@ import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
 import com.mikeisesele.clearr.ui.feature.settings.SettingsScreen
 import com.mikeisesele.clearr.ui.feature.setup.QuickSetupTypeScreen
 import com.mikeisesele.clearr.ui.feature.setup.SetupWizardScreen
+import com.mikeisesele.clearr.ui.feature.todo.AddTodoScreen
 import com.mikeisesele.clearr.ui.feature.todo.TodoDetailScreen
 import com.mikeisesele.clearr.ui.feature.trackerlist.TrackerListScreen
 import com.mikeisesele.clearr.data.model.TrackerType
@@ -178,11 +180,16 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
 
-    val showBottomBar = currentRoute?.startsWith("tracker_detail") != true &&
-        currentRoute != NavRoutes.Setup.route &&
-        currentRoute != NavRoutes.QuickSetup.route
+    val showBottomBar = currentRoute == NavRoutes.TrackerList.route ||
+        currentRoute == NavRoutes.Settings.route
 
-    BackHandler(enabled = currentRoute != null && currentRoute != NavRoutes.TrackerList.route) {
+    val topLevelNonHomeRoutes = setOf(
+        NavRoutes.Settings.route,
+        NavRoutes.QuickSetup.route,
+        NavRoutes.Setup.route
+    )
+
+    BackHandler(enabled = currentRoute in topLevelNonHomeRoutes) {
         navController.navigate(NavRoutes.TrackerList.route) {
             popUpTo(navController.graph.findStartDestination().id) {
                 saveState = true
@@ -298,12 +305,14 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                 } else if (detailState.trackerType == TrackerType.TODO) {
                     TodoDetailScreen(
                         trackerId = trackerId,
-                        onNavigateBack = { navController.popBackStack() }
+                        onNavigateBack = { navController.popBackStack() },
+                        onAddTodo = { navController.navigate(NavRoutes.TodoAdd.createRoute(trackerId)) }
                     )
                 } else if (detailState.trackerType == TrackerType.GOALS) {
                     GoalsDetailScreen(
                         trackerId = trackerId,
-                        onNavigateBack = { navController.popBackStack() }
+                        onNavigateBack = { navController.popBackStack() },
+                        onAddGoal = { navController.navigate(NavRoutes.GoalAdd.createRoute(trackerId)) }
                     )
                 } else {
                     HomeScreen(
@@ -311,6 +320,28 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                         onBack = { navController.popBackStack() }
                     )
                 }
+            }
+
+            composable(
+                route = NavRoutes.TodoAdd.route,
+                arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                AddTodoScreen(
+                    trackerId = trackerId,
+                    onClose = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = NavRoutes.GoalAdd.route,
+                arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                AddGoalScreen(
+                    trackerId = trackerId,
+                    onClose = { navController.popBackStack() }
+                )
             }
 
             composable(NavRoutes.Settings.route)   { SettingsScreen(onThemeChange = onThemeChange) }

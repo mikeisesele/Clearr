@@ -8,6 +8,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -28,17 +29,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,9 +59,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -72,10 +85,10 @@ import kotlin.math.roundToInt
 fun GoalsDetailScreen(
     trackerId: Long,
     onNavigateBack: () -> Unit,
+    onAddGoal: () -> Unit,
     viewModel: GoalsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var showAddSheet by remember { mutableStateOf(false) }
     var detailGoal by remember { mutableStateOf<GoalSummary?>(null) }
 
     if (state.trackerId != trackerId) return
@@ -124,7 +137,7 @@ fun GoalsDetailScreen(
                 .align(Alignment.BottomEnd)
                 .padding(end = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24)
                 .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp52)
-                .clickable { showAddSheet = true },
+                .clickable { onAddGoal() },
             shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
             color = ClearrColors.Violet,
             shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8
@@ -133,24 +146,6 @@ fun GoalsDetailScreen(
                 Text("+", color = ClearrColors.Surface, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp24, fontWeight = FontWeight.Bold)
             }
         }
-    }
-
-    if (showAddSheet) {
-        AddGoalSheet(
-            onDismiss = { showAddSheet = false },
-            onConfirm = { title, emoji, colorToken, target, frequency ->
-                viewModel.onAction(
-                    GoalsAction.AddGoal(
-                        title = title,
-                        emoji = emoji,
-                        colorToken = colorToken,
-                        target = target,
-                        frequency = frequency
-                    )
-                )
-                showAddSheet = false
-            }
-        )
     }
 
     detailGoal?.let { summary ->
@@ -402,8 +397,18 @@ private fun GoalDetailSheet(
     val completionPct = (summary.completionRate * 100f).roundToInt().coerceIn(0, 100)
     val historyTitle = if (summary.goal.frequency == GoalFrequency.DAILY) "LAST 7 DAYS" else "LAST 7 WEEKS"
 
-    BackHandler(onBack = onDismiss)
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = ClearrColors.Surface) {
+    val addSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { target -> target != SheetValue.Hidden }
+    )
+
+    BackHandler(enabled = true) {}
+    ModalBottomSheet(
+        onDismissRequest = {},
+        containerColor = ClearrColors.Surface,
+        sheetState = addSheetState,
+        dragHandle = null
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -562,54 +567,65 @@ private fun StatTile(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AddGoalSheet(
-    onDismiss: () -> Unit,
-    onConfirm: (title: String, emoji: String, colorToken: String, target: String?, frequency: GoalFrequency) -> Unit
+fun AddGoalScreen(
+    trackerId: Long,
+    onClose: () -> Unit,
+    viewModel: GoalsViewModel = hiltViewModel()
 ) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    if (state.trackerId != trackerId) return
+
     var title by rememberSaveable { mutableStateOf("") }
     var emoji by rememberSaveable { mutableStateOf("🎯") }
     var target by rememberSaveable { mutableStateOf("") }
     var frequency by rememberSaveable { mutableStateOf(GoalFrequency.DAILY) }
     var colorToken by rememberSaveable { mutableStateOf("Purple") }
+    var showAllIcons by rememberSaveable { mutableStateOf(false) }
+    val titleFocusRequester = remember { FocusRequester() }
+    val canSubmit = title.trim().isNotEmpty()
 
-    val emojis = listOf("🎯", "🏃", "💰", "📚", "🥗", "🚿", "💪", "🧘", "✍️", "🎸", "🌅", "💊")
+    val emojis = listOf(
+        "🎯", "🏃", "💰", "📚", "🥗", "🚿",
+        "💪", "🧘", "✍️", "🎸", "🌅", "💊",
+        "🧠", "🎨", "🧹", "🛌", "💼", "🧾",
+        "🍎", "🏊", "🚶", "📖", "🧑‍💻", "🎵"
+    )
+    val visibleEmojis = if (showAllIcons) emojis else emojis.take(6)
     val colorTokens = listOf("Purple", "Emerald", "Blue", "Amber", "Coral")
     val palette = goalPalette(colorToken)
 
-    BackHandler(onBack = onDismiss)
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = ClearrColors.Surface) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
-                .navigationBarsPadding()
-        ) {
+    LaunchedEffect(Unit) { titleFocusRequester.requestFocus() }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ClearrColors.Background)
+            .statusBarsPadding()
+            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
+            .navigationBarsPadding()
+    ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onDismiss) { Text("Cancel", color = ClearrColors.TextSecondary) }
+                Box(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34))
                 Text("New Goal", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
-                TextButton(
-                    enabled = title.trim().isNotEmpty(),
-                    onClick = {
-                        onConfirm(
-                            title.trim(),
-                            emoji,
-                            colorToken,
-                            target.trim().ifBlank { null },
-                            frequency
+                Surface(
+                    modifier = Modifier
+                        .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)
+                        .clickable { onClose() },
+                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
+                    color = ClearrColors.Background
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = ClearrColors.TextSecondary
                         )
                     }
-                ) {
-                    Text(
-                        "Add",
-                        color = if (title.trim().isNotEmpty()) ClearrColors.Violet else ClearrColors.TextMuted,
-                        fontWeight = FontWeight.SemiBold
-                    )
                 }
             }
 
@@ -652,14 +668,14 @@ private fun AddGoalSheet(
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
             SectionTitle("ICON")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
-                emojis.forEach { value ->
+                visibleEmojis.forEach { value ->
                     Surface(
                         modifier = Modifier
                             .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
                             .clickable { emoji = value },
                         shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                         color = if (emoji == value) palette.background else ClearrColors.Background,
-                        border = androidx.compose.foundation.BorderStroke(
+                        border = BorderStroke(
                             width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
                             color = if (emoji == value) palette.color else ClearrColors.Transparent
                         )
@@ -669,6 +685,17 @@ private fun AddGoalSheet(
                         }
                     }
                 }
+            }
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6))
+            TextButton(
+                onClick = { showAllIcons = !showAllIcons },
+                modifier = Modifier.align(Alignment.Start)
+            ) {
+                Text(
+                    text = if (showAllIcons) "Show fewer icons" else "Show more icons",
+                    color = palette.color,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
 
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
@@ -682,7 +709,7 @@ private fun AddGoalSheet(
                             .clickable { colorToken = token },
                         shape = CircleShape,
                         color = tokenPalette.color,
-                        border = androidx.compose.foundation.BorderStroke(
+                        border = BorderStroke(
                             width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3,
                             color = if (colorToken == token) ClearrColors.TextPrimary else ClearrColors.Transparent
                         )
@@ -692,49 +719,25 @@ private fun AddGoalSheet(
 
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
             SectionTitle("GOAL NAME")
-            Surface(shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10), color = ClearrColors.Background, modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp13)) {
-                    androidx.compose.foundation.text.BasicTextField(
-                        value = title,
-                        onValueChange = { title = it },
-                        textStyle = androidx.compose.ui.text.TextStyle(
-                            color = ClearrColors.TextPrimary,
-                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15
-                        ),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        decorationBox = { inner ->
-                            if (title.isBlank()) {
-                                Text("e.g. Exercise", color = ClearrColors.TextMuted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
-                            }
-                            inner()
-                        }
-                    )
-                }
-            }
+            GoalSheetInput(
+                value = title,
+                onValueChange = { title = it },
+                placeholder = "e.g. Exercise",
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(titleFocusRequester)
+            )
 
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             SectionTitle("TARGET (OPTIONAL)")
-            Surface(shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10), color = ClearrColors.Background, modifier = Modifier.fillMaxWidth()) {
-                Box(modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp13)) {
-                    androidx.compose.foundation.text.BasicTextField(
-                        value = target,
-                        onValueChange = { target = it },
-                        textStyle = androidx.compose.ui.text.TextStyle(
-                            color = ClearrColors.TextPrimary,
-                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15
-                        ),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        decorationBox = { inner ->
-                            if (target.isBlank()) {
-                                Text("e.g. 30 mins, ₦10,000, 20 pages", color = ClearrColors.TextMuted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
-                            }
-                            inner()
-                        }
-                    )
-                }
-            }
+            GoalSheetInput(
+                value = target,
+                onValueChange = { target = it },
+                placeholder = "e.g. 30 mins, ₦10,000, 20 pages",
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
             SectionTitle("FREQUENCY")
@@ -748,7 +751,7 @@ private fun AddGoalSheet(
                             .clickable { frequency = value },
                         shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                         color = if (selected) palette.background else ClearrColors.Background,
-                        border = androidx.compose.foundation.BorderStroke(
+                        border = BorderStroke(
                             width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
                             color = if (selected) palette.color else ClearrColors.Transparent
                         )
@@ -764,7 +767,31 @@ private fun AddGoalSheet(
                     }
                 }
             }
-        }
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = {
+                    viewModel.onAction(
+                        GoalsAction.AddGoal(
+                            title = title.trim(),
+                            emoji = emoji,
+                            colorToken = colorToken,
+                            target = target.trim().ifBlank { null },
+                            frequency = frequency
+                        )
+                    )
+                    onClose()
+                },
+                enabled = canSubmit,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = palette.color,
+                    disabledContainerColor = ClearrColors.Border
+                )
+            ) {
+                Text("Add Goal", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
     }
 }
 
@@ -777,6 +804,46 @@ private fun SectionTitle(label: String) {
         color = ClearrColors.TextMuted,
         modifier = Modifier.padding(start = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
     )
+}
+
+@Composable
+private fun GoalSheetInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    singleLine: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+        color = ClearrColors.Background,
+        border = BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, ClearrColors.Border),
+        modifier = modifier
+    ) {
+        Box(
+            modifier = Modifier.padding(
+                horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14,
+                vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp13
+            )
+        ) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = singleLine,
+                textStyle = TextStyle(
+                    color = ClearrColors.TextPrimary,
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                decorationBox = { inner ->
+                    if (value.isBlank()) {
+                        Text(placeholder, color = ClearrColors.TextMuted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
+                    }
+                    inner()
+                }
+            )
+        }
+    }
 }
 
 @Composable

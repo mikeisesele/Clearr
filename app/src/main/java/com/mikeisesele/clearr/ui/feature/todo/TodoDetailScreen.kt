@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -24,21 +25,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,9 +56,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,6 +79,7 @@ import com.mikeisesele.clearr.ui.theme.ClearrColors
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
@@ -79,10 +89,10 @@ import kotlin.math.roundToInt
 fun TodoDetailScreen(
     trackerId: Long,
     onNavigateBack: () -> Unit,
+    onAddTodo: () -> Unit,
     viewModel: TodoViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var showAddSheet by remember { mutableStateOf(false) }
     var detailTodo by remember { mutableStateOf<TodoItem?>(null) }
 
     if (state.trackerId != trackerId) return
@@ -135,17 +145,7 @@ fun TodoDetailScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24),
-            onClick = { showAddSheet = true }
-        )
-    }
-
-    if (showAddSheet) {
-        AddTodoSheet(
-            onDismiss = { showAddSheet = false },
-            onConfirm = { title, note, priority, dueDate ->
-                viewModel.onAction(TodoAction.AddTodo(title, note, priority, dueDate))
-                showAddSheet = false
-            }
+            onClick = onAddTodo
         )
     }
 
@@ -410,18 +410,239 @@ private fun StatusPill(label: String, bg: Color, fg: Color) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AddTodoSheet(
-    onDismiss: () -> Unit,
-    onConfirm: (String, String?, TodoPriority, LocalDate?) -> Unit
+fun AddTodoScreen(
+    trackerId: Long,
+    onClose: () -> Unit,
+    viewModel: TodoViewModel = hiltViewModel()
 ) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    if (state.trackerId != trackerId) return
+
     var title by rememberSaveable { mutableStateOf("") }
     var note by rememberSaveable { mutableStateOf("") }
     var priority by rememberSaveable { mutableStateOf(TodoPriority.MEDIUM) }
     var dueOption by rememberSaveable { mutableStateOf("Today") }
+    var customDate by remember { mutableStateOf<LocalDate?>(null) }
+    var showCustomDatePicker by remember { mutableStateOf(false) }
+    val titleFocusRequester = remember { FocusRequester() }
+    val canSubmit = title.trim().isNotEmpty()
 
-    val options = listOf("Today", "Tomorrow", "This week", "Next week", "No due date")
+    val options = listOf("Today", "Tomorrow", "This week", "Next week", "Custom", "No due date")
+    val customLabel = customDate?.format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))
+
+    LaunchedEffect(Unit) {
+        titleFocusRequester.requestFocus()
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ClearrColors.Background)
+            .statusBarsPadding()
+            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
+            .navigationBarsPadding()
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34))
+            Text("New Todo", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
+            Surface(
+                modifier = Modifier
+                    .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)
+                    .clickable { onClose() },
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
+                color = ClearrColors.Background
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = ClearrColors.TextSecondary
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
+        StyledSheetInput(
+            value = title,
+            onValueChange = { title = it },
+            placeholder = "What needs to be done?",
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(titleFocusRequester),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+        )
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
+        StyledSheetInput(
+            value = note,
+            onValueChange = { note = it },
+            placeholder = "Add a note (optional)",
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+        )
+
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+        Text("PRIORITY", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+        Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {
+            listOf(TodoPriority.HIGH, TodoPriority.MEDIUM, TodoPriority.LOW).forEach { value ->
+                val selected = priority == value
+                val palette = when (value) {
+                    TodoPriority.HIGH -> ClearrColors.CoralBg to ClearrColors.Coral
+                    TodoPriority.MEDIUM -> ClearrColors.AmberBg to ClearrColors.Orange
+                    TodoPriority.LOW -> ClearrColors.BlueBg to ClearrColors.Blue
+                }
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
+                        .clickable { priority = value },
+                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
+                    color = if (selected) palette.first else ClearrColors.Background
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = value.name.lowercase().replaceFirstChar { it.uppercase() },
+                            color = if (selected) palette.second else ClearrColors.TextMuted,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+        Text("DUE DATE", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
+            verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
+        ) {
+            options.forEach { option ->
+                val selected = dueOption == option || (option == "Custom" && dueOption == "Custom" && customDate != null)
+                Surface(
+                    modifier = Modifier.clickable {
+                        dueOption = option
+                        if (option == "Custom") {
+                            showCustomDatePicker = true
+                        }
+                    },
+                    color = if (selected) ClearrColors.Blue else ClearrColors.Background,
+                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20)
+                ) {
+                    Text(
+                        text = if (option == "Custom" && customLabel != null && dueOption == "Custom") "Custom: $customLabel" else option,
+                        modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp7),
+                        color = if (selected) ClearrColors.Surface else ClearrColors.TextMuted,
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Button(
+            onClick = {
+                viewModel.onAction(
+                    TodoAction.AddTodo(
+                        title = title.trim(),
+                        note = note.trim().ifBlank { null },
+                        priority = priority,
+                        dueDate = dueDateFromOption(dueOption, customDate)
+                    )
+                )
+                onClose()
+            },
+            enabled = canSubmit,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ClearrColors.Blue,
+                disabledContainerColor = ClearrColors.Border
+            )
+        ) {
+            Text("Add Todo", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
+        }
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
+    }
+
+    if (showCustomDatePicker) {
+        CustomDatePickerSheet(
+            initialDate = customDate ?: LocalDate.now(),
+            onDismiss = { showCustomDatePicker = false },
+            onDateSelected = { date ->
+                customDate = date
+                dueOption = "Custom"
+                showCustomDatePicker = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun StyledSheetInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    singleLine: Boolean,
+    modifier: Modifier = Modifier,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+        color = ClearrColors.Background,
+        border = BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, ClearrColors.Border)
+    ) {
+        Box(
+            modifier = Modifier.padding(
+                horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14,
+                vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp13
+            )
+        ) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = singleLine,
+                keyboardOptions = keyboardOptions,
+                textStyle = TextStyle(
+                    color = ClearrColors.TextPrimary,
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                decorationBox = { inner ->
+                    if (value.isBlank()) {
+                        Text(placeholder, color = ClearrColors.TextMuted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
+                    }
+                    inner()
+                }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CustomDatePickerSheet(
+    initialDate: LocalDate,
+    onDismiss: () -> Unit,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    var displayedMonth by remember { mutableStateOf(YearMonth.from(initialDate)) }
+    var selectedDate by remember { mutableStateOf(initialDate) }
+    val firstDayOfMonth = displayedMonth.atDay(1)
+    val leadingSpaces = firstDayOfMonth.dayOfWeek.value - 1
+    val monthDays = displayedMonth.lengthOfMonth()
+    val cells = buildList<LocalDate?> {
+        repeat(leadingSpaces) { add(null) }
+        (1..monthDays).forEach { day -> add(displayedMonth.atDay(day)) }
+        while (size % 7 != 0) add(null)
+    }.chunked(7)
 
     BackHandler(onBack = onDismiss)
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = ClearrColors.Surface) {
@@ -431,98 +652,74 @@ private fun AddTodoSheet(
                 .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
                 .navigationBarsPadding()
         ) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onDismiss) { Text("Cancel", color = ClearrColors.TextSecondary) }
-                Text("New Todo", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
-                TextButton(
-                    enabled = title.trim().isNotEmpty(),
-                    onClick = {
-                        onConfirm(
-                            title.trim(),
-                            note.trim().ifBlank { null },
-                            priority,
-                            dueDateFromOption(dueOption)
-                        )
-                    }
-                ) {
-                    Text("Add", color = if (title.trim().isNotEmpty()) ClearrColors.Blue else ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { displayedMonth = displayedMonth.minusMonths(1) }) { Text("‹", color = ClearrColors.Blue, fontWeight = FontWeight.Bold) }
+                Text(
+                    displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ClearrColors.TextPrimary
+                )
+                TextButton(onClick = { displayedMonth = displayedMonth.plusMonths(1) }) { Text("›", color = ClearrColors.Blue, fontWeight = FontWeight.Bold) }
             }
 
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("What needs to be done?") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-            )
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
-            OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Add a note (optional)") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-            )
-
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-            Text("PRIORITY", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
-            Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {
-                listOf(TodoPriority.HIGH, TodoPriority.MEDIUM, TodoPriority.LOW).forEach { value ->
-                    val selected = priority == value
-                    val palette = when (value) {
-                        TodoPriority.HIGH -> ClearrColors.CoralBg to ClearrColors.Coral
-                        TodoPriority.MEDIUM -> ClearrColors.AmberBg to ClearrColors.Orange
-                        TodoPriority.LOW -> ClearrColors.BlueBg to ClearrColors.Blue
+            Row(modifier = Modifier.fillMaxWidth()) {
+                listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { label ->
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        Text(label, color = ClearrColors.TextMuted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, fontWeight = FontWeight.SemiBold)
                     }
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
-                            .clickable { priority = value },
-                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                        color = if (selected) palette.first else ClearrColors.Background
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = value.name.lowercase().replaceFirstChar { it.uppercase() },
-                                color = if (selected) palette.second else ClearrColors.TextMuted,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13
-                            )
+                }
+            }
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6))
+
+            cells.forEach { week ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    week.forEach { date ->
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                                .padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (date != null) {
+                                val isSelected = date == selectedDate
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clickable { selectedDate = date },
+                                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
+                                    color = if (isSelected) ClearrColors.Blue else ClearrColors.Background
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            date.dayOfMonth.toString(),
+                                            color = if (isSelected) ClearrColors.Surface else ClearrColors.TextPrimary,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-            Text("DUE DATE", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
-                verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
-            ) {
-                options.forEach { option ->
-                    val selected = dueOption == option
-                    Surface(
-                        modifier = Modifier.clickable { dueOption = option },
-                        color = if (selected) ClearrColors.Blue else ClearrColors.Background,
-                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20)
-                    ) {
-                        Text(
-                            text = option,
-                            modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp7),
-                            color = if (selected) ClearrColors.Surface else ClearrColors.TextMuted,
-                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            }
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
+            Button(
+                onClick = { onDateSelected(selectedDate) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+                colors = ButtonDefaults.buttonColors(containerColor = ClearrColors.Blue)
+            ) {
+                Text("Use Date", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
         }
     }
 }
@@ -682,7 +879,7 @@ private fun dueLabel(dueDate: LocalDate?): String {
     }
 }
 
-private fun dueDateFromOption(option: String): LocalDate? {
+private fun dueDateFromOption(option: String, customDate: LocalDate? = null): LocalDate? {
     val today = LocalDate.now()
     return when (option) {
         "Today" -> today
@@ -692,6 +889,7 @@ private fun dueDateFromOption(option: String): LocalDate? {
             if (saturday.isBefore(today)) saturday.plusWeeks(1) else saturday
         }
         "Next week" -> today.plusWeeks(1).with(DayOfWeek.MONDAY)
+        "Custom" -> customDate ?: today
         "No due date" -> null
         else -> today
     }

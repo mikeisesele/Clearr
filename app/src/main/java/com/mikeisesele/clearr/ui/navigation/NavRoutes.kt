@@ -9,6 +9,12 @@ sealed class NavRoutes(val route: String) {
     object TrackerDetail : NavRoutes("tracker_detail/{trackerId}") {
         fun createRoute(trackerId: Long) = "tracker_detail/$trackerId"
     }
+    object TodoAdd : NavRoutes("todo_add/{trackerId}") {
+        fun createRoute(trackerId: Long) = "todo_add/$trackerId"
+    }
+    object GoalAdd : NavRoutes("goal_add/{trackerId}") {
+        fun createRoute(trackerId: Long) = "goal_add/$trackerId"
+    }
     object Settings : NavRoutes("settings")
     /** Kept for backward-compat: bottom nav still references Home route string */
     object Home : NavRoutes("tracker_list")
