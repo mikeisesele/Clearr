@@ -28,6 +28,8 @@
 /captures
 .externalNativeBuild
 .cxx
+.gradle-local/
+.kotlin/
 local.properties
 
 # Claude Code project memory (machine-local)
