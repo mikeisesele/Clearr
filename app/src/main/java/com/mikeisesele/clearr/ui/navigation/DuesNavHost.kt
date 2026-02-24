@@ -232,9 +232,6 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     onTrackerClick = { trackerId ->
                         navController.navigate(NavRoutes.TrackerDetail.createRoute(trackerId))
                     },
-                    onSettingsClick = {
-                        navController.navigate(NavRoutes.Settings.route) { launchSingleTop = true }
-                    },
                     onCreateTracker = {
                         navController.navigate(NavRoutes.QuickSetup.route) { launchSingleTop = true }
                     }

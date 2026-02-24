@@ -90,8 +90,7 @@ fun GoalsDetailScreen(
                 title = state.trackerName,
                 doneCount = state.doneCount,
                 totalCount = state.totalCount,
-                onBack = onNavigateBack,
-                onAdd = { showAddSheet = true }
+                onBack = onNavigateBack
             )
 
             AnimatedVisibility(
@@ -171,17 +170,15 @@ private fun GoalsNavBar(
     title: String,
     doneCount: Int,
     totalCount: Int,
-    onBack: () -> Unit,
-    onAdd: () -> Unit
+    onBack: () -> Unit
 ) {
     ClearrTopBar(
         title = title,
         subtitle = "$doneCount/$totalCount cleared today",
         leadingIcon = "←",
         onLeadingClick = onBack,
-        actionIcon = "+",
-        onActionClick = onAdd,
-        actionContainerColor = ClearrColors.Violet
+        actionIcon = null,
+        onActionClick = null
     )
 }
 

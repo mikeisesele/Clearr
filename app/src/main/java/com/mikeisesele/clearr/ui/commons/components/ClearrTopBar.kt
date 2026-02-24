@@ -28,8 +28,8 @@ fun ClearrTopBar(
     subtitle: String? = null,
     leadingIcon: String = "←",
     onLeadingClick: (() -> Unit)? = null,
-    actionIcon: String,
-    onActionClick: () -> Unit,
+    actionIcon: String? = null,
+    onActionClick: (() -> Unit)? = null,
     actionContainerColor: androidx.compose.ui.graphics.Color = ClearrColors.NavBg,
     modifier: Modifier = Modifier
 ) {
@@ -75,21 +75,25 @@ fun ClearrTopBar(
                 }
             }
 
-            Surface(
-                modifier = Modifier
-                    .size(ClearrDimens.dp34)
-                    .clickable { onActionClick() },
-                shape = RoundedCornerShape(ClearrDimens.dp10),
-                color = actionContainerColor
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        actionIcon,
-                        fontSize = ClearrTextSizes.sp18,
-                        color = ClearrColors.Surface,
-                        fontWeight = FontWeight.Bold
-                    )
+            if (!actionIcon.isNullOrBlank() && onActionClick != null) {
+                Surface(
+                    modifier = Modifier
+                        .size(ClearrDimens.dp34)
+                        .clickable { onActionClick() },
+                    shape = RoundedCornerShape(ClearrDimens.dp10),
+                    color = actionContainerColor
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            actionIcon,
+                            fontSize = ClearrTextSizes.sp18,
+                            color = ClearrColors.Surface,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
+            } else {
+                Box(modifier = Modifier.size(ClearrDimens.dp34))
             }
         }
         HorizontalDivider(color = ClearrColors.Border)

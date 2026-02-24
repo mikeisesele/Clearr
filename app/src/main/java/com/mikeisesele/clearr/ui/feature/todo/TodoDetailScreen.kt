@@ -96,8 +96,7 @@ fun TodoDetailScreen(
             TodoNavBar(
                 pendingCount = state.counts.pending + state.counts.overdue,
                 doneCount = state.counts.done,
-                onBack = onNavigateBack,
-                onAdd = { showAddSheet = true }
+                onBack = onNavigateBack
             )
 
             TodoFilterTabs(
@@ -170,17 +169,15 @@ fun TodoDetailScreen(
 private fun TodoNavBar(
     pendingCount: Int,
     doneCount: Int,
-    onBack: () -> Unit,
-    onAdd: () -> Unit
+    onBack: () -> Unit
 ) {
     ClearrTopBar(
         title = "My Todos",
         subtitle = "$pendingCount pending · $doneCount done",
         leadingIcon = "←",
         onLeadingClick = onBack,
-        actionIcon = "+",
-        onActionClick = onAdd,
-        actionContainerColor = ClearrColors.Blue
+        actionIcon = null,
+        onActionClick = null
     )
 }
 

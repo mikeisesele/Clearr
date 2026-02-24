@@ -38,7 +38,6 @@ import kotlinx.coroutines.launch
 fun TrackerListScreen(
     viewModel: TrackerListViewModel = hiltViewModel(),
     onTrackerClick: (trackerId: Long) -> Unit,
-    onSettingsClick: () -> Unit,
     onCreateTracker: () -> Unit
 ) {
     val spacing = ClearrDS.spacing
@@ -80,9 +79,8 @@ fun TrackerListScreen(
                     subtitle = null,
                     leadingIcon = "📋",
                     onLeadingClick = null,
-                    actionIcon = "⚙️",
-                    onActionClick = onSettingsClick,
-                    actionContainerColor = ClearrColors.Violet
+                    actionIcon = null,
+                    onActionClick = null
                 )
 
                 // ── Body ──────────────────────────────────────────────────────
