@@ -1,5 +1,6 @@
 package com.mikeisesele.clearr.ui.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -180,6 +181,16 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val showBottomBar = currentRoute?.startsWith("tracker_detail") != true &&
         currentRoute != NavRoutes.Setup.route &&
         currentRoute != NavRoutes.QuickSetup.route
+
+    BackHandler(enabled = currentRoute != null && currentRoute != NavRoutes.TrackerList.route) {
+        navController.navigate(NavRoutes.TrackerList.route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     Scaffold(
         containerColor = colors.bg,
