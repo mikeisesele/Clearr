@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,6 +30,7 @@ import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingViewModel
 import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
 import com.mikeisesele.clearr.ui.feature.settings.SettingsScreen
+import com.mikeisesele.clearr.ui.feature.setup.QuickSetupTypeScreen
 import com.mikeisesele.clearr.ui.feature.setup.SetupWizardScreen
 import com.mikeisesele.clearr.ui.feature.todo.TodoDetailScreen
 import com.mikeisesele.clearr.ui.feature.trackerlist.TrackerListScreen
@@ -85,8 +87,16 @@ fun DuesNavHost(onThemeChange: (ThemeMode) -> Unit) {
         // ── ONBOARDING FLOW ────────────────────────────────────────────────────
         OnboardingNavHost(onboardingVm = onboardingVm)
     } else if (appConfig?.setupComplete != true) {
-        // ── SETUP WIZARD (onboarding done, app not yet configured) ─────────────
-        SetupWizardScreen(onSetupComplete = {})
+        // ── QUICK SETUP ENTRY (onboarding done, app not yet configured) ───────
+        var showWizard by rememberSaveable { mutableStateOf(false) }
+        if (showWizard) {
+            SetupWizardScreen(onSetupComplete = {})
+        } else {
+            QuickSetupTypeScreen(
+                onOpenDuesWizard = { showWizard = true },
+                onSetupComplete = {}
+            )
+        }
     } else {
         // ── MAIN APP ──────────────────────────────────────────────────────────
         MainNavHost(onThemeChange = onThemeChange)
@@ -136,10 +146,19 @@ private fun OnboardingNavHost(onboardingVm: OnboardingViewModel) {
         composable("onboarding_complete") {
             CompletionScreen(
                 onCreateTracker = {
-                    navController.navigate("setup_wizard") {
+                    navController.navigate(NavRoutes.QuickSetup.route) {
                         popUpTo("onboarding_complete") { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(NavRoutes.QuickSetup.route) {
+            QuickSetupTypeScreen(
+                onOpenDuesWizard = {
+                    navController.navigate("setup_wizard") { launchSingleTop = true }
+                },
+                onSetupComplete = {}
             )
         }
 
@@ -161,7 +180,8 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val currentRoute = currentBackStack?.destination?.route
 
     val showBottomBar = currentRoute?.startsWith("tracker_detail") != true &&
-        currentRoute != NavRoutes.Setup.route
+        currentRoute != NavRoutes.Setup.route &&
+        currentRoute != NavRoutes.QuickSetup.route
 
     Scaffold(
         containerColor = colors.bg,
@@ -218,7 +238,21 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                         navController.navigate(NavRoutes.Settings.route) { launchSingleTop = true }
                     },
                     onCreateTracker = {
+                        navController.navigate(NavRoutes.QuickSetup.route) { launchSingleTop = true }
+                    }
+                )
+            }
+
+            composable(NavRoutes.QuickSetup.route) {
+                QuickSetupTypeScreen(
+                    onOpenDuesWizard = {
                         navController.navigate(NavRoutes.Setup.route) { launchSingleTop = true }
+                    },
+                    onSetupComplete = {
+                        navController.navigate(NavRoutes.TrackerList.route) {
+                            popUpTo(NavRoutes.TrackerList.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
                     }
                 )
             }

@@ -2,6 +2,7 @@ package com.mikeisesele.clearr.ui.navigation
 
 sealed class NavRoutes(val route: String) {
     object Setup : NavRoutes("setup")
+    object QuickSetup : NavRoutes("quick_setup")
     /** Tracker list — the new home screen */
     object TrackerList : NavRoutes("tracker_list")
     /** Detail / dues grid for a specific tracker */

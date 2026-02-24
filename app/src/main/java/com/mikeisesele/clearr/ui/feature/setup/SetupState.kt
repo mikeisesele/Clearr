@@ -8,7 +8,7 @@ import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.TrackerType
 
 data class SetupWizardState(
-    val step: Int = 0,                      // 0–5 (entry + 5 setup steps)
+    val step: Int = 1,                      // 1–5 setup steps
     val groupName: String = "JSS Durumi Brothers",
     val trackerName: String = "Dues Tracker",
     val adminName: String = "",
