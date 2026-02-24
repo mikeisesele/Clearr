@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,14 +27,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,6 +79,8 @@ import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.data.model.derivedStatus
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.theme.ClearrColors
+import com.mikeisesele.clearr.ui.theme.DuesColors
+import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -93,6 +98,7 @@ fun TodoDetailScreen(
     viewModel: TodoViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val colors = LocalDuesColors.current
     var detailTodo by remember { mutableStateOf<TodoItem?>(null) }
 
     if (state.trackerId != trackerId) return
@@ -100,7 +106,7 @@ fun TodoDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClearrColors.Background)
+            .background(colors.bg)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TodoNavBar(
@@ -113,19 +119,20 @@ fun TodoDetailScreen(
                 selected = state.filter,
                 overdueCount = state.counts.overdue,
                 doneCount = state.counts.done,
-                onSelect = { viewModel.onAction(TodoAction.SetFilter(it)) }
+                onSelect = { viewModel.onAction(TodoAction.SetFilter(it)) },
+                colors = colors
             )
-
-            if (state.showSwipeHint) SwipeHintStrip()
 
             if (!state.isLoading && state.displayedTodos.isEmpty()) {
                 TodoEmptyState(filter = state.filter)
             } else {
+                if (state.showSwipeHint) SwipeHintStrip(colors = colors)
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     itemsIndexed(state.displayedTodos, key = { _, todo -> todo.id }) { index, todo ->
                         SwipeableTodoRow(
                             todo = todo,
                             isLast = index == state.displayedTodos.lastIndex,
+                            colors = colors,
                             onDone = {
                                 viewModel.onAction(TodoAction.MarkDone(it))
                                 viewModel.onAction(TodoAction.OnFirstSwipeAction)
@@ -144,6 +151,7 @@ fun TodoDetailScreen(
         TodoFab(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(end = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24),
             onClick = onAddTodo
         )
@@ -152,6 +160,7 @@ fun TodoDetailScreen(
     detailTodo?.let { todo ->
         TodoDetailSheet(
             todo = todo,
+            colors = colors,
             onDismiss = { detailTodo = null },
             onMarkDone = {
                 viewModel.onAction(TodoAction.MarkDone(it))
@@ -186,7 +195,8 @@ private fun TodoFilterTabs(
     selected: TodoFilter,
     overdueCount: Int,
     doneCount: Int,
-    onSelect: (TodoFilter) -> Unit
+    onSelect: (TodoFilter) -> Unit,
+    colors: DuesColors
 ) {
     val tabs = listOf(
         TodoFilter.ALL to "All",
@@ -197,16 +207,16 @@ private fun TodoFilterTabs(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ClearrColors.Surface)
+            .background(colors.surface)
     ) {
         tabs.forEach { (filter, label) ->
             val selectedTab = selected == filter
             val textColor by animateColorAsState(
-                targetValue = if (selectedTab) ClearrColors.Blue else ClearrColors.TextMuted,
+                targetValue = if (selectedTab) ClearrColors.Blue else colors.muted,
                 label = "todo_tab_text"
             )
             val lineColor by animateColorAsState(
-                targetValue = if (selectedTab) ClearrColors.Blue else ClearrColors.Transparent,
+                targetValue = if (selectedTab) ClearrColors.Blue else Color.Transparent,
                 label = "todo_tab_line"
             )
             Column(
@@ -233,18 +243,18 @@ private fun TodoFilterTabs(
 }
 
 @Composable
-private fun SwipeHintStrip() {
+private fun SwipeHintStrip(colors: DuesColors) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp28)
-            .background(ClearrColors.Background),
+            .background(colors.bg),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "← Swipe right to mark done  ·  Swipe left to delete →",
             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
-            color = ClearrColors.TextMuted
+            color = colors.muted
         )
     }
 }
@@ -253,6 +263,7 @@ private fun SwipeHintStrip() {
 private fun SwipeableTodoRow(
     todo: TodoItem,
     isLast: Boolean,
+    colors: DuesColors,
     onDone: (String) -> Unit,
     onDelete: (String) -> Unit,
     onTap: (TodoItem) -> Unit
@@ -273,7 +284,7 @@ private fun SwipeableTodoRow(
     val bgColor = when {
         offsetX.value > 20f -> ClearrColors.Emerald
         offsetX.value < -20f -> ClearrColors.Coral
-        else -> ClearrColors.Border
+        else -> colors.border
     }
 
     Box(modifier = Modifier.fillMaxWidth().background(bgColor)) {
@@ -291,7 +302,7 @@ private fun SwipeableTodoRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(ClearrColors.Surface)
+                .background(colors.surface)
                 .alpha(if (isDone) 0.55f else 1f)
                 .onSizeChanged { rowWidthPx = it.width.toFloat() }
                 .offset { IntOffset(offsetX.value.roundToInt(), 0) }
@@ -349,7 +360,7 @@ private fun SwipeableTodoRow(
                     text = todo.title,
                     fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15,
                     fontWeight = FontWeight.Medium,
-                    color = if (isDone) ClearrColors.TextMuted else ClearrColors.TextPrimary,
+                    color = if (isDone) colors.muted else colors.text,
                     textDecoration = if (isDone) TextDecoration.LineThrough else TextDecoration.None,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -360,7 +371,7 @@ private fun SwipeableTodoRow(
                     Text(
                         text = todo.note,
                         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                        color = ClearrColors.TextMuted,
+                        color = colors.muted,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -372,7 +383,7 @@ private fun SwipeableTodoRow(
                         text = if (isDone) "Done" else dueLabel(todo.dueDate),
                         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
                         fontWeight = FontWeight.SemiBold,
-                        color = dueLabelColor(todo, derived)
+                        color = dueLabelColor(todo, derived, colors.muted)
                     )
 
                     if (todo.priority == TodoPriority.HIGH && !isDone) {
@@ -393,7 +404,7 @@ private fun SwipeableTodoRow(
             }
         }
 
-        if (!isLast) HorizontalDivider(color = ClearrColors.Border, modifier = Modifier.align(Alignment.BottomCenter))
+        if (!isLast) HorizontalDivider(color = colors.border, modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -418,6 +429,7 @@ fun AddTodoScreen(
     viewModel: TodoViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val colors = LocalDuesColors.current
     if (state.trackerId != trackerId) return
 
     var title by rememberSaveable { mutableStateOf("") }
@@ -439,29 +451,27 @@ fun AddTodoScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClearrColors.Background)
+            .background(colors.bg)
             .statusBarsPadding()
             .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
             .navigationBarsPadding()
+            .verticalScroll(rememberScrollState())
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34))
-            Text("New Todo", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
-            Surface(
+            Box(
                 modifier = Modifier
                     .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)
                     .clickable { onClose() },
-                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                color = ClearrColors.Background
+                contentAlignment = Alignment.Center
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                        tint = ClearrColors.TextSecondary
-                    )
-                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = colors.text
+                )
             }
+            Text("New Todo", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = colors.text)
+            Spacer(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34))
         }
 
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
@@ -486,7 +496,7 @@ fun AddTodoScreen(
         )
 
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-        Text("PRIORITY", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
+        Text("PRIORITY", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = colors.muted, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
         Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {
             listOf(TodoPriority.HIGH, TodoPriority.MEDIUM, TodoPriority.LOW).forEach { value ->
@@ -502,12 +512,12 @@ fun AddTodoScreen(
                         .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
                         .clickable { priority = value },
                     shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                    color = if (selected) palette.first else ClearrColors.Background
+                    color = if (selected) palette.first else colors.card
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             text = value.name.lowercase().replaceFirstChar { it.uppercase() },
-                            color = if (selected) palette.second else ClearrColors.TextMuted,
+                            color = if (selected) palette.second else colors.muted,
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13
                         )
@@ -517,7 +527,7 @@ fun AddTodoScreen(
         }
 
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-        Text("DUE DATE", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
+        Text("DUE DATE", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = colors.muted, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
@@ -532,20 +542,20 @@ fun AddTodoScreen(
                             showCustomDatePicker = true
                         }
                     },
-                    color = if (selected) ClearrColors.Blue else ClearrColors.Background,
+                    color = if (selected) ClearrColors.Blue else colors.card,
                     shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20)
                 ) {
                     Text(
                         text = if (option == "Custom" && customLabel != null && dueOption == "Custom") "Custom: $customLabel" else option,
                         modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp7),
-                        color = if (selected) ClearrColors.Surface else ClearrColors.TextMuted,
+                        color = if (selected) ClearrColors.Surface else colors.muted,
                         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
             }
         }
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24))
         Button(
             onClick = {
                 viewModel.onAction(
@@ -563,8 +573,9 @@ fun AddTodoScreen(
             shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
             colors = ButtonDefaults.buttonColors(
                 containerColor = ClearrColors.Blue,
-                disabledContainerColor = ClearrColors.Border
-            )
+                disabledContainerColor = colors.border
+            ),
+            contentPadding = PaddingValues(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
         ) {
             Text("Add Todo", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
         }
@@ -593,11 +604,12 @@ private fun StyledSheetInput(
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
+    val colors = LocalDuesColors.current
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
-        color = ClearrColors.Background,
-        border = BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, ClearrColors.Border)
+        color = colors.card,
+        border = BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, colors.border)
     ) {
         Box(
             modifier = Modifier.padding(
@@ -611,13 +623,13 @@ private fun StyledSheetInput(
                 singleLine = singleLine,
                 keyboardOptions = keyboardOptions,
                 textStyle = TextStyle(
-                    color = ClearrColors.TextPrimary,
+                    color = colors.text,
                     fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 decorationBox = { inner ->
                     if (value.isBlank()) {
-                        Text(placeholder, color = ClearrColors.TextMuted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
+                        Text(placeholder, color = colors.muted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
                     }
                     inner()
                 }
@@ -633,6 +645,7 @@ private fun CustomDatePickerSheet(
     onDismiss: () -> Unit,
     onDateSelected: (LocalDate) -> Unit
 ) {
+    val colors = LocalDuesColors.current
     var displayedMonth by remember { mutableStateOf(YearMonth.from(initialDate)) }
     var selectedDate by remember { mutableStateOf(initialDate) }
     val firstDayOfMonth = displayedMonth.atDay(1)
@@ -645,7 +658,7 @@ private fun CustomDatePickerSheet(
     }.chunked(7)
 
     BackHandler(onBack = onDismiss)
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = ClearrColors.Surface) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = colors.surface) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -662,7 +675,7 @@ private fun CustomDatePickerSheet(
                     displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
                     fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16,
                     fontWeight = FontWeight.SemiBold,
-                    color = ClearrColors.TextPrimary
+                    color = colors.text
                 )
                 TextButton(onClick = { displayedMonth = displayedMonth.plusMonths(1) }) { Text("›", color = ClearrColors.Blue, fontWeight = FontWeight.Bold) }
             }
@@ -671,7 +684,7 @@ private fun CustomDatePickerSheet(
             Row(modifier = Modifier.fillMaxWidth()) {
                 listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { label ->
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        Text(label, color = ClearrColors.TextMuted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, fontWeight = FontWeight.SemiBold)
+                        Text(label, color = colors.muted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -694,12 +707,12 @@ private fun CustomDatePickerSheet(
                                         .fillMaxSize()
                                         .clickable { selectedDate = date },
                                     shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                                    color = if (isSelected) ClearrColors.Blue else ClearrColors.Background
+                                    color = if (isSelected) ClearrColors.Blue else colors.card
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Text(
                                             date.dayOfMonth.toString(),
-                                            color = if (isSelected) ClearrColors.Surface else ClearrColors.TextPrimary,
+                                            color = if (isSelected) ClearrColors.Surface else colors.text,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                         )
                                     }
@@ -728,6 +741,7 @@ private fun CustomDatePickerSheet(
 @Composable
 private fun TodoDetailSheet(
     todo: TodoItem,
+    colors: DuesColors,
     onDismiss: () -> Unit,
     onMarkDone: (String) -> Unit,
     onDelete: (String) -> Unit
@@ -736,7 +750,7 @@ private fun TodoDetailSheet(
     val isDone = derived == TodoStatus.DONE
 
     BackHandler(onBack = onDismiss)
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = ClearrColors.Surface) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = colors.surface) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -744,8 +758,8 @@ private fun TodoDetailSheet(
                 .navigationBarsPadding()
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onDismiss) { Text("Close", color = ClearrColors.TextSecondary) }
-                Text("Detail", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
+                TextButton(onClick = onDismiss) { Text("Close", color = colors.muted) }
+                Text("Detail", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = colors.text)
                 TextButton(onClick = { onDelete(todo.id) }) { Text("Delete", color = ClearrColors.Coral, fontWeight = FontWeight.SemiBold) }
             }
 
@@ -753,18 +767,18 @@ private fun TodoDetailSheet(
                 text = todo.title,
                 fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18,
                 fontWeight = FontWeight.Bold,
-                color = if (isDone) ClearrColors.TextMuted else ClearrColors.TextPrimary,
+                color = if (isDone) colors.muted else colors.text,
                 textDecoration = if (isDone) TextDecoration.LineThrough else TextDecoration.None
             )
 
             if (!todo.note.isNullOrBlank()) {
                 Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
-                Surface(color = ClearrColors.Background, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10), modifier = Modifier.fillMaxWidth()) {
+                Surface(color = colors.card, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10), modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = todo.note,
                         modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
                         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14,
-                        color = ClearrColors.TextSecondary
+                        color = colors.muted
                     )
                 }
             }
@@ -785,7 +799,7 @@ private fun TodoDetailSheet(
                 val statusPalette = when (derived) {
                     TodoStatus.DONE -> ClearrColors.EmeraldBg to ClearrColors.Emerald
                     TodoStatus.OVERDUE -> ClearrColors.CoralBg to ClearrColors.Coral
-                    TodoStatus.PENDING -> ClearrColors.Background to ClearrColors.TextSecondary
+                    TodoStatus.PENDING -> colors.card to colors.muted
                 }
                 StatusPill(
                     label = if (derived == TodoStatus.DONE) "Done" else dueLabel(todo.dueDate),
@@ -812,6 +826,7 @@ private fun TodoDetailSheet(
 
 @Composable
 private fun TodoEmptyState(filter: TodoFilter) {
+    val colors = LocalDuesColors.current
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -823,13 +838,13 @@ private fun TodoEmptyState(filter: TodoFilter) {
             text = if (filter == TodoFilter.DONE) "Nothing done yet" else "All clear!",
             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16,
             fontWeight = FontWeight.Bold,
-            color = ClearrColors.TextPrimary
+            color = colors.text
         )
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
         Text(
             text = if (filter == TodoFilter.DONE) "Complete a task to see it here" else "No pending tasks",
             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
-            color = ClearrColors.TextMuted
+            color = colors.muted
         )
     }
 }
@@ -862,11 +877,11 @@ private fun priorityDotColor(todo: TodoItem, derived: TodoStatus): Color {
     }
 }
 
-private fun dueLabelColor(todo: TodoItem, derived: TodoStatus): Color = when {
-    derived == TodoStatus.DONE -> ClearrColors.TextMuted
+private fun dueLabelColor(todo: TodoItem, derived: TodoStatus, mutedColor: Color): Color = when {
+    derived == TodoStatus.DONE -> mutedColor
     derived == TodoStatus.OVERDUE -> ClearrColors.Coral
     todo.dueDate == LocalDate.now() -> ClearrColors.Orange
-    else -> ClearrColors.TextMuted
+    else -> mutedColor
 }
 
 private fun dueLabel(dueDate: LocalDate?): String {

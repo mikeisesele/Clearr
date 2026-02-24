@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,13 +30,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,6 +79,8 @@ import com.mikeisesele.clearr.data.model.GoalFrequency
 import com.mikeisesele.clearr.data.model.GoalSummary
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.theme.ClearrColors
+import com.mikeisesele.clearr.ui.theme.DuesColors
+import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import com.mikeisesele.clearr.ui.theme.fromToken
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -89,6 +94,7 @@ fun GoalsDetailScreen(
     viewModel: GoalsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val colors = LocalDuesColors.current
     var detailGoal by remember { mutableStateOf<GoalSummary?>(null) }
 
     if (state.trackerId != trackerId) return
@@ -96,7 +102,7 @@ fun GoalsDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClearrColors.Background)
+            .background(colors.bg)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             GoalsNavBar(
@@ -111,19 +117,19 @@ fun GoalsDetailScreen(
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut()
             ) {
-                AllClearedBanner()
+                AllClearedBanner(colors = colors)
             }
-
-            SwipeHintStrip()
 
             if (!state.isLoading && state.summaries.isEmpty()) {
                 GoalsEmptyState(modifier = Modifier.weight(1f))
             } else {
+                SwipeHintStrip(colors = colors)
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     itemsIndexed(state.summaries, key = { _, summary -> summary.goal.id }) { index, summary ->
                         SwipeableGoalRow(
                             summary = summary,
                             isLast = index == state.summaries.lastIndex,
+                            colors = colors,
                             onDone = { viewModel.onAction(GoalsAction.MarkDone(it)) },
                             onTap = { detailGoal = it }
                         )
@@ -135,6 +141,7 @@ fun GoalsDetailScreen(
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(end = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24)
                 .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp52)
                 .clickable { onAddGoal() },
@@ -151,6 +158,7 @@ fun GoalsDetailScreen(
     detailGoal?.let { summary ->
         GoalDetailSheet(
             summary = summary,
+            colors = colors,
             onDismiss = { detailGoal = null },
             onMarkDone = {
                 viewModel.onAction(GoalsAction.MarkDone(it))
@@ -178,7 +186,7 @@ private fun GoalsNavBar(
 }
 
 @Composable
-private fun AllClearedBanner() {
+private fun AllClearedBanner(colors: DuesColors) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -199,18 +207,18 @@ private fun AllClearedBanner() {
 }
 
 @Composable
-private fun SwipeHintStrip() {
+private fun SwipeHintStrip(colors: DuesColors) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp28)
-            .background(ClearrColors.Background),
+            .background(colors.bg),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "Swipe right to mark a goal done for today",
             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
-            color = ClearrColors.TextMuted
+            color = colors.muted
         )
     }
 }
@@ -219,6 +227,7 @@ private fun SwipeHintStrip() {
 private fun SwipeableGoalRow(
     summary: GoalSummary,
     isLast: Boolean,
+    colors: DuesColors,
     onDone: (String) -> Unit,
     onTap: (GoalSummary) -> Unit
 ) {
@@ -234,7 +243,7 @@ private fun SwipeableGoalRow(
 
     val doneThisPeriod = summary.isDoneThisPeriod
     val palette = goalPalette(summary.goal.colorToken)
-    val bgColor = if (offsetX.value > 20f) ClearrColors.Emerald else ClearrColors.Border
+    val bgColor = if (offsetX.value > 20f) ClearrColors.Emerald else colors.border
 
     Box(modifier = Modifier.fillMaxWidth().background(bgColor)) {
         Row(
@@ -254,7 +263,7 @@ private fun SwipeableGoalRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(ClearrColors.Surface)
+                .background(colors.surface)
                 .alpha(if (doneThisPeriod) 0.6f else 1f)
                 .onSizeChanged { rowWidthPx = it.width.toFloat() }
                 .offset { IntOffset(offsetX.value.roundToInt(), 0) }
@@ -320,17 +329,17 @@ private fun SwipeableGoalRow(
                             text = summary.goal.title,
                             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (doneThisPeriod) ClearrColors.TextMuted else ClearrColors.TextPrimary,
+                            color = if (doneThisPeriod) colors.muted else colors.text,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Spacer(Modifier.width(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6))
-                        Surface(shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10), color = ClearrColors.Background) {
+                        Surface(shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10), color = colors.card) {
                             Text(
                                 text = if (summary.goal.frequency == GoalFrequency.DAILY) "Daily" else "Weekly",
                                 modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp7, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1),
                                 fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
-                                color = ClearrColors.TextMuted
+                                color = colors.muted
                             )
                         }
                     }
@@ -342,7 +351,7 @@ private fun SwipeableGoalRow(
                             text = summary.currentStreak.toString(),
                             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
                             fontWeight = FontWeight.Bold,
-                            color = if (summary.currentStreak > 0) ClearrColors.Amber else ClearrColors.TextMuted
+                            color = if (summary.currentStreak > 0) ClearrColors.Amber else colors.muted
                         )
                     }
                 }
@@ -351,7 +360,7 @@ private fun SwipeableGoalRow(
                 Text(
                     text = summary.goal.target ?: "No target set",
                     fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                    color = ClearrColors.TextMuted,
+                    color = colors.muted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -361,7 +370,7 @@ private fun SwipeableGoalRow(
             }
         }
 
-        if (!isLast) HorizontalDivider(color = ClearrColors.Border, modifier = Modifier.align(Alignment.BottomCenter))
+        if (!isLast) HorizontalDivider(color = colors.border, modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -370,10 +379,11 @@ private fun HistoryDots(
     history: List<com.mikeisesele.clearr.data.model.HistoryEntry>,
     color: Color
 ) {
+    val colors = LocalDuesColors.current
     Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3), verticalAlignment = Alignment.CenterVertically) {
         history.forEach { entry ->
             val dotColor by animateColorAsState(
-                targetValue = if (entry.isDone) color else ClearrColors.Border,
+                targetValue = if (entry.isDone) color else colors.border,
                 label = "goal_history_dot"
             )
             Box(
@@ -389,6 +399,7 @@ private fun HistoryDots(
 @Composable
 private fun GoalDetailSheet(
     summary: GoalSummary,
+    colors: DuesColors,
     onDismiss: () -> Unit,
     onMarkDone: (String) -> Unit
 ) {
@@ -405,7 +416,7 @@ private fun GoalDetailSheet(
     BackHandler(enabled = true) {}
     ModalBottomSheet(
         onDismissRequest = {},
-        containerColor = ClearrColors.Surface,
+        containerColor = colors.surface,
         sheetState = addSheetState,
         dragHandle = null
     ) {
@@ -421,9 +432,9 @@ private fun GoalDetailSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Close", color = ClearrColors.TextSecondary)
+                    Text("Close", color = colors.muted)
                 }
-                Text("Goal Detail", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
+                Text("Goal Detail", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = colors.text)
                 Spacer(modifier = Modifier.width(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp40))
             }
 
@@ -439,11 +450,11 @@ private fun GoalDetailSheet(
                     }
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(summary.goal.title, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18, fontWeight = FontWeight.Bold, color = ClearrColors.TextPrimary)
+                    Text(summary.goal.title, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18, fontWeight = FontWeight.Bold, color = colors.text)
                     Text(
                         text = "${summary.goal.target ?: "No target"} · ${if (summary.goal.frequency == GoalFrequency.DAILY) "Daily" else "Weekly"}",
                         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
-                        color = ClearrColors.TextMuted
+                        color = colors.muted
                     )
                 }
             }
@@ -453,8 +464,8 @@ private fun GoalDetailSheet(
                 StatTile(
                     label = "Streak",
                     value = "${summary.currentStreak}🔥",
-                    fg = if (summary.currentStreak > 0) ClearrColors.Amber else ClearrColors.TextMuted,
-                    bg = if (summary.currentStreak > 0) ClearrColors.AmberBg else ClearrColors.Background,
+                    fg = if (summary.currentStreak > 0) ClearrColors.Amber else colors.muted,
+                    bg = if (summary.currentStreak > 0) ClearrColors.AmberBg else colors.card,
                     modifier = Modifier.weight(1f)
                 )
                 StatTile(
@@ -479,7 +490,7 @@ private fun GoalDetailSheet(
             }
 
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20))
-            Text(historyTitle, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextMuted)
+            Text(historyTitle, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, fontWeight = FontWeight.SemiBold, color = colors.muted)
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
             Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6), modifier = Modifier.fillMaxWidth()) {
                 summary.recentHistory.forEach { entry ->
@@ -489,7 +500,7 @@ private fun GoalDetailSheet(
                                 .fillMaxWidth()
                                 .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp36),
                             shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
-                            color = if (entry.isDone) palette.color else ClearrColors.Background
+                            color = if (entry.isDone) palette.color else colors.card
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
@@ -501,7 +512,7 @@ private fun GoalDetailSheet(
                             }
                         }
                         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
-                        Text(entry.label, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp9, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
+                        Text(entry.label, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp9, color = colors.muted, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -555,6 +566,7 @@ private fun StatTile(
     bg: Color,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalDuesColors.current
     Surface(modifier = modifier, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12), color = bg) {
         Column(
             modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
@@ -562,7 +574,7 @@ private fun StatTile(
         ) {
             Text(value, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18, fontWeight = FontWeight.ExtraBold, color = fg)
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2))
-            Text(label, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextMuted)
+            Text(label, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, fontWeight = FontWeight.SemiBold, color = colors.muted)
         }
     }
 }
@@ -575,6 +587,7 @@ fun AddGoalScreen(
     viewModel: GoalsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val colors = LocalDuesColors.current
     if (state.trackerId != trackerId) return
 
     var title by rememberSaveable { mutableStateOf("") }
@@ -600,33 +613,31 @@ fun AddGoalScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClearrColors.Background)
+            .background(colors.bg)
             .statusBarsPadding()
             .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
             .navigationBarsPadding()
+            .verticalScroll(rememberScrollState())
     ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34))
-                Text("New Goal", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
-                Surface(
+                Box(
                     modifier = Modifier
                         .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)
                         .clickable { onClose() },
-                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                    color = ClearrColors.Background
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = ClearrColors.TextSecondary
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = colors.text
+                    )
                 }
+                Text("New Goal", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = colors.text)
+                Spacer(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34))
             }
 
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
@@ -654,12 +665,12 @@ fun AddGoalScreen(
                             text = title.ifBlank { "Goal name" },
                             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16,
                             fontWeight = FontWeight.Bold,
-                            color = ClearrColors.TextPrimary
+                            color = colors.text
                         )
                         Text(
                             text = "${target.ifBlank { "Set a target" }} · ${if (frequency == GoalFrequency.DAILY) "Daily" else "Weekly"}",
                             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                            color = ClearrColors.TextMuted
+                            color = colors.muted
                         )
                     }
                 }
@@ -674,7 +685,7 @@ fun AddGoalScreen(
                             .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
                             .clickable { emoji = value },
                         shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                        color = if (emoji == value) palette.background else ClearrColors.Background,
+                        color = if (emoji == value) palette.background else colors.card,
                         border = BorderStroke(
                             width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
                             color = if (emoji == value) palette.color else ClearrColors.Transparent
@@ -750,7 +761,7 @@ fun AddGoalScreen(
                             .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp44)
                             .clickable { frequency = value },
                         shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                        color = if (selected) palette.background else ClearrColors.Background,
+                            color = if (selected) palette.background else colors.card,
                         border = BorderStroke(
                             width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
                             color = if (selected) palette.color else ClearrColors.Transparent
@@ -759,7 +770,7 @@ fun AddGoalScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Text(
                                 text = if (value == GoalFrequency.DAILY) "Daily" else "Weekly",
-                                color = if (selected) palette.color else ClearrColors.TextMuted,
+                                color = if (selected) palette.color else colors.muted,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                 fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14
                             )
@@ -767,7 +778,7 @@ fun AddGoalScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24))
             Button(
                 onClick = {
                     viewModel.onAction(
@@ -786,8 +797,9 @@ fun AddGoalScreen(
                 shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = palette.color,
-                    disabledContainerColor = ClearrColors.Border
-                )
+                    disabledContainerColor = colors.border
+                ),
+                contentPadding = PaddingValues(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
             ) {
                 Text("Add Goal", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
             }
@@ -797,11 +809,12 @@ fun AddGoalScreen(
 
 @Composable
 private fun SectionTitle(label: String) {
+    val colors = LocalDuesColors.current
     Text(
         text = label,
         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
         fontWeight = FontWeight.SemiBold,
-        color = ClearrColors.TextMuted,
+        color = colors.muted,
         modifier = Modifier.padding(start = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
     )
 }
@@ -814,10 +827,11 @@ private fun GoalSheetInput(
     singleLine: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalDuesColors.current
     Surface(
         shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
-        color = ClearrColors.Background,
-        border = BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, ClearrColors.Border),
+        color = colors.card,
+        border = BorderStroke(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, colors.border),
         modifier = modifier
     ) {
         Box(
@@ -831,13 +845,13 @@ private fun GoalSheetInput(
                 onValueChange = onValueChange,
                 singleLine = singleLine,
                 textStyle = TextStyle(
-                    color = ClearrColors.TextPrimary,
+                    color = colors.text,
                     fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 decorationBox = { inner ->
                     if (value.isBlank()) {
-                        Text(placeholder, color = ClearrColors.TextMuted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
+                        Text(placeholder, color = colors.muted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
                     }
                     inner()
                 }
@@ -848,21 +862,23 @@ private fun GoalSheetInput(
 
 @Composable
 private fun GoalsEmptyState(modifier: Modifier = Modifier) {
+    val colors = LocalDuesColors.current
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(ClearrColors.Background),
+            .background(colors.bg),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("🎯", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp40)
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
-        Text("No goals yet", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.Bold, color = ClearrColors.TextPrimary)
+        Text("No goals yet", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.Bold, color = colors.text)
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
         Text(
             text = "Add your first goal and start building a streak.",
+            modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32),
             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
-            color = ClearrColors.TextMuted
+            color = colors.muted
         )
     }
 }

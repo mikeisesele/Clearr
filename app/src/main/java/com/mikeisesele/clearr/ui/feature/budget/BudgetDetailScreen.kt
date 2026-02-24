@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -56,6 +57,8 @@ import com.mikeisesele.clearr.data.model.CategorySummary
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDS
+import com.mikeisesele.clearr.ui.theme.DuesColors
+import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import com.mikeisesele.clearr.ui.theme.fromToken
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
@@ -67,6 +70,7 @@ fun BudgetDetailScreen(
     viewModel: BudgetViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val colors = LocalDuesColors.current
     var loggingCategory by remember { mutableStateOf<CategorySummary?>(null) }
     var showAddCategory by remember { mutableStateOf(false) }
 
@@ -75,7 +79,7 @@ fun BudgetDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClearrColors.BrandBackground)
+            .background(colors.bg)
     ) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
@@ -87,7 +91,8 @@ fun BudgetDetailScreen(
                     selectedPeriodId = state.selectedPeriodId,
                     onNavigateBack = onNavigateBack,
                     onFrequencyChange = { viewModel.onAction(BudgetAction.SetFrequency(it)) },
-                    onPeriodSelect = { viewModel.onAction(BudgetAction.SelectPeriod(it)) }
+                    onPeriodSelect = { viewModel.onAction(BudgetAction.SelectPeriod(it)) },
+                    colors = colors
                 )
             }
             item { Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)) }
@@ -96,7 +101,8 @@ fun BudgetDetailScreen(
                     summaries = state.categorySummaries,
                     overBudgetNames = state.budgetSummary.overBudgetCategories.map { it.category.name },
                     onCategoryTap = { loggingCategory = it },
-                    onAddCategory = { showAddCategory = true }
+                    onAddCategory = { showAddCategory = true },
+                    colors = colors
                 )
             }
             item { Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp96)) }
@@ -105,6 +111,7 @@ fun BudgetDetailScreen(
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(end = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24)
                 .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp52),
             color = ClearrColors.Emerald,
@@ -152,11 +159,12 @@ private fun BudgetSummarySection(
     selectedPeriodId: Long?,
     onNavigateBack: () -> Unit,
     onFrequencyChange: (BudgetFrequency) -> Unit,
-    onPeriodSelect: (Long) -> Unit
+    onPeriodSelect: (Long) -> Unit,
+    colors: DuesColors
 ) {
     val spacing = ClearrDS.spacing
     val subtitle = periods.firstOrNull { it.id == selectedPeriodId }?.label.orEmpty()
-    Column(modifier = Modifier.fillMaxWidth().background(ClearrColors.Surface)) {
+    Column(modifier = Modifier.fillMaxWidth().background(colors.surface)) {
         ClearrTopBar(
             title = trackerName,
             subtitle = subtitle,
@@ -164,19 +172,19 @@ private fun BudgetSummarySection(
             onLeadingClick = onNavigateBack,
             actionIcon = "⋯",
             onActionClick = {},
-            actionContainerColor = ClearrColors.NavBg
+            actionContainerColor = colors.card
         )
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.lg),
             horizontalArrangement = Arrangement.Center
         ) {
-            Surface(color = ClearrColors.BrandBackground, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp9)) {
+            Surface(color = colors.bg, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp9)) {
                 Row(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)) {
                     listOf(BudgetFrequency.MONTHLY, BudgetFrequency.WEEKLY).forEach { mode ->
                         val selected = mode == frequency
                         Surface(
-                            color = if (selected) ClearrColors.Surface else ClearrColors.Transparent,
+                            color = if (selected) colors.surface else Color.Transparent,
                             shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp7),
                             shadowElevation = if (selected) com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2 else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0,
                             modifier = Modifier.clickable { onFrequencyChange(mode) }
@@ -184,7 +192,7 @@ private fun BudgetSummarySection(
                             Text(
                                 text = if (mode == BudgetFrequency.MONTHLY) "Monthly" else "Weekly",
                                 modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
-                                color = if (selected) ClearrColors.BrandText else ClearrColors.TextMuted,
+                                color = if (selected) colors.text else colors.muted,
                                 fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
                                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
                             )
@@ -201,14 +209,14 @@ private fun BudgetSummarySection(
             items(periods, key = { it.id }) { period ->
                 val selected = period.id == selectedPeriodId
                 Surface(
-                    color = if (selected) ClearrColors.Emerald else ClearrColors.BrandBackground,
+                    color = if (selected) ClearrColors.Emerald else colors.bg,
                     shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20),
                     modifier = Modifier.clickable { onPeriodSelect(period.id) }
                 ) {
                     Text(
                         period.label,
                         modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5),
-                        color = if (selected) ClearrColors.Surface else ClearrColors.TextMuted,
+                        color = if (selected) ClearrColors.Surface else colors.muted,
                         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -217,7 +225,7 @@ private fun BudgetSummarySection(
         }
 
         Surface(
-            color = ClearrColors.BrandBackground,
+            color = colors.bg,
             shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
             modifier = Modifier
                 .fillMaxWidth()
@@ -230,17 +238,17 @@ private fun BudgetSummarySection(
             ) {
                 DonutRingChart(spentKobo = summary.totalSpentKobo, plannedKobo = summary.totalPlannedKobo)
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Total Spent", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted)
+                    Text("Total Spent", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = colors.muted)
                     Text(
                         text = formatKobo(summary.totalSpentKobo),
                         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp26,
                         fontWeight = FontWeight.Bold,
-                        color = ClearrColors.BrandText
+                        color = colors.text
                     )
                     Text(
                         text = "of ${formatKobo(summary.totalPlannedKobo)} planned",
                         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                        color = ClearrColors.TextMuted
+                        color = colors.muted
                     )
                     Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
                     val over = summary.totalRemainingKobo < 0
@@ -268,6 +276,7 @@ private fun BudgetSummarySection(
 
 @Composable
 private fun DonutRingChart(spentKobo: Long, plannedKobo: Long, modifier: Modifier = Modifier) {
+    val colors = LocalDuesColors.current
     val pctRaw = if (plannedKobo > 0L) spentKobo.toFloat() / plannedKobo else 0f
     val pct = pctRaw.coerceAtMost(1f)
     val animatedPct by animateFloatAsState(targetValue = pct, label = "ring_pct")
@@ -297,8 +306,8 @@ private fun DonutRingChart(spentKobo: Long, plannedKobo: Long, modifier: Modifie
             )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("${(pctRaw.coerceAtMost(1f) * 100).roundToInt()}%", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp9, fontWeight = FontWeight.Bold, color = ClearrColors.TextSecondary)
-            Text("used", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp7, color = ClearrColors.TextMuted)
+            Text("${(pctRaw.coerceAtMost(1f) * 100).roundToInt()}%", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp9, fontWeight = FontWeight.Bold, color = colors.text)
+            Text("used", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp7, color = colors.muted)
         }
     }
 }
@@ -308,7 +317,8 @@ private fun BudgetCategoryList(
     summaries: List<CategorySummary>,
     overBudgetNames: List<String>,
     onCategoryTap: (CategorySummary) -> Unit,
-    onAddCategory: () -> Unit
+    onAddCategory: () -> Unit,
+    colors: DuesColors
 ) {
     val spacing = ClearrDS.spacing
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.lg)) {
@@ -329,15 +339,15 @@ private fun BudgetCategoryList(
         }
 
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
-        Text("CATEGORIES", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold)
+        Text("CATEGORIES", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13, color = colors.muted, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
 
         Surface(color = ClearrColors.Surface, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12), modifier = Modifier.fillMaxWidth()) {
             Column {
                 summaries.forEachIndexed { index, summary ->
-                    BudgetCategoryRow(summary = summary, onClick = { onCategoryTap(summary) })
+                    BudgetCategoryRow(summary = summary, onClick = { onCategoryTap(summary) }, colors = colors)
                     if (index < summaries.lastIndex) {
-                        HorizontalDivider(color = ClearrColors.Border)
+                        HorizontalDivider(color = colors.border)
                     }
                 }
             }
@@ -369,7 +379,7 @@ private fun BudgetCategoryList(
 }
 
 @Composable
-private fun BudgetCategoryRow(summary: CategorySummary, onClick: () -> Unit) {
+private fun BudgetCategoryRow(summary: CategorySummary, onClick: () -> Unit, colors: DuesColors) {
     val pct = summary.percentUsed.coerceAtMost(1f)
     val animatedPct by animateFloatAsState(targetValue = pct, label = "row_pct")
     val token = ClearrColors.fromToken(summary.category.colorToken)
@@ -381,7 +391,7 @@ private fun BudgetCategoryRow(summary: CategorySummary, onClick: () -> Unit) {
     val statusColor = when (summary.status) {
         BudgetStatus.OVER_BUDGET -> ClearrColors.Coral
         BudgetStatus.CLEARED -> ClearrColors.Emerald
-        BudgetStatus.NEAR_LIMIT, BudgetStatus.ON_TRACK -> ClearrColors.TextMuted
+        BudgetStatus.NEAR_LIMIT, BudgetStatus.ON_TRACK -> colors.muted
     }
     val progressColor = when (summary.status) {
         BudgetStatus.OVER_BUDGET -> ClearrColors.Coral
@@ -404,7 +414,7 @@ private fun BudgetCategoryRow(summary: CategorySummary, onClick: () -> Unit) {
         }
         Column(modifier = Modifier.weight(1f)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(summary.category.name, color = ClearrColors.BrandText, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15, fontWeight = FontWeight.Medium)
+                Text(summary.category.name, color = colors.text, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15, fontWeight = FontWeight.Medium)
                 Text(statusText, color = statusColor, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13, fontWeight = FontWeight.SemiBold)
             }
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5))
@@ -413,7 +423,7 @@ private fun BudgetCategoryRow(summary: CategorySummary, onClick: () -> Unit) {
                     modifier = Modifier
                         .weight(1f)
                         .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
-                        .background(ClearrColors.Border, RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp99))
+                        .background(colors.border, RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp99))
                 ) {
                     Box(
                         modifier = Modifier
@@ -422,10 +432,10 @@ private fun BudgetCategoryRow(summary: CategorySummary, onClick: () -> Unit) {
                             .background(progressColor, RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp99))
                     )
                 }
-                Text(formatKobo(summary.spentAmountKobo), fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, color = ClearrColors.TextMuted, fontWeight = FontWeight.Medium)
+                Text(formatKobo(summary.spentAmountKobo), fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, color = colors.muted, fontWeight = FontWeight.Medium)
             }
         }
-        Text("›", color = ClearrColors.Border, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14)
+        Text("›", color = colors.border, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14)
     }
 }
 
@@ -436,18 +446,19 @@ private fun LogExpenseSheet(
     onDismiss: () -> Unit,
     onSave: (amountNaira: Double, note: String?) -> Unit
 ) {
+    val colors = LocalDuesColors.current
     var amount by rememberSaveable { mutableStateOf("") }
     var note by rememberSaveable { mutableStateOf("") }
     val amountNaira = amount.toDoubleOrNull() ?: 0.0
 
     BackHandler(onBack = onDismiss)
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = ClearrColors.Surface) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = colors.surface) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onDismiss) { Text("Cancel") }
-                Text("Log Expense", fontWeight = FontWeight.SemiBold, color = ClearrColors.BrandText)
+                Text("Log Expense", fontWeight = FontWeight.SemiBold, color = colors.text)
                 TextButton(onClick = { if (amountNaira > 0.0) onSave(amountNaira, note) }, enabled = amountNaira > 0.0) {
-                    Text("Add", color = if (amountNaira > 0.0) ClearrColors.Emerald else ClearrColors.TextMuted)
+                    Text("Add", color = if (amountNaira > 0.0) ClearrColors.Emerald else colors.muted)
                 }
             }
             val token = ClearrColors.fromToken(category.category.colorToken)
@@ -455,11 +466,11 @@ private fun LogExpenseSheet(
                 Row(modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), verticalAlignment = Alignment.CenterVertically) {
                     Text(category.category.icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18)
                     Column {
-                        Text(category.category.name, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13, fontWeight = FontWeight.SemiBold, color = ClearrColors.BrandText)
+                        Text(category.category.name, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13, fontWeight = FontWeight.SemiBold, color = colors.text)
                         Text(
                             if (category.remainingAmountKobo >= 0) "${formatKobo(category.remainingAmountKobo)} remaining" else "${formatKobo(category.remainingAmountKobo.absoluteValue)} over",
                             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
-                            color = ClearrColors.TextMuted
+                            color = colors.muted
                         )
                     }
                 }
@@ -467,12 +478,12 @@ private fun LogExpenseSheet(
 
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                Text("₦", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp32, color = if (amount.isBlank()) ClearrColors.Border else ClearrColors.BrandText)
+                Text("₦", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp32, color = if (amount.isBlank()) colors.border else colors.text)
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it.filter { ch -> ch.isDigit() } },
                     modifier = Modifier.width(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp210),
-                    textStyle = MaterialTheme.typography.headlineLarge.copy(textAlign = TextAlign.Center, color = ClearrColors.BrandText),
+                    textStyle = MaterialTheme.typography.headlineLarge.copy(textAlign = TextAlign.Center, color = colors.text),
                     placeholder = { Text("0", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
                     singleLine = true
                 )
@@ -502,13 +513,14 @@ private fun AddCategorySheet(
     onDismiss: () -> Unit,
     onAdd: (name: String, icon: String, colorToken: String, plannedAmountNaira: Double) -> Unit
 ) {
+    val colors = LocalDuesColors.current
     var step by rememberSaveable { mutableStateOf(0) }
     var selected by remember { mutableStateOf(categoryPresets.first()) }
     var name by rememberSaveable { mutableStateOf("") }
     var plannedAmount by rememberSaveable { mutableStateOf("") }
 
     BackHandler(onBack = onDismiss)
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = ClearrColors.Surface) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = colors.surface) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { if (step == 0) onDismiss() else step = 0 }) {
@@ -526,8 +538,8 @@ private fun AddCategorySheet(
             }
 
             if (step == 0) {
-                Text("SELECT PRESET", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13, color = ClearrColors.TextMuted, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4, top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
-                Surface(color = ClearrColors.Surface, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12), modifier = Modifier.fillMaxWidth()) {
+                Text("SELECT PRESET", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13, color = colors.muted, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4, top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+                Surface(color = colors.surface, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12), modifier = Modifier.fillMaxWidth()) {
                     Column {
                         categoryPresets.forEachIndexed { index, preset ->
                             val token = ClearrColors.fromToken(preset.colorToken)
@@ -546,10 +558,10 @@ private fun AddCategorySheet(
                                 Surface(color = token.background, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)) {
                                     Box(contentAlignment = Alignment.Center) { Text(preset.icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp17) }
                                 }
-                                Text(preset.name, modifier = Modifier.weight(1f), fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15, fontWeight = FontWeight.Medium, color = ClearrColors.BrandText)
-                                Text("›", color = ClearrColors.Border)
+                                Text(preset.name, modifier = Modifier.weight(1f), fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15, fontWeight = FontWeight.Medium, color = colors.text)
+                                Text("›", color = colors.border)
                             }
-                            if (index < categoryPresets.lastIndex) HorizontalDivider(color = ClearrColors.Border)
+                            if (index < categoryPresets.lastIndex) HorizontalDivider(color = colors.border)
                         }
                     }
                 }
@@ -559,11 +571,11 @@ private fun AddCategorySheet(
                     Row(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)) {
                         Text(selected.icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp24)
                         Column {
-                            Text(name.ifBlank { "Category name" }, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15, fontWeight = FontWeight.SemiBold, color = ClearrColors.BrandText)
+                            Text(name.ifBlank { "Category name" }, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15, fontWeight = FontWeight.SemiBold, color = colors.text)
                             Text(
                                 if ((plannedAmount.toDoubleOrNull() ?: 0.0) > 0.0) formatKobo(((plannedAmount.toDoubleOrNull() ?: 0.0) * 100).toLong()) else "Set a budget",
                                 fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                                color = ClearrColors.TextMuted
+                                color = colors.muted
                             )
                         }
                     }

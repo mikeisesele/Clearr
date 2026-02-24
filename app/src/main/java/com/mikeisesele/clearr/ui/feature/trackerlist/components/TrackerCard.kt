@@ -26,6 +26,7 @@ import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDS
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
+import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import com.mikeisesele.clearr.ui.theme.brandBackground
 import com.mikeisesele.clearr.ui.theme.brandColor
 
@@ -59,6 +60,7 @@ internal fun TrackerCard(
 ) {
     val radii = ClearrDS.radii
     val spacing = ClearrDS.spacing
+    val colors = LocalDuesColors.current
     val style = typeStyles[summary.type] ?: typeStyles[TrackerType.DUES]!!
     val allDone = summary.completedCount == summary.totalMembers && summary.totalMembers > 0
     val barColor = if (allDone) ClearrColors.BrandSecondary else style.color
@@ -79,7 +81,7 @@ internal fun TrackerCard(
                     onLongPress = { onLongPress() }
                 )
             },
-        colors = CardDefaults.cardColors(containerColor = ClearrColors.Surface),
+        colors = CardDefaults.cardColors(containerColor = colors.card),
         shape = RoundedCornerShape(radii.lg),
         elevation = CardDefaults.cardElevation(defaultElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
     ) {
@@ -121,7 +123,7 @@ internal fun TrackerCard(
                             summary.name,
                             fontWeight = FontWeight.Bold,
                             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15,
-                            color = ClearrColors.BrandText,
+                            color = colors.text,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -129,7 +131,7 @@ internal fun TrackerCard(
                         Text(
                             "${summary.frequency.displayName()}  ·  ${summary.currentPeriodLabel}",
                             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                            color = ClearrColors.TextSecondary
+                            color = colors.muted
                         )
                     }
 
@@ -141,8 +143,8 @@ internal fun TrackerCard(
                         CircularProgressIndicator(
                             progress = { pct / 100f },
                             modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp44),
-                            color = if (allDone) ClearrColors.BrandSecondary else style.color,
-                            trackColor = ClearrColors.Border,
+                            color = animatedBarColor,
+                            trackColor = colors.border,
                             strokeWidth = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4,
                             strokeCap = StrokeCap.Round
                         )
@@ -150,7 +152,7 @@ internal fun TrackerCard(
                             "$pct%",
                             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp8,
                             fontWeight = FontWeight.Bold,
-                            color = if (allDone) ClearrColors.BrandSecondary else style.color
+                            color = animatedBarColor
                         )
                     }
                 }
