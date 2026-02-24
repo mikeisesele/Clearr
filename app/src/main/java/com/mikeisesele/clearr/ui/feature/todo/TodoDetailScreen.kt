@@ -111,11 +111,7 @@ fun TodoDetailScreen(
             .background(colors.bg)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            TodoNavBar(
-                pendingCount = state.counts.pending + state.counts.overdue,
-                doneCount = state.counts.done,
-                onBack = onNavigateBack
-            )
+            TodoNavBar(onBack = onNavigateBack)
 
             TodoFilterTabs(
                 selected = state.filter,
@@ -178,13 +174,10 @@ fun TodoDetailScreen(
 
 @Composable
 private fun TodoNavBar(
-    pendingCount: Int,
-    doneCount: Int,
     onBack: () -> Unit
 ) {
     ClearrTopBar(
         title = "Todos",
-        subtitle = "$pendingCount pending · $doneCount done",
         leadingIcon = "←",
         onLeadingClick = onBack,
         actionIcon = null,
@@ -458,7 +451,6 @@ fun AddTodoScreen(
             .statusBarsPadding()
             .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
             .navigationBarsPadding()
-            .verticalScroll(rememberScrollState())
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -477,112 +469,118 @@ fun AddTodoScreen(
             Spacer(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34))
         }
 
-        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
-        StyledSheetInput(
-            value = title,
-            onValueChange = { title = it },
-            placeholder = "What needs to be done?",
-            singleLine = true,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(titleFocusRequester),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-        )
-        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
-        StyledSheetInput(
-            value = note,
-            onValueChange = { note = it },
-            placeholder = "Add a note (optional)",
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-        )
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
+            StyledSheetInput(
+                value = title,
+                onValueChange = { title = it },
+                placeholder = "What needs to be done?",
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(titleFocusRequester),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+            )
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
+            StyledSheetInput(
+                value = note,
+                onValueChange = { note = it },
+                placeholder = "Add a note (optional)",
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+            )
 
-        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-        Text("PRIORITY", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = colors.muted, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
-        Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {
-            listOf(TodoPriority.HIGH, TodoPriority.MEDIUM, TodoPriority.LOW).forEach { value ->
-                val selected = priority == value
-                val palette = when (value) {
-                    TodoPriority.HIGH -> ClearrColors.CoralBg to ClearrColors.Coral
-                    TodoPriority.MEDIUM -> ClearrColors.AmberBg to ClearrColors.Orange
-                    TodoPriority.LOW -> ClearrColors.BlueBg to ClearrColors.Blue
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+            Text("PRIORITY", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = colors.muted, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+            Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {
+                listOf(TodoPriority.HIGH, TodoPriority.MEDIUM, TodoPriority.LOW).forEach { value ->
+                    val selected = priority == value
+                    val palette = when (value) {
+                        TodoPriority.HIGH -> ClearrColors.CoralBg to ClearrColors.Coral
+                        TodoPriority.MEDIUM -> ClearrColors.AmberBg to ClearrColors.Orange
+                        TodoPriority.LOW -> ClearrColors.BlueBg to ClearrColors.Blue
+                    }
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
+                            .clickable { priority = value },
+                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
+                        color = if (selected) palette.first else colors.card
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = value.name.lowercase().replaceFirstChar { it.uppercase() },
+                                color = if (selected) palette.second else colors.muted,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13
+                            )
+                        }
+                    }
                 }
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
-                        .clickable { priority = value },
-                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                    color = if (selected) palette.first else colors.card
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
+            }
+
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+            Text("DUE DATE", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = colors.muted, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
+                verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
+            ) {
+                options.forEach { option ->
+                    val selected = dueOption == option || (option == "Custom" && dueOption == "Custom" && customDate != null)
+                    Surface(
+                        modifier = Modifier.clickable {
+                            dueOption = option
+                            if (option == "Custom") {
+                                showCustomDatePicker = true
+                            }
+                        },
+                        color = if (selected) ClearrColors.Blue else colors.card,
+                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20)
+                    ) {
                         Text(
-                            text = value.name.lowercase().replaceFirstChar { it.uppercase() },
-                            color = if (selected) palette.second else colors.muted,
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13
+                            text = if (option == "Custom" && customLabel != null && dueOption == "Custom") "Custom: $customLabel" else option,
+                            modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp7),
+                            color = if (selected) ClearrColors.Surface else colors.muted,
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
-        }
-
-        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-        Text("DUE DATE", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = colors.muted, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
-            verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
-        ) {
-            options.forEach { option ->
-                val selected = dueOption == option || (option == "Custom" && dueOption == "Custom" && customDate != null)
-                Surface(
-                    modifier = Modifier.clickable {
-                        dueOption = option
-                        if (option == "Custom") {
-                            showCustomDatePicker = true
-                        }
-                    },
-                    color = if (selected) ClearrColors.Blue else colors.card,
-                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20)
-                ) {
-                    Text(
-                        text = if (option == "Custom" && customLabel != null && dueOption == "Custom") "Custom: $customLabel" else option,
-                        modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp7),
-                        color = if (selected) ClearrColors.Surface else colors.muted,
-                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                        fontWeight = FontWeight.SemiBold
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24))
+            Button(
+                onClick = {
+                    viewModel.onAction(
+                        TodoAction.AddTodo(
+                            title = title.trim(),
+                            note = note.trim().ifBlank { null },
+                            priority = priority,
+                            dueDate = dueDateFromOption(dueOption, customDate)
+                        )
                     )
-                }
+                    onClose()
+                },
+                enabled = canSubmit,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ClearrColors.Blue,
+                    disabledContainerColor = colors.border
+                ),
+                contentPadding = PaddingValues(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
+            ) {
+                Text("Add Todo", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
             }
+            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
         }
-        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24))
-        Button(
-            onClick = {
-                viewModel.onAction(
-                    TodoAction.AddTodo(
-                        title = title.trim(),
-                        note = note.trim().ifBlank { null },
-                        priority = priority,
-                        dueDate = dueDateFromOption(dueOption, customDate)
-                    )
-                )
-                onClose()
-            },
-            enabled = canSubmit,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = ClearrColors.Blue,
-                disabledContainerColor = colors.border
-            ),
-            contentPadding = PaddingValues(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
-        ) {
-            Text("Add Todo", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
-        }
-        Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
     }
 
     if (showCustomDatePicker) {

@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,34 +39,77 @@ internal fun HomeTopBar(
     colors: DuesColors = LocalDuesColors.current
 ) {
     Surface(color = colors.surface, shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            if (onBack != null) {
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = colors.text
-                    )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                if (onBack != null) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = colors.text
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32))
                 }
-                Spacer(Modifier.width(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (showBlurToggle) {
+                        IconButton(
+                            onClick = onBlurToggle,
+                            modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
+                        ) {
+                            Icon(
+                                imageVector = if (blurMemberNames) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (blurMemberNames) "Show names" else "Hide names",
+                                tint = colors.muted
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = onShareClick,
+                        modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share",
+                            tint = colors.muted
+                        )
+                    }
+                }
             }
-            Column(modifier = Modifier.weight(1f)) {
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 84.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
                     trackerName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18,
-                    color = colors.text
+                    color = colors.text,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
@@ -88,34 +133,9 @@ internal fun HomeTopBar(
                         "$selectedYear  ·  ${formatAmount(dueAmount)}/member",
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
-                        color = colors.muted
-                    )
-                }
-            }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (showBlurToggle) {
-                    IconButton(
-                        onClick = onBlurToggle,
-                        modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
-                    ) {
-                        Icon(
-                            imageVector = if (blurMemberNames) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (blurMemberNames) "Show names" else "Hide names",
-                            tint = colors.muted
-                        )
-                    }
-                }
-                IconButton(
-                    onClick = onShareClick,
-                    modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "Share",
-                        tint = colors.muted
+                        color = colors.muted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

@@ -108,8 +108,6 @@ fun GoalsDetailScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             GoalsNavBar(
                 title = state.trackerName,
-                doneCount = state.doneCount,
-                totalCount = state.totalCount,
                 onBack = onNavigateBack
             )
 
@@ -173,13 +171,10 @@ fun GoalsDetailScreen(
 @Composable
 private fun GoalsNavBar(
     title: String,
-    doneCount: Int,
-    totalCount: Int,
     onBack: () -> Unit
 ) {
     ClearrTopBar(
         title = title,
-        subtitle = "$doneCount/$totalCount cleared today",
         leadingIcon = "←",
         onLeadingClick = onBack,
         actionIcon = null,
@@ -637,7 +632,6 @@ fun AddGoalScreen(
             .statusBarsPadding()
             .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
             .navigationBarsPadding()
-            .verticalScroll(rememberScrollState())
     ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -660,170 +654,176 @@ fun AddGoalScreen(
                 Spacer(modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34))
             }
 
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
-                color = palette.background.copy(alpha = 0.5f)
-            ) {
-                Row(
-                    modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
-                ) {
-                    Surface(
-                        modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp44),
-                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
-                        color = palette.background
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(emoji, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp22)
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = title.ifBlank { "Goal name" },
-                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.text
-                        )
-                        Text(
-                            text = "${target.ifBlank { "Set a target" }} · ${if (frequency == GoalFrequency.DAILY) "Daily" else "Weekly"}",
-                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                            color = colors.muted
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-            SectionTitle("ICON")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
-                visibleEmojis.forEach { value ->
-                    Surface(
-                        modifier = Modifier
-                            .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
-                            .clickable { emoji = value },
-                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                        color = if (emoji == value) palette.background else colors.card,
-                        border = BorderStroke(
-                            width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
-                            color = if (emoji == value) palette.color else ClearrColors.Transparent
-                        )
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(value, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18)
-                        }
-                    }
-                }
-            }
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6))
-            TextButton(
-                onClick = { showAllIcons = !showAllIcons },
-                modifier = Modifier.align(Alignment.Start)
-            ) {
-                Text(
-                    text = if (showAllIcons) "Show fewer icons" else "Show more icons",
-                    color = palette.color,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-            SectionTitle("COLOR")
-            Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)) {
-                colorTokens.forEach { token ->
-                    val tokenPalette = goalPalette(token)
-                    Surface(
-                        modifier = Modifier
-                            .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp28)
-                            .clickable { colorToken = token },
-                        shape = CircleShape,
-                        color = tokenPalette.color,
-                        border = BorderStroke(
-                            width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3,
-                            color = if (colorToken == token) ClearrColors.TextPrimary else ClearrColors.Transparent
-                        )
-                    ) {}
-                }
-            }
-
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-            SectionTitle("GOAL NAME")
-            GoalSheetInput(
-                value = title,
-                onValueChange = { title = it },
-                placeholder = "e.g. Exercise",
-                singleLine = true,
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(titleFocusRequester)
-            )
-
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
-            SectionTitle("TARGET (OPTIONAL)")
-            GoalSheetInput(
-                value = target,
-                onValueChange = { target = it },
-                placeholder = "e.g. 30 mins, ₦10,000, 20 pages",
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-            SectionTitle("FREQUENCY")
-            Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {
-                listOf(GoalFrequency.DAILY, GoalFrequency.WEEKLY).forEach { value ->
-                    val selected = value == frequency
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp44)
-                            .clickable { frequency = value },
-                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                            color = if (selected) palette.background else colors.card,
-                        border = BorderStroke(
-                            width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
-                            color = if (selected) palette.color else ClearrColors.Transparent
-                        )
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+                    color = palette.background.copy(alpha = 0.5f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        Surface(
+                            modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp44),
+                            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+                            color = palette.background
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(emoji, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp22)
+                            }
+                        }
+                        Column {
                             Text(
-                                text = if (value == GoalFrequency.DAILY) "Daily" else "Weekly",
-                                color = if (selected) palette.color else colors.muted,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14
+                                text = title.ifBlank { "Goal name" },
+                                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.text
+                            )
+                            Text(
+                                text = "${target.ifBlank { "Set a target" }} · ${if (frequency == GoalFrequency.DAILY) "Daily" else "Weekly"}",
+                                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
+                                color = colors.muted
                             )
                         }
                     }
                 }
-            }
-            Spacer(modifier = Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24))
-            Button(
-                onClick = {
-                    viewModel.onAction(
-                        GoalsAction.AddGoal(
-                            title = title.trim(),
-                            emoji = emoji,
-                            colorToken = colorToken,
-                            target = target.trim().ifBlank { null },
-                            frequency = frequency
-                        )
+
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+                SectionTitle("ICON")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
+                    visibleEmojis.forEach { value ->
+                        Surface(
+                            modifier = Modifier
+                                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
+                                .clickable { emoji = value },
+                            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
+                            color = if (emoji == value) palette.background else colors.card,
+                            border = BorderStroke(
+                                width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
+                                color = if (emoji == value) palette.color else ClearrColors.Transparent
+                            )
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(value, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18)
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6))
+                TextButton(
+                    onClick = { showAllIcons = !showAllIcons },
+                    modifier = Modifier.align(Alignment.Start)
+                ) {
+                    Text(
+                        text = if (showAllIcons) "Show fewer icons" else "Show more icons",
+                        color = palette.color,
+                        fontWeight = FontWeight.SemiBold
                     )
-                    onClose()
-                },
-                enabled = canSubmit,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = palette.color,
-                    disabledContainerColor = colors.border
-                ),
-                contentPadding = PaddingValues(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
-            ) {
-                Text("Add Goal", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+                SectionTitle("COLOR")
+                Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)) {
+                    colorTokens.forEach { token ->
+                        val tokenPalette = goalPalette(token)
+                        Surface(
+                            modifier = Modifier
+                                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp28)
+                                .clickable { colorToken = token },
+                            shape = CircleShape,
+                            color = tokenPalette.color,
+                            border = BorderStroke(
+                                width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3,
+                                color = if (colorToken == token) ClearrColors.TextPrimary else ClearrColors.Transparent
+                            )
+                        ) {}
+                    }
+                }
+
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+                SectionTitle("GOAL NAME")
+                GoalSheetInput(
+                    value = title,
+                    onValueChange = { title = it },
+                    placeholder = "e.g. Exercise",
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(titleFocusRequester)
+                )
+
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
+                SectionTitle("TARGET (OPTIONAL)")
+                GoalSheetInput(
+                    value = target,
+                    onValueChange = { target = it },
+                    placeholder = "e.g. 30 mins, ₦10,000, 20 pages",
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+                SectionTitle("FREQUENCY")
+                Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {
+                    listOf(GoalFrequency.DAILY, GoalFrequency.WEEKLY).forEach { value ->
+                        val selected = value == frequency
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp44)
+                                .clickable { frequency = value },
+                            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
+                                color = if (selected) palette.background else colors.card,
+                            border = BorderStroke(
+                                width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
+                                color = if (selected) palette.color else ClearrColors.Transparent
+                            )
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = if (value == GoalFrequency.DAILY) "Daily" else "Weekly",
+                                    color = if (selected) palette.color else colors.muted,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24))
+                Button(
+                    onClick = {
+                        viewModel.onAction(
+                            GoalsAction.AddGoal(
+                                title = title.trim(),
+                                emoji = emoji,
+                                colorToken = colorToken,
+                                target = target.trim().ifBlank { null },
+                                frequency = frequency
+                            )
+                        )
+                        onClose()
+                    },
+                    enabled = canSubmit,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = palette.color,
+                        disabledContainerColor = colors.border
+                    ),
+                    contentPadding = PaddingValues(vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
+                ) {
+                    Text("Add Goal", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             }
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
     }
 }
 

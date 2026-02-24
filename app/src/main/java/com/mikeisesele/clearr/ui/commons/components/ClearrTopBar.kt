@@ -11,7 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +36,7 @@ fun ClearrTopBar(
     onLeadingClick: (() -> Unit)? = null,
     actionIcon: String? = null,
     onActionClick: (() -> Unit)? = null,
-    actionContainerColor: androidx.compose.ui.graphics.Color = ClearrColors.NavBg,
+    actionContainerColor: Color = ClearrColors.NavBg,
     leadingContainerColor: Color = actionContainerColor,
     modifier: Modifier = Modifier
 ) {
@@ -61,7 +64,15 @@ fun ClearrTopBar(
                         contentAlignment = Alignment.Center,
                         modifier = if (onLeadingClick != null) Modifier.clickable { onLeadingClick() } else Modifier
                     ) {
-                        Text(leadingIcon, fontSize = ClearrTextSizes.sp15, color = colors.text)
+                        if (leadingIcon == "←") {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = colors.text
+                            )
+                        } else {
+                            Text(leadingIcon, fontSize = ClearrTextSizes.sp15, color = colors.text)
+                        }
                     }
                 }
             } else {
