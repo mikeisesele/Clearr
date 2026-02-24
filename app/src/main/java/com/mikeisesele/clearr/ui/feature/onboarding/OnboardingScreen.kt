@@ -55,13 +55,13 @@ private val slides = listOf(
         accentColor = ClearrColors.Violet,
         bgColor = ClearrColors.VioletBg,
         headline = "Clear your obligations.",
-        subtext = "Clear obligations with clarity and proof: remittance, goals, todos, and budget tracking in one app."
+        subtext = "with clarity and proof, clear remittance, goals, todos, and budget tracking in one app."
     ),
     SlideData(
         icon = "◈",
         accentColor = ClearrColors.Emerald,
         bgColor = ClearrColors.EmeraldBg,
-        headline = "Every group.\nEvery period.",
+        headline = "Every tracker,\nEvery period.",
         subtext = "Create independent trackers for remittance, goals, todos, or budget — with weekly, monthly, quarterly, or custom periods."
     ),
     SlideData(
@@ -69,7 +69,7 @@ private val slides = listOf(
         accentColor = ClearrColors.Amber,
         bgColor = ClearrColors.AmberBg,
         headline = "At a glance, always.",
-        subtext = "See who's paid, who's absent, who's pending — without digging through spreadsheets."
+        subtext = "See what’s cleared, pending, or overdue across your obligations — without guesswork."
     )
 )
 
@@ -451,9 +451,9 @@ private fun Slide1Visual() {
 private data class MockTracker(val name: String, val color: Color, val bg: Color, val icon: String, val paid: Int, val total: Int)
 
 private val mockTrackers = listOf(
-    MockTracker("Term 1 Fees",     ClearrColors.Violet,  ClearrColors.VioletBg,  "₦", 7, 12),
-    MockTracker("Sunday Service",  ClearrColors.Emerald, ClearrColors.EmeraldBg, "✓", 18, 23),
-    MockTracker("Task Roster",     ClearrColors.Amber,   ClearrColors.AmberBg,   "⬡", 4, 9)
+    MockTracker("Client Remittance Status", ClearrColors.Violet,  ClearrColors.VioletBg,  "₦", 7, 12),
+    MockTracker("Weekly Goals Progress",    ClearrColors.Emerald, ClearrColors.EmeraldBg, "✓", 18, 23),
+    MockTracker("Todo Completion Tracker",  ClearrColors.Amber,   ClearrColors.AmberBg,   "⬡", 4, 9)
 )
 
 @Composable
