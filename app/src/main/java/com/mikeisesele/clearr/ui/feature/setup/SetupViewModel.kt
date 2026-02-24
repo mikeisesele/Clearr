@@ -56,21 +56,9 @@ class SetupViewModel @Inject constructor(
         }
     }
 
-    private fun handleNextStep() = updateState { s ->
-        val next = when {
-            s.step == 3 && s.trackerType != TrackerType.DUES -> 5
-            else -> s.step + 1
-        }.coerceAtMost(6)
-        s.copy(step = next)
-    }
+    private fun handleNextStep() = updateState { s -> s.copy(step = (s.step + 1).coerceAtMost(5)) }
 
-    private fun handlePrevStep() = updateState { s ->
-        val prev = when {
-            s.step == 5 && s.trackerType != TrackerType.DUES -> 3
-            else -> s.step - 1
-        }.coerceAtLeast(0)
-        s.copy(step = prev)
-    }
+    private fun handlePrevStep() = updateState { s -> s.copy(step = (s.step - 1).coerceAtLeast(0)) }
 
     private fun handleSetGroupName(value: String) = updateState { it.copy(groupName = value) }
     private fun handleSetTrackerName(value: String) = updateState { it.copy(trackerName = value) }
@@ -90,7 +78,7 @@ class SetupViewModel @Inject constructor(
     private fun handleSetDefaultAmount(value: String) = updateState { it.copy(defaultAmount = value) }
     private fun handleSetLayoutStyle(value: LayoutStyle) = updateState { it.copy(layoutStyle = value) }
     private fun handleSetLoadSampleMembers(value: Boolean) = updateState { it.copy(loadSampleMembers = value) }
-    private fun handleGoToStep(step: Int) = updateState { it.copy(step = step.coerceIn(0, 6)) }
+    private fun handleGoToStep(step: Int) = updateState { it.copy(step = step.coerceIn(0, 5)) }
 
     private fun handleLoadExistingConfig(config: AppConfig) = updateState {
         it.copy(

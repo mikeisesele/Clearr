@@ -53,7 +53,7 @@ internal fun EmptyTrackerState(onCreate: () -> Unit) {
             Spacer(Modifier.height(spacing.sm))
 
             Text(
-                "Create your first tracker to start managing dues, attendance, tasks, or events for your group.",
+                "Create your first tracker to start managing remittance, goals, todos, or budget in one place.",
                 fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14,
                 color = ClearrColors.TextSecondary,
                 lineHeight = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp22,

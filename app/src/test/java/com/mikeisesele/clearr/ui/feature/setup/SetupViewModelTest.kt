@@ -45,17 +45,16 @@ class SetupViewModelTest {
     }
 
     @Test
-    fun `next and previous step skip amount step for non dues`() = runTest {
+    fun `next and previous step move linearly through updated wizard`() = runTest {
         every { repository.getAllTrackers() } returns MutableStateFlow(emptyList())
         val viewModel = SetupViewModel(repository, appState)
 
-        viewModel.onAction(SetupAction.GoToStep(3))
-        viewModel.onAction(SetupAction.SetTrackerType(TrackerType.TODO))
+        viewModel.onAction(SetupAction.GoToStep(2))
         viewModel.onAction(SetupAction.NextStep)
-        assertEquals(5, viewModel.uiState.value.step)
+        assertEquals(3, viewModel.uiState.value.step)
 
         viewModel.onAction(SetupAction.PrevStep)
-        assertEquals(3, viewModel.uiState.value.step)
+        assertEquals(2, viewModel.uiState.value.step)
     }
 
     @Test

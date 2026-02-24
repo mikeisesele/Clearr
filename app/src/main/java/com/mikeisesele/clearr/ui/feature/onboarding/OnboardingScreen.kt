@@ -55,14 +55,14 @@ private val slides = listOf(
         accentColor = ClearrColors.Violet,
         bgColor = ClearrColors.VioletBg,
         headline = "Clear your obligations.",
-        subtext = "Track dues, attendance, tasks and events across all your groups — in one place."
+        subtext = "Clear obligations with clarity and proof: remittance, goals, todos, and budget tracking in one app."
     ),
     SlideData(
         icon = "◈",
         accentColor = ClearrColors.Emerald,
         bgColor = ClearrColors.EmeraldBg,
         headline = "Every group.\nEvery period.",
-        subtext = "Create independent trackers for each group. Weekly, monthly, quarterly — any frequency."
+        subtext = "Create independent trackers for remittance, goals, todos, or budget — with weekly, monthly, quarterly, or custom periods."
     ),
     SlideData(
         icon = "⬡",
