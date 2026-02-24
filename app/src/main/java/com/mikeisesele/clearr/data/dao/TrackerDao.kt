@@ -13,7 +13,7 @@ interface TrackerDao {
 
     // ── Trackers ──────────────────────────────────────────────────────────────
 
-    @Query("SELECT * FROM trackers ORDER BY createdAt DESC")
+    @Query("SELECT * FROM trackers ORDER BY createdAt ASC")
     fun getAllTrackers(): Flow<List<Tracker>>
 
     @Query("SELECT * FROM trackers WHERE id = :id")

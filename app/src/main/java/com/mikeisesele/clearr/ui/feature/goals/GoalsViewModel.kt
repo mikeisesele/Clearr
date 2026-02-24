@@ -34,6 +34,7 @@ class GoalsViewModel @Inject constructor(
         when (action) {
             is GoalsAction.MarkDone -> markDone(action.goalId)
             is GoalsAction.Delete -> deleteGoal(action.goalId)
+            is GoalsAction.Rename -> renameGoal(action.goalId, action.title)
             is GoalsAction.AddGoal -> addGoal(
                 title = action.title,
                 emoji = action.emoji,
@@ -150,13 +151,13 @@ class GoalsViewModel @Inject constructor(
         frequency: GoalFrequency
     ) {
         launch {
-            val trimmed = title.trim()
-            if (trimmed.isEmpty()) return@launch
+            val normalizedTitle = title.normalizeFirstWordCapitalized()
+            if (normalizedTitle.isEmpty()) return@launch
             repository.insertGoal(
                 Goal(
                     id = UUID.randomUUID().toString(),
                     trackerId = currentState.trackerId,
-                    title = trimmed,
+                    title = normalizedTitle,
                     emoji = emoji,
                     colorToken = colorToken,
                     target = target?.trim()?.ifBlank { null },
@@ -170,6 +171,32 @@ class GoalsViewModel @Inject constructor(
     private fun deleteGoal(goalId: String) {
         launch {
             repository.deleteGoal(goalId)
+        }
+    }
+
+    private fun renameGoal(goalId: String, title: String) {
+        launch {
+            val normalizedTitle = title.normalizeFirstWordCapitalized()
+            if (normalizedTitle.isBlank()) return@launch
+            val existing = currentState.summaries.firstOrNull { it.goal.id == goalId }?.goal ?: return@launch
+            repository.insertGoal(existing.copy(title = normalizedTitle))
+        }
+    }
+}
+
+private fun String.normalizeFirstWordCapitalized(): String {
+    val trimmed = trim()
+    if (trimmed.isBlank()) return trimmed
+    return buildString(trimmed.length) {
+        var capitalizedFirstWord = false
+        for (index in trimmed.indices) {
+            val ch = trimmed[index]
+            if (!capitalizedFirstWord && ch.isLetter()) {
+                append(ch.titlecaseChar())
+                capitalizedFirstWord = true
+            } else {
+                append(ch)
+            }
         }
     }
 }

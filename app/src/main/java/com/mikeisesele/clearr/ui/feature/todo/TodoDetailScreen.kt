@@ -37,6 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,10 +59,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.TextStyle
@@ -102,6 +103,8 @@ fun TodoDetailScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = LocalDuesColors.current
     var detailTodo by remember { mutableStateOf<TodoItem?>(null) }
+    var renameTarget by remember { mutableStateOf<TodoItem?>(null) }
+    var renameValue by remember { mutableStateOf("") }
 
     if (state.trackerId != trackerId) return
 
@@ -131,15 +134,16 @@ fun TodoDetailScreen(
                             todo = todo,
                             isLast = index == state.displayedTodos.lastIndex,
                             colors = colors,
+                            hintDeleteAnimation = index == 0 && state.showSwipeHint,
                             onDone = {
                                 viewModel.onAction(TodoAction.MarkDone(it))
                                 viewModel.onAction(TodoAction.OnFirstSwipeAction)
                             },
-                            onDelete = {
-                                viewModel.onAction(TodoAction.Delete(it))
-                                viewModel.onAction(TodoAction.OnFirstSwipeAction)
-                            },
-                            onTap = { detailTodo = it }
+                            onTap = { detailTodo = it },
+                            onLongPress = {
+                                renameTarget = it
+                                renameValue = it.title
+                            }
                         )
                     }
                 }
@@ -167,6 +171,35 @@ fun TodoDetailScreen(
             onDelete = {
                 viewModel.onAction(TodoAction.Delete(it))
                 detailTodo = null
+            }
+        )
+    }
+
+    renameTarget?.let { todo ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { renameTarget = null },
+            containerColor = colors.surface,
+            title = { Text("Rename Todo", color = colors.text) },
+            text = {
+                androidx.compose.material3.OutlinedTextField(
+                    value = renameValue,
+                    onValueChange = { renameValue = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Title") }
+                )
+            },
+            confirmButton = {
+                Button(
+                    enabled = renameValue.isNotBlank(),
+                    onClick = {
+                        viewModel.onAction(TodoAction.Rename(todo.id, renameValue))
+                        renameTarget = null
+                    }
+                ) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { renameTarget = null }) { Text("Cancel", color = colors.muted) }
             }
         )
     }
@@ -248,7 +281,7 @@ private fun SwipeHintStrip(colors: DuesColors) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "← Swipe right to mark done  ·  Swipe left to delete →",
+            text = "Swipe left or right to mark done",
             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
             color = colors.muted
         )
@@ -260,9 +293,10 @@ private fun SwipeableTodoRow(
     todo: TodoItem,
     isLast: Boolean,
     colors: DuesColors,
+    hintDeleteAnimation: Boolean,
     onDone: (String) -> Unit,
-    onDelete: (String) -> Unit,
-    onTap: (TodoItem) -> Unit
+    onTap: (TodoItem) -> Unit,
+    onLongPress: (TodoItem) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -271,28 +305,54 @@ private fun SwipeableTodoRow(
     val tapThresholdPx = with(density) { com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5.toPx() }
 
     val offsetX = remember(todo.id) { Animatable(0f) }
-    var rowWidthPx by remember { mutableStateOf(0f) }
+    val hintOffset = remember(todo.id) { Animatable(0f) }
+    var hintShown by rememberSaveable(todo.id) { mutableStateOf(false) }
     var dragMagnitudePx by remember { mutableStateOf(0f) }
 
     val derived = todo.derivedStatus()
     val isDone = derived == TodoStatus.DONE
 
-    val bgColor = when {
-        offsetX.value > 20f -> ClearrColors.Emerald
-        offsetX.value < -20f -> ClearrColors.Coral
-        else -> colors.border
+    val totalOffset = offsetX.value + hintOffset.value
+    val bgColor = if (kotlin.math.abs(totalOffset) > 12f) ClearrColors.Emerald else colors.border
+
+    LaunchedEffect(hintDeleteAnimation) {
+        if (hintDeleteAnimation && !hintShown) {
+            hintShown = true
+            hintOffset.animateTo(
+                targetValue = -64f,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 280)
+            )
+            hintOffset.animateTo(
+                targetValue = 0f,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 260)
+            )
+        }
     }
 
     Box(modifier = Modifier.fillMaxWidth().background(bgColor)) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
         ) {
-            Text(if (offsetX.value > 20f) "✓" else "", color = ClearrColors.Surface, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp20)
-            Text(if (offsetX.value < -20f) "🗑" else "", color = ClearrColors.Surface, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18)
+            if (totalOffset > 12f) {
+                Text(
+                    text = "✓ Done",
+                    color = ClearrColors.Surface,
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                )
+            }
+            if (totalOffset < -12f) {
+                Text(
+                    text = "✓ Done",
+                    color = ClearrColors.Surface,
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                )
+            }
         }
 
         Row(
@@ -300,13 +360,18 @@ private fun SwipeableTodoRow(
                 .fillMaxWidth()
                 .background(colors.surface)
                 .alpha(if (isDone) 0.55f else 1f)
-                .onSizeChanged { rowWidthPx = it.width.toFloat() }
-                .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                .offset { IntOffset((offsetX.value + hintOffset.value).roundToInt(), 0) }
                 .pointerInput(todo.id, isDone) {
-                    detectTapGestures(onTap = {
-                        if (dragMagnitudePx < tapThresholdPx) onTap(todo)
-                        dragMagnitudePx = 0f
-                    })
+                    detectTapGestures(
+                        onTap = {
+                            if (dragMagnitudePx < tapThresholdPx) onTap(todo)
+                            dragMagnitudePx = 0f
+                        },
+                        onLongPress = {
+                            if (dragMagnitudePx < tapThresholdPx) onLongPress(todo)
+                            dragMagnitudePx = 0f
+                        }
+                    )
                 }
                 .pointerInput(todo.id, isDone) {
                     if (isDone) return@pointerInput
@@ -322,17 +387,10 @@ private fun SwipeableTodoRow(
                         },
                         onDragEnd = {
                             scope.launch {
-                                when {
-                                    offsetX.value >= thresholdPx -> {
-                                        offsetX.animateTo(rowWidthPx.coerceAtLeast(maxSwipePx), spring())
-                                        onDone(todo.id)
-                                    }
-                                    offsetX.value <= -thresholdPx -> {
-                                        offsetX.animateTo(-rowWidthPx.coerceAtLeast(maxSwipePx), spring())
-                                        onDelete(todo.id)
-                                    }
-                                    else -> offsetX.animateTo(0f, spring())
+                                if (abs(offsetX.value) >= thresholdPx) {
+                                    onDone(todo.id)
                                 }
+                                offsetX.animateTo(0f, spring())
                             }
                         },
                         onDragCancel = {
@@ -341,24 +399,27 @@ private fun SwipeableTodoRow(
                     )
                 }
                 .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp13),
-            verticalAlignment = Alignment.Top,
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
         ) {
             Box(
                 modifier = Modifier
-                    .padding(top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5)
+                    .padding(top = if (isDone) 0.dp else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5)
                     .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)
                     .background(priorityDotColor(todo, derived), CircleShape)
             )
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = if (isDone) Arrangement.Center else Arrangement.Top
+            ) {
                 Text(
                     text = todo.title,
                     fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15,
                     fontWeight = FontWeight.Medium,
                     color = if (isDone) colors.muted else colors.text,
                     textDecoration = if (isDone) TextDecoration.LineThrough else TextDecoration.None,
-                    maxLines = 2,
+                    maxLines = if (isDone) 1 else 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
@@ -373,7 +434,7 @@ private fun SwipeableTodoRow(
                     )
                 }
 
-                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5))
+                Spacer(Modifier.height(if (isDone) 0.dp else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp3))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
                     Text(
                         text = if (isDone) "Done" else dueLabel(todo.dueDate),
@@ -623,6 +684,7 @@ private fun StyledSheetInput(
                 onValueChange = onValueChange,
                 singleLine = singleLine,
                 keyboardOptions = keyboardOptions,
+                cursorBrush = SolidColor(colors.muted),
                 textStyle = TextStyle(
                     color = colors.text,
                     fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15
@@ -775,7 +837,6 @@ private fun TodoDetailSheet(
     val derived = todo.derivedStatus()
     val isDone = derived == TodoStatus.DONE
 
-    BackHandler(onBack = onDismiss)
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = colors.surface) {
         Column(
             modifier = Modifier

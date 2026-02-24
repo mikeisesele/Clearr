@@ -203,6 +203,143 @@ class GoalsViewModelTest {
         }
     }
 
+    @Test
+    fun `add goal auto capitalizes first word`() = runTest {
+        stubBaseFlows(
+            goalsFlow = MutableStateFlow(emptyList()),
+            completionsFlow = MutableStateFlow(emptyList())
+        )
+        coEvery { repository.insertGoal(any()) } just runs
+
+        val viewModel = GoalsViewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(
+            GoalsAction.AddGoal(
+                title = "exercise every day",
+                emoji = "🏃",
+                colorToken = "Purple",
+                target = null,
+                frequency = GoalFrequency.DAILY
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify {
+            repository.insertGoal(match { it.title == "Exercise every day" })
+        }
+    }
+
+    @Test
+    fun `rename updates goal title when goal exists`() = runTest {
+        val goalsFlow = MutableStateFlow(
+            listOf(
+                Goal(
+                    id = "g1",
+                    trackerId = trackerId,
+                    title = "Old Goal",
+                    emoji = "🎯",
+                    colorToken = "Purple",
+                    target = null,
+                    frequency = GoalFrequency.DAILY,
+                    createdAt = 1L
+                )
+            )
+        )
+        stubBaseFlows(goalsFlow, MutableStateFlow(emptyList()))
+        coEvery { repository.insertGoal(any()) } just runs
+
+        val viewModel = GoalsViewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(GoalsAction.Rename(goalId = "g1", title = "  New Goal  "))
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            repository.insertGoal(match { it.id == "g1" && it.title == "New Goal" })
+        }
+    }
+
+    @Test
+    fun `rename auto capitalizes first word`() = runTest {
+        val goalsFlow = MutableStateFlow(
+            listOf(
+                Goal(
+                    id = "g1",
+                    trackerId = trackerId,
+                    title = "Old Goal",
+                    emoji = "🎯",
+                    colorToken = "Purple",
+                    target = null,
+                    frequency = GoalFrequency.DAILY,
+                    createdAt = 1L
+                )
+            )
+        )
+        stubBaseFlows(goalsFlow, MutableStateFlow(emptyList()))
+        coEvery { repository.insertGoal(any()) } just runs
+
+        val viewModel = GoalsViewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(GoalsAction.Rename(goalId = "g1", title = "new goal title"))
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            repository.insertGoal(match { it.id == "g1" && it.title == "New goal title" })
+        }
+    }
+
+    @Test
+    fun `rename no-op when goal missing or title blank`() = runTest {
+        stubBaseFlows(
+            goalsFlow = MutableStateFlow(emptyList()),
+            completionsFlow = MutableStateFlow(emptyList())
+        )
+        coEvery { repository.insertGoal(any()) } just runs
+
+        val viewModel = GoalsViewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(GoalsAction.Rename(goalId = "missing", title = "Valid"))
+        viewModel.onAction(GoalsAction.Rename(goalId = "missing", title = "  "))
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { repository.insertGoal(any()) }
+    }
+
+    @Test
+    fun `delete delegates to repository`() = runTest {
+        stubBaseFlows(
+            goalsFlow = MutableStateFlow(emptyList()),
+            completionsFlow = MutableStateFlow(emptyList())
+        )
+        coEvery { repository.deleteGoal("g1") } just runs
+
+        val viewModel = GoalsViewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(GoalsAction.Delete("g1"))
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { repository.deleteGoal("g1") }
+    }
+
     private fun stubBaseFlows(
         goalsFlow: MutableStateFlow<List<Goal>>,
         completionsFlow: MutableStateFlow<List<GoalCompletion>>

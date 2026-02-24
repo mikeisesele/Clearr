@@ -139,17 +139,34 @@ class TrackerListViewModelTest {
     @Test
     fun `delete and clear new flag delegate to repository`() = runTest {
         stubStaticBootstrap()
-        every { repository.getAllTrackers() } returns MutableStateFlow(emptyList())
-        coEvery { repository.deleteTracker(2) } just runs
+        val trackersFlow = MutableStateFlow(
+            listOf(
+                Tracker(id = 2, name = "Remittance", type = TrackerType.DUES, frequency = Frequency.MONTHLY)
+            )
+        )
+        every { repository.getAllTrackers() } returns trackersFlow
+        every { repository.getActiveMembersForTracker(2) } returns MutableStateFlow(emptyList())
+        every { repository.getCurrentPeriodFlow(2) } returns MutableStateFlow(null)
+        coEvery {
+            repository.deleteTracker(2)
+        } answers {
+            trackersFlow.value = emptyList()
+        }
         coEvery { repository.clearTrackerNewFlag(2) } just runs
 
         val viewModel = TrackerListViewModel(repository)
+        advanceUntilIdle()
+        assertEquals(1, viewModel.uiState.value.summaries.size)
+
         viewModel.onAction(TrackerListAction.DeleteTracker(2))
+        assertTrue(viewModel.uiState.value.summaries.isEmpty())
+
         viewModel.onAction(TrackerListAction.ClearNewFlag(2))
         advanceUntilIdle()
 
         coVerify(exactly = 1) { repository.deleteTracker(2) }
         coVerify(exactly = 1) { repository.clearTrackerNewFlag(2) }
+        assertTrue(viewModel.uiState.value.summaries.isEmpty())
     }
 
     private fun assertTrue(value: Boolean) {

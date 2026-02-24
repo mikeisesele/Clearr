@@ -38,6 +38,7 @@ class TodoViewModel @Inject constructor(
         when (action) {
             is TodoAction.SetFilter -> setFilter(action.filter)
             is TodoAction.AddTodo -> addTodo(action.title, action.note, action.priority, action.dueDate)
+            is TodoAction.Rename -> rename(action.id, action.title)
             is TodoAction.MarkDone -> markDone(action.id)
             is TodoAction.Delete -> delete(action.id)
             TodoAction.OnFirstSwipeAction -> markHintSeen()
@@ -109,12 +110,13 @@ class TodoViewModel @Inject constructor(
 
     private fun addTodo(title: String, note: String?, priority: TodoPriority, dueDate: LocalDate?) {
         launch {
-            if (title.trim().isBlank()) return@launch
+            val normalizedTitle = title.normalizeFirstWordCapitalized()
+            if (normalizedTitle.isBlank()) return@launch
             repository.insertTodo(
                 TodoItem(
                     id = UUID.randomUUID().toString(),
                     trackerId = currentState.trackerId,
-                    title = title.trim(),
+                    title = normalizedTitle,
                     note = note?.trim()?.ifBlank { null },
                     priority = priority,
                     dueDate = dueDate,
@@ -138,9 +140,35 @@ class TodoViewModel @Inject constructor(
         }
     }
 
+    private fun rename(id: String, title: String) {
+        launch {
+            val normalizedTitle = title.normalizeFirstWordCapitalized()
+            if (normalizedTitle.isBlank()) return@launch
+            val existing = repository.getTodoById(id) ?: return@launch
+            repository.updateTodo(existing.copy(title = normalizedTitle))
+        }
+    }
+
     private fun markHintSeen() {
         launch {
             todoPreferencesRepository.markSwipeHintSeen()
+        }
+    }
+}
+
+private fun String.normalizeFirstWordCapitalized(): String {
+    val trimmed = trim()
+    if (trimmed.isBlank()) return trimmed
+    return buildString(trimmed.length) {
+        var capitalizedFirstWord = false
+        for (index in trimmed.indices) {
+            val ch = trimmed[index]
+            if (!capitalizedFirstWord && ch.isLetter()) {
+                append(ch.titlecaseChar())
+                capitalizedFirstWord = true
+            } else {
+                append(ch)
+            }
         }
     }
 }
