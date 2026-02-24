@@ -153,16 +153,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val colors = LocalDuesColors.current
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
-    val forceDarkIconsRoutes = setOf(
-        NavRoutes.TrackerList.route,
-        NavRoutes.Settings.route,
-        NavRoutes.Setup.route,
-        NavRoutes.TrackerDetail.route,
-        NavRoutes.TodoAdd.route,
-        NavRoutes.GoalAdd.route
-    )
-    val darkIcons = currentRoute in forceDarkIconsRoutes || !colors.isDark
-    ApplySystemBars(darkIcons = darkIcons)
+    ApplySystemBars(darkIcons = !colors.isDark)
 
     val topLevelNonHomeRoutes = setOf(
         NavRoutes.Settings.route,

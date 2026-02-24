@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
+import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 
 @Composable
 fun ClearrTopBar(
@@ -34,10 +35,11 @@ fun ClearrTopBar(
     actionContainerColor: androidx.compose.ui.graphics.Color = ClearrColors.NavBg,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalDuesColors.current
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(ClearrColors.Surface)
+            .background(colors.surface)
     ) {
         Row(
             modifier = Modifier
@@ -51,13 +53,13 @@ fun ClearrTopBar(
                 Surface(
                     modifier = Modifier.size(ClearrDimens.dp34),
                     shape = RoundedCornerShape(ClearrDimens.dp10),
-                    color = ClearrColors.NavBg
+                    color = actionContainerColor
                 ) {
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = if (onLeadingClick != null) Modifier.clickable { onLeadingClick() } else Modifier
                     ) {
-                        Text(leadingIcon, fontSize = ClearrTextSizes.sp15, color = ClearrColors.TextPrimary)
+                        Text(leadingIcon, fontSize = ClearrTextSizes.sp15, color = colors.text)
                     }
                 }
             } else {
@@ -69,13 +71,13 @@ fun ClearrTopBar(
                     text = title,
                     fontSize = ClearrTextSizes.sp17,
                     fontWeight = FontWeight.SemiBold,
-                    color = ClearrColors.TextPrimary
+                    color = colors.text
                 )
                 if (!subtitle.isNullOrBlank()) {
                     Text(
                         text = subtitle,
                         fontSize = ClearrTextSizes.sp12,
-                        color = ClearrColors.TextMuted
+                        color = colors.muted
                     )
                 }
             }
@@ -92,7 +94,7 @@ fun ClearrTopBar(
                         Text(
                             actionIcon,
                             fontSize = ClearrTextSizes.sp18,
-                            color = ClearrColors.Surface,
+                            color = colors.surface,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -101,6 +103,6 @@ fun ClearrTopBar(
                 Box(modifier = Modifier.size(ClearrDimens.dp34))
             }
         }
-        HorizontalDivider(color = ClearrColors.Border)
+        HorizontalDivider(color = colors.border)
     }
 }

@@ -62,7 +62,8 @@ fun SettingsScreen(
             leadingIcon = "⚙️",
             onLeadingClick = null,
             actionIcon = null,
-            onActionClick = null
+            onActionClick = null,
+            actionContainerColor = colors.card
         )
 
         // ── Active Year ───────────────────────────────────────────────────────
@@ -211,6 +212,7 @@ fun SettingsScreen(
         }
 
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp80))
+        Spacer(Modifier.navigationBarsPadding())
     }
 
     if (showResetDialog) {

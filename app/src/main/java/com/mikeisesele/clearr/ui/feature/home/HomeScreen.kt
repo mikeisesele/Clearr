@@ -179,6 +179,7 @@ fun HomeScreen(
             onClick = { showAddMember = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(end = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20),
             containerColor = colors.accent,
             contentColor = ClearrColors.Surface,
@@ -189,7 +190,12 @@ fun HomeScreen(
         }
 
         // ── Snackbar ──────────────────────────────────────────────────────────
-        Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp80)) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp80)
+        ) {
             state.snackbarMessage?.let { snack ->
                 DuesSnackbar(
                     message = snack.message,

@@ -28,6 +28,7 @@ import com.mikeisesele.clearr.ui.feature.trackerlist.components.primaryColor
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDS
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
+import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -46,6 +47,7 @@ fun TrackerListScreen(
     val spacing = ClearrDS.spacing
     val radii = ClearrDS.radii
     val sizes = ClearrDS.sizes
+    val colors = LocalDuesColors.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var deleteTarget by remember { mutableStateOf<TrackerSummary?>(null) }
@@ -60,7 +62,7 @@ fun TrackerListScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClearrColors.BrandBackground)
+            .background(colors.bg)
     ) {
         PullToRefreshBox(
             isRefreshing = isRefreshing,
@@ -83,7 +85,7 @@ fun TrackerListScreen(
                     showLeading = false,
                     actionIcon = "⚙️",
                     onActionClick = onOpenSettings,
-                    actionContainerColor = ClearrColors.NavBg
+                    actionContainerColor = colors.card
                 )
 
                 // ── Body ──────────────────────────────────────────────────────
