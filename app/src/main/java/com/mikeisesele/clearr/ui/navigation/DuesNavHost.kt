@@ -20,7 +20,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
-import com.mikeisesele.clearr.ui.feature.analytics.AnalyticsScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetDetailScreen
 import com.mikeisesele.clearr.ui.feature.goals.GoalsDetailScreen
 import com.mikeisesele.clearr.ui.feature.home.HomeScreen
@@ -46,7 +45,6 @@ data class BottomNavItem(
 
 val bottomNavItems = listOf(
     BottomNavItem(NavRoutes.TrackerList.route, "📋", "Trackers"),
-    BottomNavItem(NavRoutes.Analytics.route,   "📊", "Analytics"),
     BottomNavItem(NavRoutes.Settings.route,    "⚙️", "Settings"),
 )
 
@@ -307,7 +305,6 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                 }
             }
 
-            composable(NavRoutes.Analytics.route)  { AnalyticsScreen() }
             composable(NavRoutes.Settings.route)   { SettingsScreen(onThemeChange = onThemeChange) }
         }
     }

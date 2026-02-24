@@ -2,7 +2,6 @@ package com.mikeisesele.clearr.ui.feature.settings
 
 import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.AppConfig
-import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.di.AppStateHolder
@@ -57,7 +56,6 @@ class SettingsViewModel @Inject constructor(
                         allMembers = p.allMembers,
                         yearConfigs = p.yearConfigs,
                         themeMode = p.themeMode,
-                        layoutStyle = tracker?.layoutStyle ?: p.appConfig?.layoutStyle ?: LayoutStyle.GRID,
                         currentTrackerType = tracker?.type,
                         currentTrackerDueAmount = tracker?.defaultAmount
                     )
@@ -75,7 +73,6 @@ class SettingsViewModel @Inject constructor(
             is SettingsAction.UpdateDueAmount -> handleUpdateDueAmount(action.amount)
             is SettingsAction.SetMemberArchived -> handleSetMemberArchived(action.id, action.archived)
             is SettingsAction.StartNewYear -> handleStartNewYear(action.fromYear)
-            is SettingsAction.SetLayoutStyle -> handleSetLayoutStyle(action.style)
             SettingsAction.ResetSetup -> handleResetSetup()
         }
     }
@@ -111,21 +108,6 @@ class SettingsViewModel @Inject constructor(
             val nextYear = fromYear + 1
             repository.ensureYearConfig(nextYear, currentConfig?.dueAmountPerMonth ?: 5000.0)
             appState.setYear(nextYear)
-        }
-    }
-
-    private fun handleSetLayoutStyle(style: LayoutStyle) {
-        launch {
-            val trackerId = appState.currentTrackerId.value
-            if (trackerId != null) {
-                val tracker = repository.getTrackerById(trackerId) ?: return@launch
-                repository.updateTracker(tracker.copy(layoutStyle = style))
-            } else {
-                val existing = repository.getAppConfig() ?: AppConfig()
-                val updated = existing.copy(layoutStyle = style)
-                repository.upsertAppConfig(updated)
-                appState.setAppConfig(updated)
-            }
         }
     }
 

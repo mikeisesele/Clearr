@@ -16,12 +16,13 @@ import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 internal fun SectionCard(
     title: String,
     colors: DuesColors = LocalDuesColors.current,
+    modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = colors.card),
         shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)) {
             Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = colors.text)

@@ -53,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.BudgetStatus
 import com.mikeisesele.clearr.data.model.CategorySummary
+import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDS
 import com.mikeisesele.clearr.ui.theme.fromToken
@@ -154,37 +155,17 @@ private fun BudgetSummarySection(
     onPeriodSelect: (Long) -> Unit
 ) {
     val spacing = ClearrDS.spacing
+    val subtitle = periods.firstOrNull { it.id == selectedPeriodId }?.label.orEmpty()
     Column(modifier = Modifier.fillMaxWidth().background(ClearrColors.Surface)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.lg, vertical = spacing.lg),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Surface(
-                color = ClearrColors.BrandBackground,
-                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.clickable { onNavigateBack() }) {
-                    Text("←", color = ClearrColors.BrandText, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
-                }
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(trackerName, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp17, fontWeight = FontWeight.SemiBold, color = ClearrColors.BrandText)
-                Text(periods.firstOrNull { it.id == selectedPeriodId }?.label.orEmpty(), fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted)
-            }
-            Surface(
-                color = ClearrColors.BrandBackground,
-                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("⋯", color = ClearrColors.TextSecondary, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18)
-                }
-            }
-        }
+        ClearrTopBar(
+            title = trackerName,
+            subtitle = subtitle,
+            leadingIcon = "←",
+            onLeadingClick = onNavigateBack,
+            actionIcon = "⋯",
+            onActionClick = {},
+            actionContainerColor = ClearrColors.NavBg
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.lg),

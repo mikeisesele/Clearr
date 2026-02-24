@@ -1,7 +1,6 @@
 package com.mikeisesele.clearr.ui.feature.settings
 
 import com.mikeisesele.clearr.data.model.AppConfig
-import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.data.model.YearConfig
@@ -34,8 +33,8 @@ class SettingsViewModelTest {
     private val appState = AppStateHolder()
 
     @Test
-    fun `state reflects selected tracker layout and due amount`() = runTest {
-        val tracker = Tracker(id = 99, name = "Dues", type = TrackerType.DUES, layoutStyle = LayoutStyle.KANBAN, defaultAmount = 7000.0)
+    fun `state reflects selected tracker due amount`() = runTest {
+        val tracker = Tracker(id = 99, name = "Dues", type = TrackerType.DUES, defaultAmount = 7000.0)
         appState.setCurrentTrackerId(99)
 
         every { repository.getAllMembers() } returns flowOf(emptyList())
@@ -45,7 +44,6 @@ class SettingsViewModelTest {
         val viewModel = SettingsViewModel(repository, appState)
         advanceUntilIdle()
 
-        assertEquals(LayoutStyle.KANBAN, viewModel.uiState.value.layoutStyle)
         assertEquals(TrackerType.DUES, viewModel.uiState.value.currentTrackerType)
         assertEquals(7000.0, viewModel.uiState.value.currentTrackerDueAmount)
     }
@@ -74,20 +72,20 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `set layout style updates app config when no current tracker`() = runTest {
+    fun `reset setup marks setup as incomplete`() = runTest {
         every { repository.getAllMembers() } returns flowOf(emptyList())
         every { repository.getAllYearConfigs() } returns flowOf(listOf(YearConfig(year = 2026, dueAmountPerMonth = 5000.0)))
-        coEvery { repository.getAppConfig() } returns AppConfig(layoutStyle = LayoutStyle.GRID)
+        coEvery { repository.getAppConfig() } returns AppConfig(setupComplete = true)
         coEvery { repository.upsertAppConfig(any()) } just runs
 
         val viewModel = SettingsViewModel(repository, appState)
-        viewModel.onAction(SettingsAction.SetLayoutStyle(LayoutStyle.RECEIPT))
+        viewModel.onAction(SettingsAction.ResetSetup)
         advanceUntilIdle()
 
         coVerify {
-            repository.upsertAppConfig(match { it.layoutStyle == LayoutStyle.RECEIPT })
+            repository.upsertAppConfig(match { it.setupComplete.not() })
         }
-        assertEquals(LayoutStyle.RECEIPT, appState.appConfig.value?.layoutStyle)
+        assertEquals(false, appState.appConfig.value?.setupComplete)
     }
 
     @Test

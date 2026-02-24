@@ -12,14 +12,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.TrackerSummary
+import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.feature.trackerlist.TrackerListAction
 import com.mikeisesele.clearr.ui.feature.trackerlist.components.EmptyTrackerState
 import com.mikeisesele.clearr.ui.feature.trackerlist.components.TrackerCard
@@ -76,31 +75,15 @@ fun TrackerListScreen(
             Column(modifier = Modifier.fillMaxSize()) {
 
                 // ── Header ────────────────────────────────────────────────────
-                Surface(color = ClearrColors.Surface, shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = spacing.xl, end = spacing.xl, top = spacing.lg - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2, bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp0)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    "My Trackers",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = ClearrColors.BrandText,
-                                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp22
-                                )
-                            }
-                            IconPill(icon = "⚙️", onClick = onSettingsClick)
-                        }
-                        Spacer(Modifier.height(spacing.lg - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2))
-                    }
-                }
+                ClearrTopBar(
+                    title = "My Trackers",
+                    subtitle = null,
+                    leadingIcon = "📋",
+                    onLeadingClick = null,
+                    actionIcon = "⚙️",
+                    onActionClick = onSettingsClick,
+                    actionContainerColor = ClearrColors.Violet
+                )
 
                 // ── Body ──────────────────────────────────────────────────────
                 when {
@@ -250,26 +233,6 @@ fun TrackerListScreen(
                 TextButton(onClick = { renameTarget = null }) { Text("Cancel") }
             }
         )
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Icon pill for header actions (file-private, used only in this screen)
-// ─────────────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun IconPill(icon: String, onClick: () -> Unit) {
-    val radii = ClearrDS.radii
-    val sizes = ClearrDS.sizes
-    Box(
-        modifier = Modifier
-            .size(sizes.chipHeight)
-            .clip(RoundedCornerShape(radii.sm + com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2))
-            .background(ClearrColors.VioletBg)
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16)
     }
 }
 

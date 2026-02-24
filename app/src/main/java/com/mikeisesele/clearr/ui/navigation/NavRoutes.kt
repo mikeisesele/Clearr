@@ -9,7 +9,6 @@ sealed class NavRoutes(val route: String) {
     object TrackerDetail : NavRoutes("tracker_detail/{trackerId}") {
         fun createRoute(trackerId: Long) = "tracker_detail/$trackerId"
     }
-    object Analytics : NavRoutes("analytics")
     object Settings : NavRoutes("settings")
     /** Kept for backward-compat: bottom nav still references Home route string */
     object Home : NavRoutes("tracker_list")

@@ -9,7 +9,7 @@ import javax.inject.Singleton
 
 /**
  * Singleton that holds app-wide UI state shared across ViewModels.
- * - selectedYear: which year the tracker / analytics / reminders display
+ * - selectedYear: which year the tracker screens display
  * - appConfig: the live AppConfig from the DB (wizard completion and defaults)
  * - currentTrackerId: the tracker currently open in detail view
  */

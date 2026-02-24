@@ -11,22 +11,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.TrackerType
+import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import com.mikeisesele.clearr.ui.commons.util.currentYear
 import com.mikeisesele.clearr.ui.commons.util.formatAmount
@@ -59,14 +54,25 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(colors.bg)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+            .padding(bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
         verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
     ) {
-        Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = colors.text)
+        ClearrTopBar(
+            title = "Settings",
+            leadingIcon = "⚙️",
+            onLeadingClick = null,
+            actionIcon = "↻",
+            onActionClick = { viewModel.onAction(SettingsAction.ResetSetup) },
+            actionContainerColor = colors.accent
+        )
 
         // ── Active Year ───────────────────────────────────────────────────────
-        SectionCard(title = "Active Year", colors = colors) {
-            Text("Applies to the tracker, reminders, and analytics.", style = MaterialTheme.typography.bodySmall, color = colors.muted)
+        SectionCard(
+            title = "Active Year",
+            colors = colors,
+            modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
+        ) {
+            Text("Applies to the current tracker data.", style = MaterialTheme.typography.bodySmall, color = colors.muted)
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
             Box {
                 OutlinedButton(
@@ -110,7 +116,11 @@ fun SettingsScreen(
         }
 
         // ── Due Amount ────────────────────────────────────────────────────────
-        SectionCard(title = "Due Amount", colors = colors) {
+        SectionCard(
+            title = "Due Amount",
+            colors = colors,
+            modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
@@ -151,55 +161,12 @@ fun SettingsScreen(
             }
         }
 
-        // ── Layout Style ──────────────────────────────────────────────────────
-        SectionCard(title = "Tracker Layout", colors = colors) {
-            Text(
-                "Choose how the current tracker screen displays data. Changes apply instantly to that tracker only.",
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.muted
-            )
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
-
-            val layoutOptions = listOf(
-                LayoutStyle.GRID    to Triple("⊞", "Grid",    "Compact scrollable table — members × months"),
-                LayoutStyle.KANBAN  to Triple("🗂️", "Kanban", "Month columns with member status chips"),
-                LayoutStyle.CARDS   to Triple("🃏", "Cards",  "One card per member with month breakdown"),
-                LayoutStyle.RECEIPT to Triple("🧾", "Receipt","Detailed financial ledger per member")
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
-                layoutOptions.forEach { (style, info) ->
-                    val (icon, title, desc) = info
-                    val selected = state.layoutStyle == style
-                    val borderColor = if (selected) colors.accent else colors.border
-                    val bgColor = if (selected) colors.accent.copy(alpha = 0.08f) else ClearrColors.Transparent
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
-                            .background(bgColor)
-                            .border(width = if (selected) com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2 else com.mikeisesele.clearr.ui.theme.ClearrDimens.dp1, color = borderColor, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10))
-                            .clickable { viewModel.onAction(SettingsAction.SetLayoutStyle(style)) }
-                            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10)
-                    ) {
-                        Text(icon, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp22)
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = if (selected) colors.accent else colors.text)
-                            Text(desc, style = MaterialTheme.typography.labelSmall, color = colors.muted)
-                        }
-                        if (selected) {
-                            Icon(Icons.Default.Check, contentDescription = null, tint = colors.accent, modifier = Modifier.size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp18))
-                        }
-                    }
-                }
-            }
-        }
-
         // ── Appearance ────────────────────────────────────────────────────────
-        SectionCard(title = "Appearance", colors = colors) {
+        SectionCard(
+            title = "Appearance",
+            colors = colors,
+            modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
+        ) {
             Text("Theme", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
             Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
@@ -221,7 +188,11 @@ fun SettingsScreen(
         }
 
         // ── App Info ──────────────────────────────────────────────────────────
-        SectionCard(title = "App Info", colors = colors) {
+        SectionCard(
+            title = "App Info",
+            colors = colors,
+            modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
+        ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Version", style = MaterialTheme.typography.bodyMedium, color = colors.text)
                 Text("1.0", style = MaterialTheme.typography.bodyMedium, color = colors.muted)

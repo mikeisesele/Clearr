@@ -61,6 +61,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.GoalFrequency
 import com.mikeisesele.clearr.data.model.GoalSummary
+import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.fromToken
 import kotlinx.coroutines.launch
@@ -173,45 +174,15 @@ private fun GoalsNavBar(
     onBack: () -> Unit,
     onAdd: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(ClearrColors.Surface)
-            .statusBarsPadding()
-            .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            modifier = Modifier
-                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)
-                .clickable(onClick = onBack),
-            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-            color = ClearrColors.NavBg
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("←", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15, color = ClearrColors.TextPrimary)
-            }
-        }
-
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(title, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp17, fontWeight = FontWeight.SemiBold, color = ClearrColors.TextPrimary)
-            Text("$doneCount/$totalCount cleared today", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = ClearrColors.TextMuted)
-        }
-
-        Surface(
-            modifier = Modifier
-                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp34)
-                .clickable(onClick = onAdd),
-            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-            color = ClearrColors.Violet
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("+", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp20, color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-    HorizontalDivider(color = ClearrColors.Border)
+    ClearrTopBar(
+        title = title,
+        subtitle = "$doneCount/$totalCount cleared today",
+        leadingIcon = "←",
+        onLeadingClick = onBack,
+        actionIcon = "+",
+        onActionClick = onAdd,
+        actionContainerColor = ClearrColors.Violet
+    )
 }
 
 @Composable
