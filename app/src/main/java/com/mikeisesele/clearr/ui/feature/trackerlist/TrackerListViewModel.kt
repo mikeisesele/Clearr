@@ -256,7 +256,15 @@ class TrackerListViewModel @Inject constructor(
     }
 
     private fun handleDeleteTracker(trackerId: Long) {
-        launch { repository.deleteTracker(trackerId) }
+        updateState { state ->
+            state.copy(
+                summaries = state.summaries.filterNot { it.trackerId == trackerId }
+            )
+        }
+        launch {
+            repository.deleteTracker(trackerId)
+            refreshSignal.update { it + 1 }
+        }
     }
 
     private fun handleRenameTracker(trackerId: Long, newName: String) {

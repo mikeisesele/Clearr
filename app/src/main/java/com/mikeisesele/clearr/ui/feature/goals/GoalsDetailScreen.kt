@@ -1,7 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.goals
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
@@ -39,17 +39,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,6 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.pointer.pointerInput
@@ -97,6 +98,9 @@ fun GoalsDetailScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = LocalDuesColors.current
     var detailGoal by remember { mutableStateOf<GoalSummary?>(null) }
+    var renameTarget by remember { mutableStateOf<GoalSummary?>(null) }
+    var renameValue by remember { mutableStateOf("") }
+    var playDeleteHint by rememberSaveable { mutableStateOf(true) }
 
     if (state.trackerId != trackerId) return
 
@@ -129,9 +133,15 @@ fun GoalsDetailScreen(
                             summary = summary,
                             isLast = index == state.summaries.lastIndex,
                             colors = colors,
+                            hintDeleteAnimation = index == 0 && playDeleteHint,
+                            onHintAnimationPlayed = { playDeleteHint = false },
                             onDone = { viewModel.onAction(GoalsAction.MarkDone(it)) },
                             onDelete = { viewModel.onAction(GoalsAction.Delete(it)) },
-                            onTap = { detailGoal = it }
+                            onTap = { detailGoal = it },
+                            onLongPress = {
+                                renameTarget = it
+                                renameValue = it.goal.title
+                            }
                         )
                     }
                 }
@@ -163,6 +173,35 @@ fun GoalsDetailScreen(
             onMarkDone = {
                 viewModel.onAction(GoalsAction.MarkDone(it))
                 detailGoal = null
+            }
+        )
+    }
+
+    renameTarget?.let { summary ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { renameTarget = null },
+            containerColor = colors.surface,
+            title = { Text("Rename Goal", color = colors.text) },
+            text = {
+                androidx.compose.material3.OutlinedTextField(
+                    value = renameValue,
+                    onValueChange = { renameValue = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Title") }
+                )
+            },
+            confirmButton = {
+                Button(
+                    enabled = renameValue.isNotBlank(),
+                    onClick = {
+                        viewModel.onAction(GoalsAction.Rename(summary.goal.id, renameValue))
+                        renameTarget = null
+                    }
+                ) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { renameTarget = null }) { Text("Cancel", color = colors.muted) }
             }
         )
     }
@@ -226,9 +265,12 @@ private fun SwipeableGoalRow(
     summary: GoalSummary,
     isLast: Boolean,
     colors: DuesColors,
+    hintDeleteAnimation: Boolean,
+    onHintAnimationPlayed: () -> Unit,
     onDone: (String) -> Unit,
     onDelete: (String) -> Unit,
-    onTap: (GoalSummary) -> Unit
+    onTap: (GoalSummary) -> Unit,
+    onLongPress: (GoalSummary) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -237,36 +279,73 @@ private fun SwipeableGoalRow(
     val tapThresholdPx = with(density) { com.mikeisesele.clearr.ui.theme.ClearrDimens.dp5.toPx() }
 
     val offsetX = remember(summary.goal.id) { Animatable(0f) }
+    val hintOffset = remember(summary.goal.id) { Animatable(0f) }
+    var hintShown by rememberSaveable(summary.goal.id) { mutableStateOf(false) }
     var rowWidthPx by remember { mutableStateOf(0f) }
     var dragMagnitudePx by remember { mutableStateOf(0f) }
 
     val doneThisPeriod = summary.isDoneThisPeriod
     val palette = goalPalette(summary.goal.colorToken)
-    val bgColor = when {
-        offsetX.value > 20f -> ClearrColors.Emerald
-        offsetX.value < -20f -> ClearrColors.Coral
-        else -> colors.border
+    val totalOffset = offsetX.value + hintOffset.value
+    val isSwipingRight = totalOffset > 0f
+    val isSwipingLeft = totalOffset < 0f
+    val revealProgress = (kotlin.math.abs(totalOffset) / maxSwipePx).coerceIn(0f, 1f)
+
+    LaunchedEffect(hintDeleteAnimation) {
+        if (hintDeleteAnimation && !hintShown) {
+            hintShown = true
+            hintOffset.animateTo(
+                targetValue = -64f,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 280)
+            )
+            hintOffset.animateTo(
+                targetValue = 0f,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 260)
+            )
+            onHintAnimationPlayed()
+        }
     }
 
-    Box(modifier = Modifier.fillMaxWidth().background(bgColor)) {
-        Row(
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = if (offsetX.value > 20f) "✓ Done!" else "",
-                color = ClearrColors.Surface,
-                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = if (offsetX.value < -20f) "🗑" else "",
-                color = ClearrColors.Surface,
-                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18
-            )
+                .matchParentSize()
+                .background(colors.border)
+        )
+        if (isSwipingRight) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(ClearrColors.Emerald)
+                    .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = "✓ Done",
+                    color = ClearrColors.Surface,
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.alpha(revealProgress)
+                )
+            }
+        }
+        if (isSwipingLeft) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(ClearrColors.BrandDanger)
+                    .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = ClearrColors.Surface,
+                    modifier = Modifier
+                        .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp22)
+                        .alpha(revealProgress)
+                )
+            }
         }
 
         Row(
@@ -275,12 +354,18 @@ private fun SwipeableGoalRow(
                 .background(colors.surface)
                 .alpha(if (doneThisPeriod) 0.6f else 1f)
                 .onSizeChanged { rowWidthPx = it.width.toFloat() }
-                .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                .offset { IntOffset((offsetX.value + hintOffset.value).roundToInt(), 0) }
                 .pointerInput(summary.goal.id, doneThisPeriod) {
-                    detectTapGestures(onTap = {
-                        if (dragMagnitudePx < tapThresholdPx) onTap(summary)
-                        dragMagnitudePx = 0f
-                    })
+                    detectTapGestures(
+                        onTap = {
+                            if (dragMagnitudePx < tapThresholdPx) onTap(summary)
+                            dragMagnitudePx = 0f
+                        },
+                        onLongPress = {
+                            if (dragMagnitudePx < tapThresholdPx) onLongPress(summary)
+                            dragMagnitudePx = 0f
+                        }
+                    )
                 }
                 .pointerInput(summary.goal.id, doneThisPeriod) {
                     detectHorizontalDragGestures(
@@ -423,16 +508,9 @@ private fun GoalDetailSheet(
     val completionPct = (summary.completionRate * 100f).roundToInt().coerceIn(0, 100)
     val historyTitle = if (summary.goal.frequency == GoalFrequency.DAILY) "LAST 7 DAYS" else "LAST 7 WEEKS"
 
-    val addSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { target -> target != SheetValue.Hidden }
-    )
-
-    BackHandler(enabled = true) {}
     ModalBottomSheet(
-        onDismissRequest = {},
+        onDismissRequest = onDismiss,
         containerColor = colors.surface,
-        sheetState = addSheetState,
         dragHandle = null
     ) {
         Column(
@@ -446,11 +524,15 @@ private fun GoalDetailSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onDismiss) {
-                    Text("Close", color = colors.muted)
-                }
-                Text("Goal Detail", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = colors.text)
                 Spacer(modifier = Modifier.width(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp40))
+                Text("Goal Detail", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = colors.text)
+                TextButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = colors.muted
+                    )
+                }
             }
 
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
@@ -461,7 +543,7 @@ private fun GoalDetailSheet(
                     color = if (doneThisPeriod) ClearrColors.EmeraldBg else palette.background
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(if (doneThisPeriod) "✓" else summary.goal.emoji, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp24)
+                        Text(summary.goal.emoji, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp24)
                     }
                 }
                 Column(modifier = Modifier.weight(1f)) {
@@ -620,7 +702,8 @@ fun AddGoalScreen(
         "🧠", "🎨", "🧹", "🛌", "💼", "🧾",
         "🍎", "🏊", "🚶", "📖", "🧑‍💻", "🎵"
     )
-    val visibleEmojis = if (showAllIcons) emojis else emojis.take(6)
+    val firstRowEmojis = emojis.take(6)
+    val extraEmojis = emojis.drop(6)
     val colorTokens = listOf("Purple", "Emerald", "Blue", "Amber", "Coral")
     val palette = goalPalette(colorToken)
 
@@ -689,7 +772,7 @@ fun AddGoalScreen(
                             Text(
                                 text = "${target.ifBlank { "Set a target" }} · ${if (frequency == GoalFrequency.DAILY) "Daily" else "Weekly"}",
                                 fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                                color = colors.muted
+                                color = colors.text.copy(alpha = 0.78f)
                             )
                         }
                     }
@@ -697,21 +780,47 @@ fun AddGoalScreen(
 
                 Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
                 SectionTitle("ICON")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
-                    visibleEmojis.forEach { value ->
-                        Surface(
-                            modifier = Modifier
-                                .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
-                                .clickable { emoji = value },
-                            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                            color = if (emoji == value) palette.background else colors.card,
-                            border = BorderStroke(
-                                width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
-                                color = if (emoji == value) palette.color else ClearrColors.Transparent
-                            )
+                Column(modifier = Modifier.animateContentSize()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
+                        firstRowEmojis.forEach { value ->
+                            Surface(
+                                modifier = Modifier
+                                    .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
+                                    .clickable { emoji = value },
+                                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
+                                color = if (emoji == value) palette.background else colors.card,
+                                border = BorderStroke(
+                                    width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
+                                    color = if (emoji == value) palette.color else ClearrColors.Transparent
+                                )
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(value, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18)
+                                }
+                            }
+                        }
+                    }
+                    AnimatedVisibility(visible = showAllIcons) {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
+                            verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(value, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18)
+                            extraEmojis.forEach { value ->
+                                Surface(
+                                    modifier = Modifier
+                                        .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
+                                        .clickable { emoji = value },
+                                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
+                                    color = if (emoji == value) palette.background else colors.card,
+                                    border = BorderStroke(
+                                        width = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2,
+                                        color = if (emoji == value) palette.color else ClearrColors.Transparent
+                                    )
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(value, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18)
+                                    }
+                                }
                             }
                         }
                     }
@@ -864,6 +973,7 @@ private fun GoalSheetInput(
                 value = value,
                 onValueChange = onValueChange,
                 singleLine = singleLine,
+                cursorBrush = SolidColor(colors.muted),
                 textStyle = TextStyle(
                     color = colors.text,
                     fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15
