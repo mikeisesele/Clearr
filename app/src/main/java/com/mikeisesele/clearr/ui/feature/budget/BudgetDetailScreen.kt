@@ -342,7 +342,7 @@ private fun BudgetCategoryList(
         Text("CATEGORIES", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13, color = colors.muted, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
 
-        Surface(color = ClearrColors.Surface, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12), modifier = Modifier.fillMaxWidth()) {
+        Surface(color = colors.card, shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12), modifier = Modifier.fillMaxWidth()) {
             Column {
                 summaries.forEachIndexed { index, summary ->
                     BudgetCategoryRow(summary = summary, onClick = { onCategoryTap(summary) }, colors = colors)
