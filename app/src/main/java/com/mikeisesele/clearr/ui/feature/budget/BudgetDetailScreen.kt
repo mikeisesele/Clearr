@@ -163,11 +163,9 @@ private fun BudgetSummarySection(
     colors: DuesColors
 ) {
     val spacing = ClearrDS.spacing
-    val subtitle = periods.firstOrNull { it.id == selectedPeriodId }?.label.orEmpty()
     Column(modifier = Modifier.fillMaxWidth().background(colors.surface)) {
         ClearrTopBar(
             title = trackerName,
-            subtitle = subtitle,
             leadingIcon = "←",
             onLeadingClick = onNavigateBack,
             actionIcon = "⋯",
