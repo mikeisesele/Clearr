@@ -9,18 +9,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.TrackerSummary
+import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.feature.trackerlist.TrackerListAction
-import com.mikeisesele.clearr.ui.feature.trackerlist.components.EmptyTrackerState
 import com.mikeisesele.clearr.ui.feature.trackerlist.components.TrackerCard
 import com.mikeisesele.clearr.ui.feature.trackerlist.components.primaryColor
 import com.mikeisesele.clearr.ui.theme.ClearrColors
@@ -38,7 +40,8 @@ import kotlinx.coroutines.launch
 fun TrackerListScreen(
     viewModel: TrackerListViewModel = hiltViewModel(),
     onTrackerClick: (trackerId: Long) -> Unit,
-    onCreateTracker: () -> Unit
+    onCreateTracker: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     val spacing = ClearrDS.spacing
     val radii = ClearrDS.radii
@@ -75,12 +78,12 @@ fun TrackerListScreen(
 
                 // ── Header ────────────────────────────────────────────────────
                 ClearrTopBar(
-                    title = "My Trackers",
+                    title = "Dashboard",
                     subtitle = null,
-                    leadingIcon = "📋",
-                    onLeadingClick = null,
-                    actionIcon = null,
-                    onActionClick = null
+                    showLeading = false,
+                    actionIcon = "⚙️",
+                    onActionClick = onOpenSettings,
+                    actionContainerColor = ClearrColors.NavBg
                 )
 
                 // ── Body ──────────────────────────────────────────────────────
@@ -90,9 +93,6 @@ fun TrackerListScreen(
                             CircularProgressIndicator(color = primaryColor)
                         }
                     }
-                    state.summaries.isEmpty() -> {
-                        EmptyTrackerState(onCreate = onCreateTracker)
-                    }
                     else -> {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
@@ -100,34 +100,22 @@ fun TrackerListScreen(
                             verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
                         ) {
                             items(state.summaries, key = { it.trackerId }) { summary ->
-                                val dismissState = rememberSwipeToDismissBoxState(
-                                    positionalThreshold = { it * 0.35f },
-                                    confirmValueChange = { value ->
-                                        if (value == SwipeToDismissBoxValue.EndToStart) {
-                                            deleteTarget = summary
-                                            false
-                                        } else {
-                                            false
+                                if (summary.type == TrackerType.DUES) {
+                                    RemittanceSwipeCard(
+                                        summary = summary,
+                                        onDeleteRequest = { deleteTarget = summary },
+                                        onClick = {
+                                            if (summary.isNew) {
+                                                viewModel.onAction(TrackerListAction.ClearNewFlag(summary.trackerId))
+                                            }
+                                            onTrackerClick(summary.trackerId)
+                                        },
+                                        onLongPress = {
+                                            renameTarget = summary
+                                            renameValue = summary.name
                                         }
-                                    }
-                                )
-                                SwipeToDismissBox(
-                                    state = dismissState,
-                                    backgroundContent = {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .clip(RoundedCornerShape(radii.lg))
-                                                .background(ClearrColors.BrandDanger)
-                                                .padding(horizontal = spacing.xl),
-                                            contentAlignment = Alignment.CenterEnd
-                                        ) {
-                                            Text("Delete", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
-                                        }
-                                    },
-                                    enableDismissFromStartToEnd = false,
-                                    enableDismissFromEndToStart = true
-                                ) {
+                                    )
+                                } else {
                                     TrackerCard(
                                         summary = summary,
                                         onClick = {
@@ -149,10 +137,11 @@ fun TrackerListScreen(
             }
 
             // ── FAB ───────────────────────────────────────────────────────────
-            if (!state.isLoading && state.summaries.isNotEmpty()) {
+            if (!state.isLoading) {
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
+                        .navigationBarsPadding()
                         .padding(end = spacing.xl, bottom = spacing.xxl),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(spacing.md - com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
@@ -163,7 +152,7 @@ fun TrackerListScreen(
                         shadowElevation = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8
                     ) {
                         Text(
-                            "New Tracker",
+                            "New Remittance",
                             color = ClearrColors.Surface,
                             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
                             fontWeight = FontWeight.SemiBold,
@@ -234,10 +223,94 @@ fun TrackerListScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RemittanceSwipeCard(
+    summary: TrackerSummary,
+    onDeleteRequest: () -> Unit,
+    onClick: () -> Unit,
+    onLongPress: () -> Unit
+) {
+    val spacing = ClearrDS.spacing
+    val radii = ClearrDS.radii
+    val hintOffset = remember { androidx.compose.animation.core.Animatable(0f) }
+    var hintShown by rememberSaveable(summary.trackerId) { mutableStateOf(false) }
+    val hintAlpha = (kotlin.math.abs(hintOffset.value) / 64f).coerceIn(0f, 1f)
+
+    LaunchedEffect(summary.trackerId, summary.isNew) {
+        if (summary.isNew && !hintShown) {
+            hintShown = true
+            delay(250)
+            hintOffset.animateTo(
+                targetValue = -64f,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 280)
+            )
+            delay(140)
+            hintOffset.animateTo(
+                targetValue = 0f,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 260)
+            )
+        }
+    }
+
+    val dismissState = rememberSwipeToDismissBoxState(
+        positionalThreshold = { it * 0.35f },
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) {
+                onDeleteRequest()
+            }
+            false
+        }
+    )
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(radii.lg))
+                .background(ClearrColors.BrandDanger)
+                .padding(horizontal = spacing.xl),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Text(
+                text = "Delete",
+                color = ClearrColors.Surface,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.graphicsLayer { alpha = hintAlpha }
+            )
+        }
+
+        SwipeToDismissBox(
+            state = dismissState,
+            modifier = Modifier.graphicsLayer { translationX = hintOffset.value },
+            backgroundContent = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(radii.lg))
+                        .background(ClearrColors.BrandDanger)
+                        .padding(horizontal = spacing.xl),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Text("Delete", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
+                }
+            },
+            enableDismissFromStartToEnd = false,
+            enableDismissFromEndToStart = true
+        ) {
+            TrackerCard(
+                summary = summary,
+                onClick = onClick,
+                onLongPress = onLongPress
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun TrackerListScreenEmptyPreview() {
     ClearrTheme {
-        EmptyTrackerState(onCreate = {})
+        Box(modifier = Modifier.fillMaxSize().background(ClearrColors.BrandBackground))
     }
 }

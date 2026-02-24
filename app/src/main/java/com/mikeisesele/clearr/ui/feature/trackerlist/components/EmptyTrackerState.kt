@@ -53,7 +53,7 @@ internal fun EmptyTrackerState(onCreate: () -> Unit) {
             Spacer(Modifier.height(spacing.sm))
 
             Text(
-                "Create your first tracker to start managing remittance, goals, todos, or budget in one place.",
+                "Create your first remittance to start tracking payments for your group.",
                 fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp14,
                 color = ClearrColors.TextSecondary,
                 lineHeight = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp22,
@@ -68,7 +68,7 @@ internal fun EmptyTrackerState(onCreate: () -> Unit) {
                 shape = RoundedCornerShape(radii.md + com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2),
                 contentPadding = PaddingValues(horizontal = spacing.xxl + com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4, vertical = spacing.md + com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2)
             ) {
-                Text("+ Create Tracker", color = ClearrColors.Surface, fontWeight = FontWeight.Bold, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
+                Text("+ New Remittance", color = ClearrColors.Surface, fontWeight = FontWeight.Bold, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp15)
             }
         }
     }

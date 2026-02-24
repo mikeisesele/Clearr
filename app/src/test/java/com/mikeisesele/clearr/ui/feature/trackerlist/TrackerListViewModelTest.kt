@@ -34,8 +34,14 @@ class TrackerListViewModelTest {
 
     private val repository = mockk<DuesRepository>()
 
+    private fun stubStaticBootstrap() {
+        coEvery { repository.insertTracker(any()) } returns 999L
+        coEvery { repository.ensureBudgetPeriods(any(), any()) } just runs
+    }
+
     @Test
     fun `empty tracker flow produces non loading empty state`() = runTest {
+        stubStaticBootstrap()
         every { repository.getAllTrackers() } returns MutableStateFlow(emptyList())
 
         val viewModel = TrackerListViewModel(repository)
@@ -47,6 +53,7 @@ class TrackerListViewModelTest {
 
     @Test
     fun `summary counts completed dues records only`() = runTest {
+        stubStaticBootstrap()
         val tracker = Tracker(id = 9, name = "Dues", type = TrackerType.DUES, frequency = Frequency.MONTHLY)
         every { repository.getAllTrackers() } returns MutableStateFlow(listOf(tracker))
         every { repository.getActiveMembersForTracker(9) } returns MutableStateFlow(
@@ -77,15 +84,18 @@ class TrackerListViewModelTest {
 
     @Test
     fun `create tracker inserts tracker members period and current period`() = runTest {
+        coEvery { repository.ensureBudgetPeriods(any(), any()) } just runs
         every { repository.getAllTrackers() } returns MutableStateFlow(emptyList())
-        coEvery { repository.insertTracker(any()) } returns 45L
         coEvery { repository.insertTrackerMember(any()) } returns 1L
         coEvery { repository.insertPeriod(any()) } returns 400L
         coEvery { repository.setCurrentPeriod(45L, 400L) } just runs
 
-        val trackerSlot = slot<Tracker>()
+        val insertedTrackers = mutableListOf<Tracker>()
         val memberSlot = mutableListOf<TrackerMember>()
-        coEvery { repository.insertTracker(capture(trackerSlot)) } returns 45L
+        coEvery { repository.insertTracker(capture(insertedTrackers)) } answers {
+            val tracker = firstArg<Tracker>()
+            if (tracker.type == TrackerType.DUES && tracker.name.contains("New Tracker")) 45L else 900L
+        }
         coEvery { repository.insertTrackerMember(capture(memberSlot)) } returns 1L
 
         val viewModel = TrackerListViewModel(repository)
@@ -100,7 +110,8 @@ class TrackerListViewModelTest {
         )
         advanceUntilIdle()
 
-        assertEquals("  New Tracker  ", trackerSlot.captured.name)
+        val createdTracker = insertedTrackers.last { it.type == TrackerType.DUES && it.name.contains("New Tracker") }
+        assertEquals("  New Tracker  ", createdTracker.name)
         assertEquals(2, memberSlot.size)
         assertEquals("Henry", memberSlot[0].name)
         assertEquals("Simon", memberSlot[1].name)
@@ -110,6 +121,7 @@ class TrackerListViewModelTest {
 
     @Test
     fun `rename tracker trims name and updates repository`() = runTest {
+        stubStaticBootstrap()
         val existing = Tracker(id = 8, name = "Old", type = TrackerType.TODO, frequency = Frequency.WEEKLY, layoutStyle = LayoutStyle.CARDS)
         every { repository.getAllTrackers() } returns MutableStateFlow(emptyList())
         coEvery { repository.getTrackerById(8) } returns existing
@@ -126,6 +138,7 @@ class TrackerListViewModelTest {
 
     @Test
     fun `delete and clear new flag delegate to repository`() = runTest {
+        stubStaticBootstrap()
         every { repository.getAllTrackers() } returns MutableStateFlow(emptyList())
         coEvery { repository.deleteTracker(2) } just runs
         coEvery { repository.clearTrackerNewFlag(2) } just runs

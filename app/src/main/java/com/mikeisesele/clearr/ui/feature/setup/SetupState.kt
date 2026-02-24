@@ -10,7 +10,7 @@ import com.mikeisesele.clearr.data.model.TrackerType
 data class SetupWizardState(
     val step: Int = 1,                      // 1–5 setup steps
     val groupName: String = "JSS Durumi Brothers",
-    val trackerName: String = "Dues Tracker",
+    val trackerName: String = "Remittance",
     val adminName: String = "",
     val adminPhone: String = "",
     val trackerType: TrackerType = TrackerType.DUES,

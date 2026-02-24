@@ -172,7 +172,7 @@ class SetupViewModel @Inject constructor(
         }
     }
     private fun defaultTrackerName(type: TrackerType): String = when (type) {
-        TrackerType.DUES -> "Dues Tracker"
+        TrackerType.DUES -> "Remittance"
         TrackerType.GOALS -> "Goals Tracker"
         TrackerType.TODO -> "To-do Tracker"
         TrackerType.BUDGET -> "Budget Tracker"

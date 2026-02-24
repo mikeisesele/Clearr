@@ -13,7 +13,7 @@ import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 
 /**
- * Stub dialog shown when the user taps "New Tracker" from within the list.
+ * Stub dialog shown when the user taps "New Remittance" from within the list.
  * The actual tracker-creation flow is delegated to SetupWizardScreen via
  * [onNavigateToSetup]. This component exists as a future-ready anchor for
  * an inline creation sheet.
@@ -30,7 +30,7 @@ internal fun CreateTrackerDialog(
         shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
         title = {
             Text(
-                "Create Tracker",
+                "Create Remittance",
                 color = colors.text,
                 fontWeight = FontWeight.Bold
             )

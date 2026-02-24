@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -39,6 +40,7 @@ class TrackerListViewModel @Inject constructor(
 
     init {
         launch {
+            ensureStaticTrackers()
             refreshSignal
                 .flatMapLatest { repository.getAllTrackers() }
                 .flatMapLatest { trackers ->
@@ -158,6 +160,37 @@ class TrackerListViewModel @Inject constructor(
                 }
                 .collectLatest { newState -> updateState { newState } }
         }
+    }
+
+    private suspend fun ensureStaticTrackers() {
+        val now = System.currentTimeMillis()
+        val existing = repository.getAllTrackers().first()
+        val existingTypes = existing.mapTo(mutableSetOf()) { it.type }
+
+        suspend fun createIfMissing(type: TrackerType, name: String) {
+            if (type in existingTypes) return
+            val trackerId = repository.insertTracker(
+                Tracker(
+                    name = name,
+                    type = type,
+                    frequency = Frequency.MONTHLY,
+                    layoutStyle = LayoutStyle.GRID,
+                    defaultAmount = 0.0,
+                    isNew = false,
+                    createdAt = now
+                )
+            )
+            if (type == TrackerType.BUDGET) {
+                listOf(BudgetFrequency.MONTHLY, BudgetFrequency.WEEKLY).forEach { budgetFrequency ->
+                    repository.ensureBudgetPeriods(trackerId, budgetFrequency)
+                }
+            }
+            existingTypes += type
+        }
+
+        createIfMissing(TrackerType.GOALS, "Goals")
+        createIfMissing(TrackerType.TODO, "Todos")
+        createIfMissing(TrackerType.BUDGET, "Budget")
     }
 
     override fun onAction(action: TrackerListAction) {
