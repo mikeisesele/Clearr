@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
@@ -33,6 +34,7 @@ fun ClearrTopBar(
     actionIcon: String? = null,
     onActionClick: (() -> Unit)? = null,
     actionContainerColor: androidx.compose.ui.graphics.Color = ClearrColors.NavBg,
+    leadingContainerColor: Color = actionContainerColor,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalDuesColors.current
@@ -53,7 +55,7 @@ fun ClearrTopBar(
                 Surface(
                     modifier = Modifier.size(ClearrDimens.dp34),
                     shape = RoundedCornerShape(ClearrDimens.dp10),
-                    color = actionContainerColor
+                    color = leadingContainerColor
                 ) {
                     Box(
                         contentAlignment = Alignment.Center,

@@ -71,6 +71,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.TodoItem
@@ -181,12 +183,13 @@ private fun TodoNavBar(
     onBack: () -> Unit
 ) {
     ClearrTopBar(
-        title = "My Todos",
+        title = "Todos",
         subtitle = "$pendingCount pending · $doneCount done",
         leadingIcon = "←",
         onLeadingClick = onBack,
         actionIcon = null,
-        onActionClick = null
+        onActionClick = null,
+        leadingContainerColor = Color.Transparent
     )
 }
 
@@ -584,7 +587,7 @@ fun AddTodoScreen(
 
     if (showCustomDatePicker) {
         CustomDatePickerSheet(
-            initialDate = customDate ?: LocalDate.now(),
+            initialDate = customDate ?: LocalDate.now().plusDays(1),
             onDismiss = { showCustomDatePicker = false },
             onDateSelected = { date ->
                 customDate = date
@@ -638,7 +641,6 @@ private fun StyledSheetInput(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CustomDatePickerSheet(
     initialDate: LocalDate,
@@ -646,8 +648,10 @@ private fun CustomDatePickerSheet(
     onDateSelected: (LocalDate) -> Unit
 ) {
     val colors = LocalDuesColors.current
-    var displayedMonth by remember { mutableStateOf(YearMonth.from(initialDate)) }
-    var selectedDate by remember { mutableStateOf(initialDate) }
+    val minSelectableDate = LocalDate.now().plusDays(1)
+    val initial = if (initialDate.isBefore(minSelectableDate)) minSelectableDate else initialDate
+    var displayedMonth by remember { mutableStateOf(YearMonth.from(initial)) }
+    var selectedDate by remember { mutableStateOf(initial) }
     val firstDayOfMonth = displayedMonth.atDay(1)
     val leadingSpaces = firstDayOfMonth.dayOfWeek.value - 1
     val monthDays = displayedMonth.lengthOfMonth()
@@ -658,81 +662,105 @@ private fun CustomDatePickerSheet(
     }.chunked(7)
 
     BackHandler(onBack = onDismiss)
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = colors.surface) {
-        Column(
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
-                .navigationBarsPadding()
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.35f))
+                .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
+            contentAlignment = Alignment.Center
         ) {
-            Row(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20),
+                color = colors.surface
             ) {
-                TextButton(onClick = { displayedMonth = displayedMonth.minusMonths(1) }) { Text("‹", color = ClearrColors.Blue, fontWeight = FontWeight.Bold) }
-                Text(
-                    displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
-                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.text
-                )
-                TextButton(onClick = { displayedMonth = displayedMonth.plusMonths(1) }) { Text("›", color = ClearrColors.Blue, fontWeight = FontWeight.Bold) }
-            }
-
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { label ->
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        Text(label, color = colors.muted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, fontWeight = FontWeight.SemiBold)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(onClick = { displayedMonth = displayedMonth.minusMonths(1) }) { Text("‹", color = ClearrColors.Blue, fontWeight = FontWeight.Bold) }
+                        Text(
+                            displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
+                            fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp16,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.text
+                        )
+                        TextButton(onClick = { displayedMonth = displayedMonth.plusMonths(1) }) { Text("›", color = ClearrColors.Blue, fontWeight = FontWeight.Bold) }
                     }
-                }
-            }
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6))
 
-            cells.forEach { week ->
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    week.forEach { date ->
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .aspectRatio(1f)
-                                .padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (date != null) {
-                                val isSelected = date == selectedDate
-                                Surface(
+                    Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { label ->
+                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                Text(label, color = colors.muted, fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6))
+
+                    cells.forEach { week ->
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            week.forEach { date ->
+                                Box(
                                     modifier = Modifier
-                                        .fillMaxSize()
-                                        .clickable { selectedDate = date },
-                                    shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
-                                    color = if (isSelected) ClearrColors.Blue else colors.card
+                                        .weight(1f)
+                                        .aspectRatio(1f)
+                                        .padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp2),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text(
-                                            date.dayOfMonth.toString(),
-                                            color = if (isSelected) ClearrColors.Surface else colors.text,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                                        )
+                                    if (date != null) {
+                                        val selectable = !date.isBefore(minSelectableDate)
+                                        val isSelected = date == selectedDate
+                                        Surface(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clickable(enabled = selectable) { selectedDate = date },
+                                            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
+                                            color = when {
+                                                isSelected -> ClearrColors.Blue
+                                                selectable -> colors.card
+                                                else -> colors.bg
+                                            }
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Text(
+                                                    date.dayOfMonth.toString(),
+                                                    color = when {
+                                                        isSelected -> ClearrColors.Surface
+                                                        selectable -> colors.text
+                                                        else -> colors.muted.copy(alpha = 0.6f)
+                                                    },
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+
+                    Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
+                    Button(
+                        onClick = { onDateSelected(selectedDate) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
+                        colors = ButtonDefaults.buttonColors(containerColor = ClearrColors.Blue)
+                    ) {
+                        Text("Use Date", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
-
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
-            Button(
-                onClick = { onDateSelected(selectedDate) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14),
-                colors = ButtonDefaults.buttonColors(containerColor = ClearrColors.Blue)
-            ) {
-                Text("Use Date", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
         }
     }
 }
@@ -904,7 +932,7 @@ private fun dueDateFromOption(option: String, customDate: LocalDate? = null): Lo
             if (saturday.isBefore(today)) saturday.plusWeeks(1) else saturday
         }
         "Next week" -> today.plusWeeks(1).with(DayOfWeek.MONDAY)
-        "Custom" -> customDate ?: today
+        "Custom" -> customDate ?: today.plusDays(1)
         "No due date" -> null
         else -> today
     }
