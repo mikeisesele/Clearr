@@ -61,9 +61,8 @@ fun SettingsScreen(
             title = "Settings",
             leadingIcon = "⚙️",
             onLeadingClick = null,
-            actionIcon = "↻",
-            onActionClick = { viewModel.onAction(SettingsAction.ResetSetup) },
-            actionContainerColor = colors.accent
+            actionIcon = null,
+            onActionClick = null
         )
 
         // ── Active Year ───────────────────────────────────────────────────────
