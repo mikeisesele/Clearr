@@ -1,11 +1,5 @@
 package com.mikeisesele.clearr.ui.feature.onboarding
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
-import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
@@ -21,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -36,7 +29,6 @@ import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.R
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import kotlinx.coroutines.delay
 
 // ── Slide data model ──────────────────────────────────────────────────────────
@@ -83,32 +75,6 @@ fun OnboardingScreen(
     onComplete: () -> Unit,
     onSkip: () -> Unit
 ) {
-    val context = LocalContext.current
-    val activity = remember(context) { context.findActivity() as? ComponentActivity }
-    val themeIsDark = LocalDuesColors.current.isDark
-
-    DisposableEffect(activity, themeIsDark) {
-        val transparent = android.graphics.Color.TRANSPARENT
-        activity?.enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(transparent, transparent),
-            navigationBarStyle = SystemBarStyle.light(transparent, transparent)
-        )
-        onDispose {
-            activity?.enableEdgeToEdge(
-                statusBarStyle = if (themeIsDark) {
-                    SystemBarStyle.dark(transparent)
-                } else {
-                    SystemBarStyle.light(transparent, transparent)
-                },
-                navigationBarStyle = if (themeIsDark) {
-                    SystemBarStyle.dark(transparent)
-                } else {
-                    SystemBarStyle.light(transparent, transparent)
-                }
-            )
-        }
-    }
-
     var currentSlide by remember { mutableIntStateOf(initialSlide.coerceIn(0, slides.lastIndex)) }
     var prevSlide by remember { mutableIntStateOf(currentSlide) }
     var goingForward by remember { mutableStateOf(true) }
@@ -138,6 +104,7 @@ fun OnboardingScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
+                        .statusBarsPadding()
                         .padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
                 ) {
                     Text(
@@ -256,6 +223,7 @@ fun OnboardingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(ClearrColors.Surface)
+                    .navigationBarsPadding()
                     .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24)
                     .padding(bottom = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32, top = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
             ) {
@@ -340,12 +308,6 @@ fun OnboardingScreen(
             }
         }
     }
-}
-
-private tailrec fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is ContextWrapper -> baseContext.findActivity()
-    else -> null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

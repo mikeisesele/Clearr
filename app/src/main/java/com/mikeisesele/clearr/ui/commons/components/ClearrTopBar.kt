@@ -26,6 +26,7 @@ import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 fun ClearrTopBar(
     title: String,
     subtitle: String? = null,
+    showLeading: Boolean = true,
     leadingIcon: String = "←",
     onLeadingClick: (() -> Unit)? = null,
     actionIcon: String? = null,
@@ -46,17 +47,21 @@ fun ClearrTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                modifier = Modifier.size(ClearrDimens.dp34),
-                shape = RoundedCornerShape(ClearrDimens.dp10),
-                color = ClearrColors.NavBg
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = if (onLeadingClick != null) Modifier.clickable { onLeadingClick() } else Modifier
+            if (showLeading) {
+                Surface(
+                    modifier = Modifier.size(ClearrDimens.dp34),
+                    shape = RoundedCornerShape(ClearrDimens.dp10),
+                    color = ClearrColors.NavBg
                 ) {
-                    Text(leadingIcon, fontSize = ClearrTextSizes.sp15, color = ClearrColors.TextPrimary)
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = if (onLeadingClick != null) Modifier.clickable { onLeadingClick() } else Modifier
+                    ) {
+                        Text(leadingIcon, fontSize = ClearrTextSizes.sp15, color = ClearrColors.TextPrimary)
+                    }
                 }
+            } else {
+                Box(modifier = Modifier.size(ClearrDimens.dp34))
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
