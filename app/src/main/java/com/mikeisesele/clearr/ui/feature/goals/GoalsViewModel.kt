@@ -33,6 +33,7 @@ class GoalsViewModel @Inject constructor(
     override fun onAction(action: GoalsAction) {
         when (action) {
             is GoalsAction.MarkDone -> markDone(action.goalId)
+            is GoalsAction.Delete -> deleteGoal(action.goalId)
             is GoalsAction.AddGoal -> addGoal(
                 title = action.title,
                 emoji = action.emoji,
@@ -163,6 +164,12 @@ class GoalsViewModel @Inject constructor(
                     createdAt = System.currentTimeMillis()
                 )
             )
+        }
+    }
+
+    private fun deleteGoal(goalId: String) {
+        launch {
+            repository.deleteGoal(goalId)
         }
     }
 }

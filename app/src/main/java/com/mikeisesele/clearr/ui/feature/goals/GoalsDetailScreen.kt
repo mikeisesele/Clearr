@@ -69,6 +69,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -131,6 +132,7 @@ fun GoalsDetailScreen(
                             isLast = index == state.summaries.lastIndex,
                             colors = colors,
                             onDone = { viewModel.onAction(GoalsAction.MarkDone(it)) },
+                            onDelete = { viewModel.onAction(GoalsAction.Delete(it)) },
                             onTap = { detailGoal = it }
                         )
                     }
@@ -181,7 +183,8 @@ private fun GoalsNavBar(
         leadingIcon = "←",
         onLeadingClick = onBack,
         actionIcon = null,
-        onActionClick = null
+        onActionClick = null,
+        leadingContainerColor = Color.Transparent
     )
 }
 
@@ -216,7 +219,7 @@ private fun SwipeHintStrip(colors: DuesColors) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Swipe right to mark a goal done for today",
+            text = "← Swipe right to mark done  ·  Swipe left to delete →",
             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp11,
             color = colors.muted
         )
@@ -229,6 +232,7 @@ private fun SwipeableGoalRow(
     isLast: Boolean,
     colors: DuesColors,
     onDone: (String) -> Unit,
+    onDelete: (String) -> Unit,
     onTap: (GoalSummary) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -243,20 +247,30 @@ private fun SwipeableGoalRow(
 
     val doneThisPeriod = summary.isDoneThisPeriod
     val palette = goalPalette(summary.goal.colorToken)
-    val bgColor = if (offsetX.value > 20f) ClearrColors.Emerald else colors.border
+    val bgColor = when {
+        offsetX.value > 20f -> ClearrColors.Emerald
+        offsetX.value < -20f -> ClearrColors.Coral
+        else -> colors.border
+    }
 
     Box(modifier = Modifier.fillMaxWidth().background(bgColor)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp20, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = if (offsetX.value > 20f) "✓ Done!" else "",
                 color = ClearrColors.Surface,
                 fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18,
                 fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = if (offsetX.value < -20f) "🗑" else "",
+                color = ClearrColors.Surface,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp18
             )
         }
 
@@ -274,24 +288,30 @@ private fun SwipeableGoalRow(
                     })
                 }
                 .pointerInput(summary.goal.id, doneThisPeriod) {
-                    if (doneThisPeriod) return@pointerInput
                     detectHorizontalDragGestures(
                         onDragStart = { dragMagnitudePx = 0f },
                         onHorizontalDrag = { change, dragAmount ->
                             change.consume()
                             dragMagnitudePx += abs(dragAmount)
                             scope.launch {
-                                val next = (offsetX.value + dragAmount).coerceIn(0f, maxSwipePx)
+                                val next = (offsetX.value + dragAmount).coerceIn(-maxSwipePx, maxSwipePx)
                                 offsetX.snapTo(next)
                             }
                         },
                         onDragEnd = {
                             scope.launch {
-                                if (offsetX.value >= thresholdPx) {
-                                    offsetX.animateTo(rowWidthPx.coerceAtLeast(maxSwipePx), spring())
-                                    onDone(summary.goal.id)
-                                } else {
-                                    offsetX.animateTo(0f, spring())
+                                when {
+                                    offsetX.value >= thresholdPx && !doneThisPeriod -> {
+                                        offsetX.animateTo(rowWidthPx.coerceAtLeast(maxSwipePx), spring())
+                                        onDone(summary.goal.id)
+                                    }
+                                    offsetX.value <= -thresholdPx -> {
+                                        offsetX.animateTo(-rowWidthPx.coerceAtLeast(maxSwipePx), spring())
+                                        onDelete(summary.goal.id)
+                                    }
+                                    else -> {
+                                        offsetX.animateTo(0f, spring())
+                                    }
                                 }
                             }
                         },
@@ -878,7 +898,8 @@ private fun GoalsEmptyState(modifier: Modifier = Modifier) {
             text = "Add your first goal and start building a streak.",
             modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp32),
             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp13,
-            color = colors.muted
+            color = colors.muted,
+            textAlign = TextAlign.Center
         )
     }
 }

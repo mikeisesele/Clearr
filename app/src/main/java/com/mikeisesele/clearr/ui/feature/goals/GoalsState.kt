@@ -17,6 +17,7 @@ data class GoalsUiState(
 
 sealed interface GoalsAction {
     data class MarkDone(val goalId: String) : GoalsAction
+    data class Delete(val goalId: String) : GoalsAction
     data class AddGoal(
         val title: String,
         val emoji: String,
