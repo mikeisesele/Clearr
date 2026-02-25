@@ -41,6 +41,7 @@ internal data class TypeStyle(
 
 internal val typeStyles = mapOf(
     TrackerType.DUES to TypeStyle("₦", TrackerType.DUES.brandColor(), TrackerType.DUES.brandBackground(), "Remittance"),
+    TrackerType.EXPENSES to TypeStyle("₦", TrackerType.DUES.brandColor(), TrackerType.DUES.brandBackground(), "Remittance"),
     TrackerType.GOALS to TypeStyle("🎯", TrackerType.GOALS.brandColor(), TrackerType.GOALS.brandBackground(), "Goals"),
     TrackerType.TODO to TypeStyle("☑", TrackerType.TODO.brandColor(), TrackerType.TODO.brandBackground(), "To-do"),
     TrackerType.BUDGET to TypeStyle("💳", TrackerType.BUDGET.brandColor(), TrackerType.BUDGET.brandBackground(), "Budget"),

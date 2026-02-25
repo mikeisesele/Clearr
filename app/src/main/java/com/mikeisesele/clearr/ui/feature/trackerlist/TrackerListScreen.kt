@@ -102,7 +102,7 @@ fun TrackerListScreen(
                             verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12)
                         ) {
                             items(state.summaries, key = { it.trackerId }) { summary ->
-                                if (summary.type == TrackerType.DUES) {
+                                if (summary.type == TrackerType.DUES || summary.type == TrackerType.EXPENSES) {
                                     RemittanceSwipeCard(
                                         summary = summary,
                                         onDeleteRequest = { deleteTarget = summary },

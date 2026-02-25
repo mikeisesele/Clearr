@@ -69,6 +69,7 @@ object ClearrColors {
 
 fun TrackerType.brandColor(): Color = when (this) {
     TrackerType.DUES     -> ClearrColors.Violet
+    TrackerType.EXPENSES -> ClearrColors.Violet
     TrackerType.GOALS    -> ClearrColors.Emerald
     TrackerType.TODO     -> ClearrColors.Amber
     TrackerType.BUDGET   -> ClearrColors.Blue
@@ -76,6 +77,7 @@ fun TrackerType.brandColor(): Color = when (this) {
 
 fun TrackerType.brandBackground(): Color = when (this) {
     TrackerType.DUES     -> ClearrColors.VioletBg
+    TrackerType.EXPENSES -> ClearrColors.VioletBg
     TrackerType.GOALS    -> ClearrColors.EmeraldBg
     TrackerType.TODO     -> ClearrColors.AmberBg
     TrackerType.BUDGET   -> ClearrColors.BlueBg
@@ -83,6 +85,7 @@ fun TrackerType.brandBackground(): Color = when (this) {
 
 fun TrackerType.brandSurface(): Color = when (this) {
     TrackerType.DUES     -> ClearrColors.VioletSurface
+    TrackerType.EXPENSES -> ClearrColors.VioletSurface
     TrackerType.GOALS    -> ClearrColors.EmeraldSurface
     TrackerType.TODO     -> ClearrColors.AmberSurface
     TrackerType.BUDGET   -> ClearrColors.BlueSurface
@@ -90,6 +93,7 @@ fun TrackerType.brandSurface(): Color = when (this) {
 
 fun TrackerType.brandIcon(): String = when (this) {
     TrackerType.DUES     -> "₦"
+    TrackerType.EXPENSES -> "₦"
     TrackerType.GOALS    -> "🎯"
     TrackerType.TODO     -> "☑"
     TrackerType.BUDGET   -> "💳"
@@ -136,6 +140,12 @@ fun RecordStatus.brandBackground(): Color = when (this) {
 
 fun RecordStatus.brandLabel(type: TrackerType): String = when (type) {
     TrackerType.DUES -> when (this) {
+        RecordStatus.PAID    -> "Paid"
+        RecordStatus.UNPAID  -> "Unpaid"
+        RecordStatus.PARTIAL -> "Partial"
+        else -> name.lowercase().replaceFirstChar { it.uppercase() }
+    }
+    TrackerType.EXPENSES -> when (this) {
         RecordStatus.PAID    -> "Paid"
         RecordStatus.UNPAID  -> "Unpaid"
         RecordStatus.PARTIAL -> "Partial"

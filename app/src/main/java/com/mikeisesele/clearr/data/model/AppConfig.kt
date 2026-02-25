@@ -40,6 +40,7 @@ data class AppConfig(
 
 enum class TrackerType {
     DUES,       // Group financial obligations
+    EXPENSES,   // Legacy value kept for backward compatibility with old DB rows
     GOALS,      // Personal goals / recurring habits
     TODO,       // Personal to-do / task list
     BUDGET      // Planned vs actual spending

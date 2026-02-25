@@ -319,9 +319,10 @@ private fun AmountStep(
 ) {
     val label = when (trackerType) {
         TrackerType.DUES -> "Amount per ${frequency.name.lowercase().replaceFirstChar { it.uppercase() }} (₦)"
+        TrackerType.EXPENSES -> "Amount per ${frequency.name.lowercase().replaceFirstChar { it.uppercase() }} (₦)"
         TrackerType.GOALS, TrackerType.TODO, TrackerType.BUDGET -> "Not applicable for this tracker type"
     }
-    val skipAmount = trackerType != TrackerType.DUES
+    val skipAmount = trackerType != TrackerType.DUES && trackerType != TrackerType.EXPENSES
     Column(modifier = Modifier.fillMaxWidth().padding(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp24), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)) {
         StepHeader("Set the Amount", "How much is due per period per member?", colors)
         if (skipAmount) {
@@ -398,7 +399,7 @@ private fun ReviewStep(
                 Text("Tracker: ${trackerName.ifBlank { "Unnamed Tracker" }}", color = colors.text)
                 Text("Type: ${trackerType.name.lowercase().replaceFirstChar { it.uppercase() }}", color = colors.text)
                 Text("Frequency: ${frequency.name.lowercase().replaceFirstChar { it.uppercase() }}", color = colors.text)
-                if (trackerType == TrackerType.DUES) {
+                if (trackerType == TrackerType.DUES || trackerType == TrackerType.EXPENSES) {
                     Text("Amount: ₦${defaultAmount.ifBlank { "5000" }}", color = colors.text)
                     Text("Seed sample members: ${if (loadSampleMembers) "On" else "Off"}", color = colors.text)
                 }

@@ -40,7 +40,7 @@ fun SettingsScreen(
 
     val currentYearConfig = state.yearConfigs.find { it.year == state.selectedYear }
     val dueAmount = state.currentTrackerDueAmount ?: currentYearConfig?.dueAmountPerMonth ?: 5000.0
-    val dueEditable = state.currentTrackerType == TrackerType.DUES
+    val dueEditable = state.currentTrackerType == TrackerType.DUES || state.currentTrackerType == TrackerType.EXPENSES
 
     var localDue by remember(state.selectedYear, dueAmount) { mutableStateOf(dueAmount.toInt().toString()) }
     var showResetDialog by remember { mutableStateOf(false) }

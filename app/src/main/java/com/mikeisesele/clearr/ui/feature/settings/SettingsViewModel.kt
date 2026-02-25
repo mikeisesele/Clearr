@@ -91,7 +91,7 @@ class SettingsViewModel @Inject constructor(
             val trackerId = appState.currentTrackerId.value
             if (trackerId != null) {
                 val tracker = repository.getTrackerById(trackerId) ?: return@launch
-                if (tracker.type == TrackerType.DUES) {
+                if (tracker.type == TrackerType.DUES || tracker.type == TrackerType.EXPENSES) {
                     repository.updateTracker(tracker.copy(defaultAmount = amount))
                 }
             }
