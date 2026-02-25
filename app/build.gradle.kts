@@ -35,6 +35,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs += listOf("-Xskip-metadata-version-check")
     }
     buildFeatures {
         compose = true
@@ -89,6 +90,7 @@ dependencies {
 
     // DataStore (onboarding flag persistence)
     implementation(libs.datastore.preferences)
+    implementation(libs.mlkit.genai.prompt)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
