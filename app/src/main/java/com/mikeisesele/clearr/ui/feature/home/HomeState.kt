@@ -19,7 +19,8 @@ data class HomeUiState(
     val layoutStyle: LayoutStyle = LayoutStyle.GRID,
     val trackerName: String = "Dues Tracker",
     val trackerType: TrackerType = TrackerType.DUES,
-    val currentPeriodId: Long? = null
+    val currentPeriodId: Long? = null,
+    val aiRiskHint: String? = null
 ) : BaseState
 
 data class SnackbarData(

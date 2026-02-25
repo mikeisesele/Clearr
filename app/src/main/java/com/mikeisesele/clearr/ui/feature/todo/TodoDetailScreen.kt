@@ -76,6 +76,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mikeisesele.clearr.core.ai.ClearrEdgeAi
+import com.mikeisesele.clearr.core.ai.TodoAiResult
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
@@ -84,6 +86,7 @@ import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.DuesColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -123,6 +126,20 @@ fun TodoDetailScreen(
                 onSelect = { viewModel.onAction(TodoAction.SetFilter(it)) },
                 colors = colors
             )
+            state.aiInsight?.let { insight ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colors.bg)
+                        .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
+                ) {
+                    Text(
+                        text = insight,
+                        color = colors.muted,
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12
+                    )
+                }
+            }
 
             if (!state.isLoading && state.displayedTodos.isEmpty()) {
                 TodoEmptyState(filter = state.filter)
@@ -497,12 +514,47 @@ fun AddTodoScreen(
     var showCustomDatePicker by remember { mutableStateOf(false) }
     val titleFocusRequester = remember { FocusRequester() }
     val canSubmit = title.trim().isNotEmpty()
+    var aiLoading by remember { mutableStateOf(false) }
+    var aiDraft by remember {
+        mutableStateOf(
+            TodoAiResult(
+                normalizedTitle = ClearrEdgeAi.normalizeTitle(title),
+                normalizedNote = note?.trim()?.ifBlank { null },
+                suggestedPriority = priority,
+                suggestedDueDate = dueDateFromOption(dueOption, customDate)
+            )
+        )
+    }
 
     val options = listOf("Today", "Tomorrow", "This week", "Next week", "Custom", "No due date")
     val customLabel = customDate?.format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))
 
     LaunchedEffect(Unit) {
         titleFocusRequester.requestFocus()
+    }
+
+    LaunchedEffect(title, note, priority, dueOption, customDate) {
+        val selectedDueDate = dueDateFromOption(dueOption, customDate)
+        if (title.isBlank()) {
+            aiLoading = false
+            aiDraft = TodoAiResult(
+                normalizedTitle = ClearrEdgeAi.normalizeTitle(title),
+                normalizedNote = note?.trim()?.ifBlank { null },
+                suggestedPriority = priority,
+                suggestedDueDate = selectedDueDate
+            )
+            return@LaunchedEffect
+        }
+
+        aiLoading = true
+        delay(220)
+        aiDraft = ClearrEdgeAi.inferTodoNanoAware(
+            title = title,
+            note = note,
+            selectedPriority = priority,
+            selectedDueDate = selectedDueDate
+        )
+        aiLoading = false
     }
 
     Column(
@@ -557,6 +609,22 @@ fun AddTodoScreen(
             )
 
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+            if (title.isNotBlank()) {
+                Text(
+                    text = if (aiLoading) {
+                        "AI: Thinking..."
+                    } else {
+                        "AI: ${aiDraft.suggestedPriority.name.lowercase().replaceFirstChar { it.uppercase() }} priority${
+                            aiDraft.suggestedDueDate?.let {
+                                " · due ${it.format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))}"
+                            } ?: ""
+                        }"
+                    },
+                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
+                    color = colors.muted
+                )
+                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+            }
             Text("PRIORITY", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = colors.muted, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
             Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {

@@ -14,6 +14,7 @@ data class BudgetUiState(
     val periods: List<BudgetPeriod> = emptyList(),
     val selectedPeriodId: Long? = null,
     val categorySummaries: List<CategorySummary> = emptyList(),
+    val aiInsight: String? = null,
     val budgetSummary: BudgetSummary = BudgetSummary(
         totalPlannedKobo = 0,
         totalSpentKobo = 0,

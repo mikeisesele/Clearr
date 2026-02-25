@@ -12,6 +12,7 @@ data class GoalsUiState(
     val doneCount: Int = 0,
     val totalCount: Int = 0,
     val allDoneThisPeriod: Boolean = false,
+    val aiInsight: String? = null,
     val isLoading: Boolean = true
 ) : BaseState
 

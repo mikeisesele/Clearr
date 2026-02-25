@@ -75,6 +75,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mikeisesele.clearr.core.ai.ClearrEdgeAi
+import com.mikeisesele.clearr.core.ai.GoalAiResult
 import com.mikeisesele.clearr.data.model.GoalFrequency
 import com.mikeisesele.clearr.data.model.GoalSummary
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
@@ -82,6 +84,7 @@ import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.DuesColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import com.mikeisesele.clearr.ui.theme.fromToken
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 @Composable
@@ -117,6 +120,20 @@ fun GoalsDetailScreen(
                 exit = fadeOut()
             ) {
                 AllClearedBanner(colors = colors)
+            }
+            state.aiInsight?.let { insight ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colors.bg)
+                        .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
+                ) {
+                    Text(
+                        text = insight,
+                        color = colors.muted,
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12
+                    )
+                }
             }
 
             if (!state.isLoading && state.summaries.isEmpty()) {
@@ -661,6 +678,12 @@ fun AddGoalScreen(
     var showAllIcons by rememberSaveable { mutableStateOf(false) }
     val titleFocusRequester = remember { FocusRequester() }
     val canSubmit = title.trim().isNotEmpty()
+    var aiDraft by remember { mutableStateOf<GoalAiResult?>(null) }
+    var aiLoading by remember { mutableStateOf(false) }
+    var frequencyTouched by rememberSaveable { mutableStateOf(false) }
+    var emojiTouched by rememberSaveable { mutableStateOf(false) }
+    var colorTouched by rememberSaveable { mutableStateOf(false) }
+    var targetTouched by rememberSaveable { mutableStateOf(false) }
 
     val emojis = listOf(
         "🎯", "🏃", "💰", "📚", "🥗", "🚿",
@@ -674,6 +697,36 @@ fun AddGoalScreen(
     val palette = goalPalette(colorToken)
 
     LaunchedEffect(Unit) { titleFocusRequester.requestFocus() }
+    LaunchedEffect(title, target) {
+        if (title.trim().length < 3) {
+            aiDraft = null
+            aiLoading = false
+            return@LaunchedEffect
+        }
+        aiLoading = true
+        delay(350)
+        val inferred = ClearrEdgeAi.inferGoalNanoAware(
+            title = title,
+            target = target,
+            frequency = frequency,
+            emoji = emoji,
+            colorToken = colorToken
+        )
+        aiDraft = inferred
+        if (!targetTouched && target.isBlank() && !inferred.suggestedTarget.isNullOrBlank()) {
+            target = inferred.suggestedTarget
+        }
+        if (!frequencyTouched) {
+            frequency = inferred.suggestedFrequency
+        }
+        if (!emojiTouched) {
+            emoji = inferred.suggestedEmoji
+        }
+        if (!colorTouched) {
+            colorToken = inferred.suggestedColorToken
+        }
+        aiLoading = false
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -745,6 +798,23 @@ fun AddGoalScreen(
                 }
 
                 Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
+                if (title.isNotBlank()) {
+                    Text(
+                        text = when {
+                            aiLoading -> "AI: Thinking..."
+                            aiDraft != null -> {
+                                val draft = aiDraft!!
+                                val freq = draft.suggestedFrequency.name.lowercase().replaceFirstChar { it.uppercase() }
+                                "AI: ${draft.suggestedEmoji} $freq${draft.suggestedTarget?.let { " · target $it" } ?: ""}"
+                            }
+                            else -> "AI: No suggestion yet"
+                        },
+                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
+                        color = colors.muted,
+                        modifier = Modifier.padding(start = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
+                    )
+                    Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+                }
                 SectionTitle("ICON")
                 Column(modifier = Modifier.animateContentSize()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
@@ -752,7 +822,10 @@ fun AddGoalScreen(
                             Surface(
                                 modifier = Modifier
                                     .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
-                                    .clickable { emoji = value },
+                                    .clickable {
+                                        emojiTouched = true
+                                        emoji = value
+                                    },
                                 shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                                 color = if (emoji == value) palette.background else colors.card,
                                 border = BorderStroke(
@@ -775,7 +848,10 @@ fun AddGoalScreen(
                                 Surface(
                                     modifier = Modifier
                                         .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp38)
-                                        .clickable { emoji = value },
+                                        .clickable {
+                                            emojiTouched = true
+                                            emoji = value
+                                        },
                                     shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                                     color = if (emoji == value) palette.background else colors.card,
                                     border = BorderStroke(
@@ -811,7 +887,10 @@ fun AddGoalScreen(
                         Surface(
                             modifier = Modifier
                                 .size(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp28)
-                                .clickable { colorToken = token },
+                                .clickable {
+                                    colorTouched = true
+                                    colorToken = token
+                                },
                             shape = CircleShape,
                             color = tokenPalette.color,
                             border = BorderStroke(
@@ -838,7 +917,10 @@ fun AddGoalScreen(
                 SectionTitle("TARGET (OPTIONAL)")
                 GoalSheetInput(
                     value = target,
-                    onValueChange = { target = it },
+                    onValueChange = {
+                        targetTouched = true
+                        target = it
+                    },
                     placeholder = "e.g. 30 mins, ₦10,000, 20 pages",
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -853,7 +935,10 @@ fun AddGoalScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp44)
-                                .clickable { frequency = value },
+                                .clickable {
+                                    frequencyTouched = true
+                                    frequency = value
+                                },
                             shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp10),
                                 color = if (selected) palette.background else colors.card,
                             border = BorderStroke(

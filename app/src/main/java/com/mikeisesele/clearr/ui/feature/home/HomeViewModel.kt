@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.home
 
 import com.mikeisesele.clearr.core.base.BaseViewModel
+import com.mikeisesele.clearr.core.ai.ClearrEdgeAi
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Member
@@ -95,6 +96,15 @@ class HomeViewModel @Inject constructor(
                             year = p.year,
                             dueAmountPerMonth = tracker?.defaultAmount ?: 5000.0
                         )
+                        val expectedMonths = 12
+                        val riskHint = mappedMembers.asSequence()
+                            .mapNotNull { member ->
+                                val paidMonths = (0..11).count { mi ->
+                                    mappedPayments.any { it.memberId == member.id && it.monthIndex == mi && it.amountPaid >= (tracker?.defaultAmount ?: 5000.0) }
+                                }
+                                ClearrEdgeAi.remittanceRiskLabel(member.name, paidMonths, expectedMonths)
+                            }
+                            .firstOrNull()
                         HomeUiState(
                             selectedYear = p.year,
                             members = mappedMembers,
@@ -106,7 +116,8 @@ class HomeViewModel @Inject constructor(
                             layoutStyle = tracker?.layoutStyle ?: p.appConfig?.layoutStyle ?: LayoutStyle.GRID,
                             trackerName = tracker?.name ?: "Tracker",
                             trackerType = tracker?.type ?: TrackerType.DUES,
-                            currentPeriodId = periods.firstOrNull { it.isCurrent }?.id
+                            currentPeriodId = periods.firstOrNull { it.isCurrent }?.id,
+                            aiRiskHint = if (tracker?.type == TrackerType.DUES || tracker?.type == TrackerType.EXPENSES) riskHint else null
                         )
                     }
                 } else {
@@ -115,6 +126,15 @@ class HomeViewModel @Inject constructor(
                         repository.getPaymentsForYear(p.year),
                         repository.getYearConfigFlow(p.year)
                     ) { members, payments, config ->
+                        val expectedMonths = 12
+                        val riskHint = members.asSequence()
+                            .mapNotNull { member ->
+                                val paidMonths = (0..11).count { mi ->
+                                    payments.any { it.memberId == member.id && it.monthIndex == mi && it.amountPaid >= (config?.dueAmountPerMonth ?: 5000.0) }
+                                }
+                                ClearrEdgeAi.remittanceRiskLabel(member.name, paidMonths, expectedMonths)
+                            }
+                            .firstOrNull()
                         HomeUiState(
                             selectedYear = p.year,
                             members = members,
@@ -125,7 +145,8 @@ class HomeViewModel @Inject constructor(
                             snackbarMessage = p.snackbar,
                             layoutStyle = p.appConfig?.layoutStyle ?: LayoutStyle.GRID,
                             trackerName = "Dues Tracker",
-                            trackerType = TrackerType.DUES
+                            trackerType = TrackerType.DUES,
+                            aiRiskHint = riskHint
                         )
                     }
                 }
@@ -192,7 +213,7 @@ class HomeViewModel @Inject constructor(
             }
 
             val tracker = repository.getTrackerById(trackerId) ?: return@launch
-            val period = if (tracker.type == TrackerType.DUES) {
+            val period = if (tracker.type == TrackerType.DUES || tracker.type == TrackerType.EXPENSES) {
                 ensureMonthlyPeriod(trackerId, year, monthIndex)
             } else {
                 repository.getCurrentPeriod(trackerId) ?: return@launch
@@ -201,6 +222,16 @@ class HomeViewModel @Inject constructor(
             val now = System.currentTimeMillis()
             val updated = when (tracker.type) {
                 TrackerType.DUES -> {
+                    val currentlyCompleted = existing?.status == RecordStatus.PAID
+                    val newStatus = if (currentlyCompleted) RecordStatus.UNPAID else RecordStatus.PAID
+                    val newAmount = if (newStatus == RecordStatus.PAID) tracker.defaultAmount else 0.0
+                    (existing ?: TrackerRecord(
+                        trackerId = trackerId,
+                        periodId = period.id,
+                        memberId = member.id
+                    )).copy(status = newStatus, amountPaid = newAmount, updatedAt = now)
+                }
+                TrackerType.EXPENSES -> {
                     val currentlyCompleted = existing?.status == RecordStatus.PAID
                     val newStatus = if (currentlyCompleted) RecordStatus.UNPAID else RecordStatus.PAID
                     val newAmount = if (newStatus == RecordStatus.PAID) tracker.defaultAmount else 0.0
@@ -251,7 +282,7 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
             val tracker = repository.getTrackerById(trackerId) ?: return@launch
-            val period = if (tracker.type == TrackerType.DUES) {
+            val period = if (tracker.type == TrackerType.DUES || tracker.type == TrackerType.EXPENSES) {
                 ensureMonthlyPeriod(trackerId, year, monthIndex)
             } else {
                 repository.getCurrentPeriod(trackerId) ?: return@launch
@@ -384,6 +415,7 @@ class HomeViewModel @Inject constructor(
         val records = repository.getRecordsForPeriod(trackerId, periodId).first()
         val completed = when (type) {
             TrackerType.DUES -> setOf(RecordStatus.PAID)
+            TrackerType.EXPENSES -> setOf(RecordStatus.PAID)
             TrackerType.GOALS -> setOf(RecordStatus.DONE)
             TrackerType.TODO -> setOf(RecordStatus.DONE)
             TrackerType.BUDGET -> setOf(RecordStatus.PAID)
@@ -483,7 +515,7 @@ class HomeViewModel @Inject constructor(
 
             if (trackerId != null) {
                 val tracker = repository.getTrackerById(trackerId) ?: return@launch
-                if (tracker.type != TrackerType.DUES) return@launch
+                if (tracker.type != TrackerType.DUES && tracker.type != TrackerType.EXPENSES) return@launch
                 for (mi in 0..endMonth) {
                     val period = ensureMonthlyPeriod(trackerId, year, mi)
                     val existing = repository.getRecord(trackerId, period.id, memberId)

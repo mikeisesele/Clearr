@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.todo
 
 import androidx.lifecycle.SavedStateHandle
+import com.mikeisesele.clearr.core.ai.ClearrEdgeAi
 import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
@@ -82,12 +83,14 @@ class TodoViewModel @Inject constructor(
                 }
                 .collectLatest { (filter, todos, payload) ->
                     val (displayed, counts) = payload
+                    val insight = ClearrEdgeAi.todoInsightNanoAware(todos)
                     updateState {
                         it.copy(
                             filter = filter,
                             todos = todos,
                             displayedTodos = displayed,
                             counts = counts,
+                            aiInsight = insight,
                             isLoading = false
                         )
                     }
@@ -110,16 +113,21 @@ class TodoViewModel @Inject constructor(
 
     private fun addTodo(title: String, note: String?, priority: TodoPriority, dueDate: LocalDate?) {
         launch {
-            val normalizedTitle = title.normalizeFirstWordCapitalized()
-            if (normalizedTitle.isBlank()) return@launch
+            val ai = ClearrEdgeAi.inferTodoNanoAware(
+                title = title,
+                note = note,
+                selectedPriority = priority,
+                selectedDueDate = dueDate
+            )
+            if (ai.normalizedTitle.isBlank()) return@launch
             repository.insertTodo(
                 TodoItem(
                     id = UUID.randomUUID().toString(),
                     trackerId = currentState.trackerId,
-                    title = normalizedTitle,
-                    note = note?.trim()?.ifBlank { null },
-                    priority = priority,
-                    dueDate = dueDate,
+                    title = ai.normalizedTitle,
+                    note = ai.normalizedNote,
+                    priority = ai.suggestedPriority,
+                    dueDate = ai.suggestedDueDate,
                     status = TodoStatus.PENDING,
                     createdAt = System.currentTimeMillis(),
                     completedAt = null
@@ -142,7 +150,7 @@ class TodoViewModel @Inject constructor(
 
     private fun rename(id: String, title: String) {
         launch {
-            val normalizedTitle = title.normalizeFirstWordCapitalized()
+            val normalizedTitle = ClearrEdgeAi.normalizeTitle(title)
             if (normalizedTitle.isBlank()) return@launch
             val existing = repository.getTodoById(id) ?: return@launch
             repository.updateTodo(existing.copy(title = normalizedTitle))
@@ -152,23 +160,6 @@ class TodoViewModel @Inject constructor(
     private fun markHintSeen() {
         launch {
             todoPreferencesRepository.markSwipeHintSeen()
-        }
-    }
-}
-
-private fun String.normalizeFirstWordCapitalized(): String {
-    val trimmed = trim()
-    if (trimmed.isBlank()) return trimmed
-    return buildString(trimmed.length) {
-        var capitalizedFirstWord = false
-        for (index in trimmed.indices) {
-            val ch = trimmed[index]
-            if (!capitalizedFirstWord && ch.isLetter()) {
-                append(ch.titlecaseChar())
-                capitalizedFirstWord = true
-            } else {
-                append(ch)
-            }
         }
     }
 }

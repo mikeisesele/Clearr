@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.trackerlist
 
 import com.mikeisesele.clearr.core.base.BaseViewModel
+import com.mikeisesele.clearr.core.ai.ClearrEdgeAi
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.GoalPeriodKey
@@ -152,7 +153,7 @@ class TrackerListViewModel @Inject constructor(
                         }
                         combine(summaryFlows) { arr ->
                             TrackerListUiState(
-                                summaries = arr.toList(),
+                                summaries = ClearrEdgeAi.prioritizeTrackers(arr.toList()),
                                 isLoading = false
                             )
                         }
@@ -301,6 +302,7 @@ class TrackerListViewModel @Inject constructor(
 
     private fun completedStatuses(type: TrackerType): Set<String> = when (type) {
         TrackerType.DUES -> setOf("PAID")
+        TrackerType.EXPENSES -> setOf("PAID")
         TrackerType.GOALS -> setOf("DONE")
         TrackerType.TODO -> setOf("DONE")
         TrackerType.BUDGET -> emptySet()

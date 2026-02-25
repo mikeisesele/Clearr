@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.setup
 
 import com.mikeisesele.clearr.core.base.BaseViewModel
+import com.mikeisesele.clearr.core.ai.ClearrEdgeAi
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.BudgetCategory
 import com.mikeisesele.clearr.data.model.BudgetFrequency
@@ -61,7 +62,19 @@ class SetupViewModel @Inject constructor(
     private fun handlePrevStep() = updateState { s -> s.copy(step = (s.step - 1).coerceAtLeast(1)) }
 
     private fun handleSetGroupName(value: String) = updateState { it.copy(groupName = value) }
-    private fun handleSetTrackerName(value: String) = updateState { it.copy(trackerName = value) }
+    private fun handleSetTrackerName(value: String) {
+        updateState { it.copy(trackerName = value) }
+        launch {
+            val ai = ClearrEdgeAi.parseSetupIntentNanoAware(value)
+            updateState { state ->
+                state.copy(
+                    trackerType = ai.trackerType ?: state.trackerType,
+                    frequency = ai.suggestedFrequency ?: state.frequency,
+                    defaultAmount = ai.suggestedDefaultAmount?.toInt()?.toString() ?: state.defaultAmount
+                )
+            }
+        }
+    }
     private fun handleSetAdminName(value: String) = updateState { it.copy(adminName = value) }
     private fun handleSetAdminPhone(value: String) = updateState { it.copy(adminPhone = value) }
 
@@ -126,7 +139,7 @@ class SetupViewModel @Inject constructor(
             val periodId = repository.insertPeriod(buildCurrentPeriod(trackerId, s.frequency, now))
             repository.setCurrentPeriod(trackerId, periodId)
 
-            if (s.trackerType == TrackerType.DUES && s.loadSampleMembers) {
+            if ((s.trackerType == TrackerType.DUES || s.trackerType == TrackerType.EXPENSES) && s.loadSampleMembers) {
                 SAMPLE_MEMBERS.forEach { name ->
                     repository.insertTrackerMember(
                         TrackerMember(
@@ -173,6 +186,7 @@ class SetupViewModel @Inject constructor(
     }
     private fun defaultTrackerName(type: TrackerType): String = when (type) {
         TrackerType.DUES -> "Remittance"
+        TrackerType.EXPENSES -> "Remittance"
         TrackerType.GOALS -> "Goals Tracker"
         TrackerType.TODO -> "To-do Tracker"
         TrackerType.BUDGET -> "Budget Tracker"

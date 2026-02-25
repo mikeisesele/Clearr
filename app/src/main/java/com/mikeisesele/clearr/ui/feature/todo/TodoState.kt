@@ -12,6 +12,7 @@ data class TodoUiState(
     val todos: List<TodoItem> = emptyList(),
     val displayedTodos: List<TodoItem> = emptyList(),
     val counts: TodoCounts = TodoCounts(),
+    val aiInsight: String? = null,
     val showSwipeHint: Boolean = true,
     val isLoading: Boolean = true
 ) : BaseState

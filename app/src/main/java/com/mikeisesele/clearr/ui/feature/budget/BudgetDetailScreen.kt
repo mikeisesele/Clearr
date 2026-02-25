@@ -86,6 +86,7 @@ fun BudgetDetailScreen(
                 BudgetSummarySection(
                     trackerName = state.trackerName,
                     summary = state.budgetSummary,
+                    aiInsight = state.aiInsight,
                     frequency = state.frequency,
                     periods = state.periods,
                     selectedPeriodId = state.selectedPeriodId,
@@ -154,6 +155,7 @@ fun BudgetDetailScreen(
 private fun BudgetSummarySection(
     trackerName: String,
     summary: com.mikeisesele.clearr.data.model.BudgetSummary,
+    aiInsight: String?,
     frequency: BudgetFrequency,
     periods: List<com.mikeisesele.clearr.data.model.BudgetPeriod>,
     selectedPeriodId: Long?,
@@ -268,6 +270,16 @@ private fun BudgetSummarySection(
                     }
                 }
             }
+        }
+        if (!aiInsight.isNullOrBlank()) {
+            Text(
+                text = aiInsight,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16),
+                color = colors.muted,
+                fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12
+            )
         }
     }
 }

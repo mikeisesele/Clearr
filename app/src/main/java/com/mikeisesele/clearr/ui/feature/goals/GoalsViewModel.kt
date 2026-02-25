@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.goals
 
 import androidx.lifecycle.SavedStateHandle
+import com.mikeisesele.clearr.core.ai.ClearrEdgeAi
 import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.Goal
 import com.mikeisesele.clearr.data.model.GoalCompletion
@@ -69,6 +70,7 @@ class GoalsViewModel @Inject constructor(
             ) { goals, completions ->
                 val summaries = buildGoalSummaries(goals, completions)
                 val doneCount = summaries.count { it.isDoneThisPeriod }
+                val aiInsight = ClearrEdgeAi.goalsInsightNanoAware(summaries)
                 GoalsUiState(
                     trackerId = currentState.trackerId,
                     trackerName = currentState.trackerName,
@@ -76,6 +78,7 @@ class GoalsViewModel @Inject constructor(
                     doneCount = doneCount,
                     totalCount = summaries.size,
                     allDoneThisPeriod = summaries.isNotEmpty() && doneCount == summaries.size,
+                    aiInsight = aiInsight,
                     isLoading = false
                 )
             }.collectLatest { next ->
@@ -151,17 +154,23 @@ class GoalsViewModel @Inject constructor(
         frequency: GoalFrequency
     ) {
         launch {
-            val normalizedTitle = title.normalizeFirstWordCapitalized()
-            if (normalizedTitle.isEmpty()) return@launch
+            val ai = ClearrEdgeAi.inferGoalNanoAware(
+                title = title,
+                target = target,
+                frequency = frequency,
+                emoji = emoji,
+                colorToken = colorToken
+            )
+            if (ai.normalizedTitle.isEmpty()) return@launch
             repository.insertGoal(
                 Goal(
                     id = UUID.randomUUID().toString(),
                     trackerId = currentState.trackerId,
-                    title = normalizedTitle,
-                    emoji = emoji,
-                    colorToken = colorToken,
-                    target = target?.trim()?.ifBlank { null },
-                    frequency = frequency,
+                    title = ai.normalizedTitle,
+                    emoji = ai.suggestedEmoji,
+                    colorToken = ai.suggestedColorToken,
+                    target = ai.suggestedTarget?.ifBlank { null },
+                    frequency = ai.suggestedFrequency,
                     createdAt = System.currentTimeMillis()
                 )
             )
@@ -176,27 +185,10 @@ class GoalsViewModel @Inject constructor(
 
     private fun renameGoal(goalId: String, title: String) {
         launch {
-            val normalizedTitle = title.normalizeFirstWordCapitalized()
+            val normalizedTitle = ClearrEdgeAi.normalizeTitle(title)
             if (normalizedTitle.isBlank()) return@launch
             val existing = currentState.summaries.firstOrNull { it.goal.id == goalId }?.goal ?: return@launch
             repository.insertGoal(existing.copy(title = normalizedTitle))
-        }
-    }
-}
-
-private fun String.normalizeFirstWordCapitalized(): String {
-    val trimmed = trim()
-    if (trimmed.isBlank()) return trimmed
-    return buildString(trimmed.length) {
-        var capitalizedFirstWord = false
-        for (index in trimmed.indices) {
-            val ch = trimmed[index]
-            if (!capitalizedFirstWord && ch.isLetter()) {
-                append(ch.titlecaseChar())
-                capitalizedFirstWord = true
-            } else {
-                append(ch)
-            }
         }
     }
 }

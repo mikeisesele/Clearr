@@ -39,6 +39,7 @@ import com.mikeisesele.clearr.ui.commons.util.currentMonth
 import com.mikeisesele.clearr.ui.commons.util.currentYear
 import com.mikeisesele.clearr.ui.commons.util.formatAmount
 import com.mikeisesele.clearr.ui.commons.util.isFuture
+import com.mikeisesele.clearr.ui.commons.util.redactSensitiveZones
 import com.mikeisesele.clearr.ui.commons.util.saveBitmapToCache
 import com.mikeisesele.clearr.ui.commons.util.shareImageUri
 import com.mikeisesele.clearr.ui.feature.home.components.StatsRow
@@ -136,16 +137,34 @@ fun HomeScreen(
                 layoutStyle = state.layoutStyle,
                 selectedYear = state.selectedYear,
                 dueAmount = dueAmount,
-                showBlurToggle = state.trackerType == com.mikeisesele.clearr.data.model.TrackerType.DUES,
+                showBlurToggle = state.trackerType == com.mikeisesele.clearr.data.model.TrackerType.DUES ||
+                    state.trackerType == com.mikeisesele.clearr.data.model.TrackerType.EXPENSES,
                 blurMemberNames = blurMemberNames,
                 onBlurToggle = { blurMemberNames = !blurMemberNames },
                 onBack = onBack,
                 onLayoutClick = { showLayoutSheet = true },
-                onShareClick = { shareScreenshot(context, view) },
+                onShareClick = {
+                    shareScreenshot(
+                        context,
+                        view,
+                        state.trackerType == com.mikeisesele.clearr.data.model.TrackerType.DUES ||
+                            state.trackerType == com.mikeisesele.clearr.data.model.TrackerType.EXPENSES
+                    )
+                },
                 colors = colors
             )
 
             // ── Stats ─────────────────────────────────────────────────────────
+            state.aiRiskHint?.let { risk ->
+                Text(
+                    text = risk,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6),
+                    color = colors.muted,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
             StatsRow(
                 totalCollected = totalCollected,
                 totalExpected = totalExpected,
@@ -246,7 +265,8 @@ fun HomeScreen(
             payments = state.payments.filter { it.memberId == member.id },
             dueAmount = dueAmount,
             selectedYear = state.selectedYear,
-            showBulkMarkPaid = state.trackerType == com.mikeisesele.clearr.data.model.TrackerType.DUES,
+            showBulkMarkPaid = state.trackerType == com.mikeisesele.clearr.data.model.TrackerType.DUES ||
+                state.trackerType == com.mikeisesele.clearr.data.model.TrackerType.EXPENSES,
             onDismiss = { memberDetail = null },
             onEdit = { editTarget = member; memberDetail = null },
             onArchiveToggle = {
@@ -367,13 +387,15 @@ fun HomeScreen(
 
 private fun shareScreenshot(
     context: android.content.Context,
-    view: android.view.View
+    view: android.view.View,
+    redactSensitive: Boolean
 ) {
     val window = (context as? android.app.Activity)?.window ?: return
     captureViewWithPixelCopy(view, window) { bitmap ->
         if (bitmap != null) {
             try {
-                val uri = saveBitmapToCache(context, bitmap, "dues_tracker_${System.currentTimeMillis()}.png")
+                val processed = if (redactSensitive) redactSensitiveZones(bitmap) else bitmap
+                val uri = saveBitmapToCache(context, processed, "dues_tracker_${System.currentTimeMillis()}.png")
                 shareImageUri(context, uri, "Share Dues Summary")
             } catch (e: Exception) {
                 e.printStackTrace()

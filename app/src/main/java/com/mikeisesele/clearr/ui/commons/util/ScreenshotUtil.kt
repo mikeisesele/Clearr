@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Build
 import android.os.Handler
@@ -75,6 +77,26 @@ fun saveBitmapToCache(
         "${context.packageName}.provider",
         file
     )
+}
+
+/**
+ * Applies a lightweight privacy mask over areas that typically contain names/details
+ * on tracker screens before sharing screenshots.
+ */
+fun redactSensitiveZones(source: Bitmap): Bitmap {
+    val mutable = source.copy(Bitmap.Config.ARGB_8888, true)
+    val canvas = Canvas(mutable)
+    val paint = Paint().apply {
+        color = 0xAAFFFFFF.toInt()
+        style = Paint.Style.FILL
+        isAntiAlias = true
+    }
+    val left = (mutable.width * 0.06f).toInt()
+    val right = (mutable.width * 0.78f).toInt()
+    val top = (mutable.height * 0.24f).toInt()
+    val bottom = (mutable.height * 0.84f).toInt()
+    canvas.drawRect(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat(), paint)
+    return mutable
 }
 
 /**

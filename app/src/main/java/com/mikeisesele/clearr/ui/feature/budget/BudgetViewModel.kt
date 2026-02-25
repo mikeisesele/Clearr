@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.budget
 
 import androidx.lifecycle.SavedStateHandle
+import com.mikeisesele.clearr.core.ai.ClearrEdgeAi
 import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.BudgetCategory
 import com.mikeisesele.clearr.data.model.BudgetEntry
@@ -92,12 +93,14 @@ class BudgetViewModel @Inject constructor(
                         entries = slice.entries,
                         periodId = selectedPeriod
                     )
+                    val aiInsight = ClearrEdgeAi.budgetInsightNanoAware(summaries)
                     updateState {
                         it.copy(
                             frequency = slice.frequency,
                             periods = slice.periods,
                             selectedPeriodId = selectedPeriod,
                             categorySummaries = summaries,
+                            aiInsight = aiInsight,
                             budgetSummary = computeBudgetSummary(summaries),
                             isLoading = false
                         )
@@ -140,10 +143,15 @@ class BudgetViewModel @Inject constructor(
             val periodId = currentState.selectedPeriodId ?: return@launch
             val kobo = nairaToKobo(amountNaira)
             if (kobo <= 0L) return@launch
+            val suggestedCategoryId = ClearrEdgeAi.inferBudgetCategoryIdNanoAware(
+                note = note,
+                categories = currentState.categorySummaries.map { it.category }
+            )
+            val resolvedCategoryId = suggestedCategoryId ?: categoryId
             repository.addBudgetEntry(
                 BudgetEntry(
                     trackerId = currentState.trackerId,
-                    categoryId = categoryId,
+                    categoryId = resolvedCategoryId,
                     periodId = periodId,
                     amountKobo = kobo,
                     note = note?.trim()?.ifBlank { null },
