@@ -16,6 +16,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlin.math.roundToLong
 import javax.inject.Inject
@@ -112,7 +113,12 @@ class BudgetViewModel @Inject constructor(
 
     private suspend fun ensureBudgetFrequencySeeded(frequency: BudgetFrequency) {
         repository.ensureBudgetPeriods(currentState.trackerId, frequency)
-        if (repository.getBudgetMaxSortOrder(currentState.trackerId, frequency) >= 0) return
+        val existingCategories = repository.getBudgetCategories(currentState.trackerId, frequency).first()
+        if (existingCategories.isNotEmpty()) {
+            normalizeLegacySeededBudgetAmounts(existingCategories)
+            return
+        }
+
         defaultCategoryPresets.forEachIndexed { index, preset ->
             repository.addBudgetCategory(
                 BudgetCategory(
@@ -125,6 +131,19 @@ class BudgetViewModel @Inject constructor(
                     sortOrder = index
                 )
             )
+        }
+    }
+
+    /**
+     * One-time cleanup for previously seeded fake amounts so default categories start at 0.
+     * Only legacy preset amounts are normalized; user-entered values are preserved.
+     */
+    private suspend fun normalizeLegacySeededBudgetAmounts(existingCategories: List<BudgetCategory>) {
+        existingCategories.forEach { category ->
+            val legacyAmount = legacySeededAmountByName[category.name] ?: return@forEach
+            if (category.plannedAmountKobo == legacyAmount) {
+                repository.updateBudgetCategory(category.copy(plannedAmountKobo = 0L))
+            }
         }
     }
 
@@ -254,6 +273,15 @@ class BudgetViewModel @Inject constructor(
             CategoryPreset("Savings", "💰", "Teal", 0L),
             CategoryPreset("Entertainment", "🎬", "Purple", 0L),
             CategoryPreset("Health", "💊", "Teal", 0L)
+        )
+
+        val legacySeededAmountByName = mapOf(
+            "Housing" to 150_000_00L,
+            "Food" to 60_000_00L,
+            "Transport" to 30_000_00L,
+            "Savings" to 50_000_00L,
+            "Entertainment" to 20_000_00L,
+            "Health" to 15_000_00L
         )
     }
 }

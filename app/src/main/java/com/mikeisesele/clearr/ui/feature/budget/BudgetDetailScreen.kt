@@ -27,7 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,6 +44,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -53,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,6 +62,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.text.KeyboardOptions
 import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.BudgetStatus
 import com.mikeisesele.clearr.data.model.BudgetSummary
@@ -420,13 +423,15 @@ private fun BudgetCategoryTable(
         ) {
             Column {
                 summaries.forEachIndexed { index, summary ->
-                    SwipeableBudgetCategoryRow(
-                        summary = summary,
-                        colors = colors,
-                        onTap = { onCategoryTap(summary) },
-                        onDelete = { onCategoryDelete(summary.category.id) },
-                        isLast = index == summaries.lastIndex
-                    )
+                    key(summary.category.id) {
+                        SwipeableBudgetCategoryRow(
+                            summary = summary,
+                            colors = colors,
+                            onTap = { onCategoryTap(summary) },
+                            onDelete = { onCategoryDelete(summary.category.id) },
+                            isLast = index == summaries.lastIndex
+                        )
+                    }
                 }
             }
         }
@@ -495,16 +500,7 @@ private fun SwipeableBudgetCategoryRow(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(colors.red)
-                    .padding(horizontal = ClearrDimens.dp20),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = ClearrColors.Surface,
-                    modifier = Modifier.size(ClearrDimens.dp22)
-                )
-            }
+            )
         }
     ) {
         BudgetCategoryRow(
@@ -550,6 +546,7 @@ private fun BudgetCategoryRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(colors.surface)
             .clickable { onClick() }
             .padding(horizontal = ClearrDimens.dp12, vertical = ClearrDimens.dp11),
         verticalAlignment = Alignment.CenterVertically,
@@ -640,21 +637,37 @@ fun LogExpenseDialog(
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(onClick = onDismiss) { Text("Cancel", color = colors.muted) }
-                        Text("Log Expense", fontWeight = FontWeight.Bold, fontSize = ClearrTextSizes.sp16, color = colors.text)
-                        TextButton(
-                            onClick = { selectedCategory?.let { onSave(it, amountNaira, note.ifBlank { null }) } },
-                            enabled = canSave
+                        Spacer(Modifier.size(ClearrDimens.dp34))
+                        Text(
+                            "Log Expense",
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = ClearrTextSizes.sp16,
+                            color = colors.text
+                        )
+                        Surface(
+                            modifier = Modifier
+                                .size(ClearrDimens.dp34)
+                                .clickable { onDismiss() },
+                            shape = RoundedCornerShape(ClearrDimens.dp10),
+                            color = colors.card
                         ) {
-                            Text("Save", color = if (canSave) colors.green else colors.muted, fontWeight = FontWeight.Bold)
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Close",
+                                    tint = colors.muted
+                                )
+                            }
                         }
                     }
+                    Spacer(Modifier.height(ClearrDimens.dp10))
 
                     Surface(
-                        color = colors.bg,
+                        color = colors.card,
                         shape = RoundedCornerShape(ClearrDimens.dp16),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -681,6 +694,7 @@ fun LogExpenseDialog(
                                     value = amount,
                                     onValueChange = { amount = it.filter { ch -> ch.isDigit() } },
                                     modifier = Modifier.width(180.dp),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     textStyle = MaterialTheme.typography.headlineLarge.copy(
                                         textAlign = TextAlign.Center,
                                         color = colors.text,
@@ -746,7 +760,7 @@ fun LogExpenseDialog(
                                         cat.category.name,
                                         fontSize = ClearrTextSizes.sp13,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = if (active) ClearrColors.Surface else colors.text
+                                        color = if (active) ClearrColors.Surface else tk.color
                                     )
                                 }
                             }
@@ -781,7 +795,7 @@ fun LogExpenseDialog(
                             containerColor = colors.green,
                             disabledContainerColor = colors.border
                         ),
-                        contentPadding = PaddingValues(vertical = ClearrDimens.dp14)
+                        contentPadding = PaddingValues(vertical = ClearrDimens.dp16)
                     ) {
                         Text(
                             text = if (canSave) {
@@ -943,30 +957,37 @@ private fun AddCategoryDetailDialog(
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(onClick = onDismiss) { Text("Cancel", color = colors.muted) }
+                        Spacer(Modifier.size(ClearrDimens.dp34))
                         Text(
                             "Category Details",
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold,
                             fontSize = ClearrTextSizes.sp16,
                             color = colors.text
                         )
-                        TextButton(
-                            onClick = { onAdd(name.trim(), amountNaira) },
-                            enabled = canAdd
+                        Surface(
+                            modifier = Modifier
+                                .size(ClearrDimens.dp34)
+                                .clickable { onDismiss() },
+                            shape = RoundedCornerShape(ClearrDimens.dp10),
+                            color = colors.card
                         ) {
-                            Text(
-                                "Add",
-                                color = if (canAdd) colors.accent else colors.muted,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Close",
+                                    tint = colors.muted
+                                )
+                            }
                         }
                     }
+                    Spacer(Modifier.height(ClearrDimens.dp10))
 
                     Surface(
-                        color = token.background,
+                        color = colors.card,
                         shape = RoundedCornerShape(ClearrDimens.dp16),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -978,7 +999,7 @@ private fun AddCategoryDetailDialog(
                             horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp12)
                         ) {
                             Surface(
-                                color = colors.surface,
+                                color = token.background,
                                 shape = RoundedCornerShape(ClearrDimens.dp12),
                                 modifier = Modifier.size(ClearrDimens.dp44)
                             ) {
@@ -1022,8 +1043,27 @@ private fun AddCategoryDetailDialog(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(ClearrDimens.dp10),
-                        leadingIcon = { Text("₦", fontWeight = FontWeight.Bold, color = colors.muted) }
+                        leadingIcon = { Text("₦", fontWeight = FontWeight.Bold, color = colors.muted) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
+                    Spacer(Modifier.height(ClearrDimens.dp16))
+                    Button(
+                        onClick = { onAdd(name.trim(), amountNaira) },
+                        enabled = canAdd,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(ClearrDimens.dp14),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.accent,
+                            disabledContainerColor = colors.border
+                        ),
+                        contentPadding = PaddingValues(vertical = ClearrDimens.dp16)
+                    ) {
+                        Text(
+                            "Add",
+                            color = ClearrColors.Surface,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

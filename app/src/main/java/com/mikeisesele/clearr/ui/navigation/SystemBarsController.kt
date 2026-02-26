@@ -9,13 +9,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import com.mikeisesele.clearr.ui.theme.ClearrColors
 
 @Composable
 internal fun ApplySystemBars(darkIcons: Boolean) {
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() as? ComponentActivity }
     val transparent = android.graphics.Color.TRANSPARENT
+    val lightNav = ClearrColors.BrandBackground.toArgb()
+    val darkNav = ClearrColors.DarkBackground.toArgb()
 
     DisposableEffect(activity, darkIcons) {
         activity?.enableEdgeToEdge(
@@ -25,9 +29,9 @@ internal fun ApplySystemBars(darkIcons: Boolean) {
                 SystemBarStyle.dark(transparent)
             },
             navigationBarStyle = if (darkIcons) {
-                SystemBarStyle.light(transparent, transparent)
+                SystemBarStyle.light(lightNav, lightNav)
             } else {
-                SystemBarStyle.dark(transparent)
+                SystemBarStyle.dark(darkNav)
             }
         )
         onDispose {}
