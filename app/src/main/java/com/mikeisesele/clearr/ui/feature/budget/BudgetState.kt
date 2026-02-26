@@ -30,6 +30,7 @@ sealed interface BudgetAction {
     data class SetFrequency(val frequency: BudgetFrequency) : BudgetAction
     data class SelectPeriod(val periodId: Long) : BudgetAction
     data class LogExpense(val categoryId: Long, val amountNaira: Double, val note: String?) : BudgetAction
+    data class DeleteCategory(val categoryId: Long) : BudgetAction
     data class AddCategory(
         val name: String,
         val icon: String,

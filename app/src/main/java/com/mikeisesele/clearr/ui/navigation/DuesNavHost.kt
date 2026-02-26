@@ -17,6 +17,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
+import com.mikeisesele.clearr.ui.feature.budget.AddBudgetCategoryScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetDetailScreen
 import com.mikeisesele.clearr.ui.feature.goals.AddGoalScreen
 import com.mikeisesele.clearr.ui.feature.goals.GoalsDetailScreen
@@ -219,7 +220,8 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                 } else if (detailState.trackerType == TrackerType.BUDGET) {
                     BudgetDetailScreen(
                         trackerId = trackerId,
-                        onNavigateBack = { navController.popBackStack() }
+                        onNavigateBack = { navController.popBackStack() },
+                        onAddCategory = { navController.navigate(NavRoutes.BudgetAddCategory.createRoute(trackerId)) }
                     )
                 } else if (detailState.trackerType == TrackerType.TODO) {
                     TodoDetailScreen(
@@ -258,6 +260,17 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
             ) { backStackEntry ->
                 val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
                 AddGoalScreen(
+                    trackerId = trackerId,
+                    onClose = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = NavRoutes.BudgetAddCategory.route,
+                arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                AddBudgetCategoryScreen(
                     trackerId = trackerId,
                     onClose = { navController.popBackStack() }
                 )

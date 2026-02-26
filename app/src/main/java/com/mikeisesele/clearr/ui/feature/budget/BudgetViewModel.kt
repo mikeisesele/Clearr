@@ -40,6 +40,7 @@ class BudgetViewModel @Inject constructor(
             is BudgetAction.SetFrequency -> setFrequency(action.frequency)
             is BudgetAction.SelectPeriod -> updateState { it.copy(selectedPeriodId = action.periodId) }
             is BudgetAction.LogExpense -> logExpense(action.categoryId, action.amountNaira, action.note)
+            is BudgetAction.DeleteCategory -> deleteCategory(action.categoryId)
             is BudgetAction.AddCategory -> addCategory(
                 name = action.name,
                 icon = action.icon,
@@ -164,7 +165,7 @@ class BudgetViewModel @Inject constructor(
     private fun addCategory(name: String, icon: String, colorToken: String, plannedAmountNaira: Double) {
         launch {
             val plannedKobo = nairaToKobo(plannedAmountNaira)
-            if (name.isBlank() || plannedKobo <= 0L) return@launch
+            if (name.isBlank() || plannedKobo < 0L) return@launch
             val sortOrder = repository.getBudgetMaxSortOrder(currentState.trackerId, currentState.frequency) + 1
             repository.addBudgetCategory(
                 BudgetCategory(
@@ -178,6 +179,12 @@ class BudgetViewModel @Inject constructor(
                     createdAt = System.currentTimeMillis()
                 )
             )
+        }
+    }
+
+    private fun deleteCategory(categoryId: Long) {
+        launch {
+            repository.deleteBudgetCategory(categoryId)
         }
     }
 
@@ -241,12 +248,12 @@ class BudgetViewModel @Inject constructor(
 
     private companion object {
         val defaultCategoryPresets = listOf(
-            CategoryPreset("Housing", "🏠", "Violet", 150_000_00),
-            CategoryPreset("Food", "🍔", "Orange", 60_000_00),
-            CategoryPreset("Transport", "🚗", "Blue", 30_000_00),
-            CategoryPreset("Savings", "💰", "Teal", 50_000_00),
-            CategoryPreset("Entertainment", "🎬", "Purple", 20_000_00),
-            CategoryPreset("Health", "💊", "Teal", 15_000_00)
+            CategoryPreset("Housing", "🏠", "Violet", 0L),
+            CategoryPreset("Food", "🍔", "Orange", 0L),
+            CategoryPreset("Transport", "🚗", "Blue", 0L),
+            CategoryPreset("Savings", "💰", "Teal", 0L),
+            CategoryPreset("Entertainment", "🎬", "Purple", 0L),
+            CategoryPreset("Health", "💊", "Teal", 0L)
         )
     }
 }
