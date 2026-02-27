@@ -2,6 +2,7 @@ package com.mikeisesele.clearr.ui.feature.budget
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -611,6 +612,7 @@ fun LogExpenseDialog(
     var selectedCategory by remember { mutableStateOf(preselectedCategory) }
     val amountNaira = amount.toDoubleOrNull() ?: 0.0
     val canSave = amountNaira > 0.0 && selectedCategory != null
+    val hasAmount = amountNaira > 0.0
 
     BackHandler(onBack = onDismiss)
     Dialog(
@@ -635,6 +637,7 @@ fun LogExpenseDialog(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp12)
                 ) {
+                    // ── Header ──────────────────────────────────────────────
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -664,39 +667,99 @@ fun LogExpenseDialog(
                             }
                         }
                     }
+
                     Spacer(Modifier.height(ClearrDimens.dp10))
+
+                    // ── THEO LAYOUT: Amount card ─────────────────────────────
+                    // Selected category color for accent — falls back to muted
+                    val tk = selectedCategory?.let { ClearrColors.fromToken(it.category.colorToken) }
 
                     Surface(
                         color = colors.card,
                         shape = RoundedCornerShape(ClearrDimens.dp16),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        border = tk?.let {
+                            BorderStroke(
+                                width = 1.5.dp,
+                                color = it.color.copy(alpha = 0.25f)
+                            )
+                        }
                     ) {
                         Column(
-                            modifier = Modifier.padding(ClearrDimens.dp20),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier.padding(ClearrDimens.dp16)
                         ) {
-                            Text(
-                                "AMOUNT",
-                                fontSize = ClearrTextSizes.sp11,
-                                fontWeight = FontWeight.Bold,
-                                color = colors.muted,
-                                letterSpacing = 0.8.sp
-                            )
-                            Spacer(Modifier.height(ClearrDimens.dp12))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Row: "AMOUNT" label  ←→  selected category badge
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
                                 Text(
-                                    "₦",
-                                    fontSize = ClearrTextSizes.sp32,
+                                    "AMOUNT",
+                                    fontSize = ClearrTextSizes.sp11,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (amount.isBlank()) colors.muted else colors.text
+                                    color = colors.muted,
+                                    letterSpacing = 0.8.sp
                                 )
+                                // Category badge — only shown when one is selected
+                                selectedCategory?.let { cat ->
+                                    val catTk = ClearrColors.fromToken(cat.category.colorToken)
+                                    Surface(
+                                        color = catTk.background,
+                                        shape = RoundedCornerShape(ClearrDimens.dp99)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(
+                                                horizontal = ClearrDimens.dp10,
+                                                vertical = ClearrDimens.dp5
+                                            ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp5)
+                                        ) {
+                                            Text(cat.category.icon, fontSize = ClearrTextSizes.sp13)
+                                            Text(
+                                                cat.category.name,
+                                                fontSize = ClearrTextSizes.sp12,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = catTk.color
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(Modifier.height(ClearrDimens.dp14))
+
+                            // Row: ₦ icon tile + amount input
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp10)
+                            ) {
+                                // Naira icon tile — lights up with category accent when amount entered
+                                Surface(
+                                    shape = RoundedCornerShape(ClearrDimens.dp14),
+                                    color = if (hasAmount && tk != null)
+                                        tk.color.copy(alpha = 0.15f)
+                                    else
+                                        colors.surface,
+                                    modifier = Modifier.size(ClearrDimens.dp44)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            "₦",
+                                            fontSize = ClearrTextSizes.sp20,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (hasAmount && tk != null) tk.color else colors.muted
+                                        )
+                                    }
+                                }
+
                                 OutlinedTextField(
                                     value = amount,
                                     onValueChange = { amount = it.filter { ch -> ch.isDigit() } },
-                                    modifier = Modifier.width(180.dp),
+                                    modifier = Modifier.weight(1f),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     textStyle = MaterialTheme.typography.headlineLarge.copy(
-                                        textAlign = TextAlign.Center,
                                         color = colors.text,
                                         fontWeight = FontWeight.Black,
                                         letterSpacing = (-1).sp
@@ -704,8 +767,6 @@ fun LogExpenseDialog(
                                     placeholder = {
                                         Text(
                                             "0",
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.fillMaxWidth(),
                                             fontSize = 44.sp,
                                             color = colors.muted
                                         )
@@ -717,22 +778,50 @@ fun LogExpenseDialog(
                                     )
                                 )
                             }
+
+                            // Over-budget banner — only shown when category selected
+
                             selectedCategory?.let { cat ->
-                                Spacer(Modifier.height(ClearrDimens.dp4))
-                                Text(
-                                    text = buildString {
-                                        append("into ${cat.category.name}")
-                                        if (cat.remainingAmountKobo > 0) append(" · ${formatKobo(cat.remainingAmountKobo)} remaining")
-                                        else append(" · over budget")
-                                    },
-                                    fontSize = ClearrTextSizes.sp12,
-                                    color = colors.muted
-                                )
+                                val isOverBudget = cat.remainingAmountKobo <= 0
+                                Spacer(Modifier.height(ClearrDimens.dp12))
+                                Surface(
+                                    color = if (isOverBudget)
+                                        ClearrColors.BrandDanger.copy(alpha = 0.12f)
+                                    else
+                                        colors.green.copy(alpha = 0.10f),
+                                    shape = RoundedCornerShape(ClearrDimens.dp10),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(
+                                            horizontal = ClearrDimens.dp12,
+                                            vertical = ClearrDimens.dp8
+                                        ),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp8)
+                                    ) {
+                                        Text(
+                                            if (isOverBudget) "⚠️" else "✅",
+                                            fontSize = ClearrTextSizes.sp13
+                                        )
+                                        Text(
+                                            text = if (isOverBudget)
+                                                "over budget in ${cat.category.name}"
+                                            else
+                                                "${formatKobo(cat.remainingAmountKobo)} remaining in ${cat.category.name}",
+                                            fontSize = ClearrTextSizes.sp12,
+                                            color = if (isOverBudget) ClearrColors.BrandDanger else colors.green
+                                        )
+                                    }
+                                }
+
                             }
                         }
                     }
 
                     Spacer(Modifier.height(ClearrDimens.dp16))
+
+                    // ── CATEGORY chips (unchanged behaviour, same style) ──────
                     Text(
                         "CATEGORY",
                         fontSize = ClearrTextSizes.sp11,
@@ -743,15 +832,18 @@ fun LogExpenseDialog(
                     Spacer(Modifier.height(ClearrDimens.dp10))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp8)) {
                         items(allCategories, key = { it.category.id }) { cat ->
-                            val tk = ClearrColors.fromToken(cat.category.colorToken)
+                            val catTk = ClearrColors.fromToken(cat.category.colorToken)
                             val active = selectedCategory?.category?.id == cat.category.id
                             Surface(
-                                color = if (active) tk.color else tk.background,
+                                color = if (active) catTk.color else catTk.background,
                                 shape = RoundedCornerShape(ClearrDimens.dp99),
                                 modifier = Modifier.clickable { selectedCategory = cat }
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = ClearrDimens.dp12, vertical = ClearrDimens.dp7),
+                                    modifier = Modifier.padding(
+                                        horizontal = ClearrDimens.dp12,
+                                        vertical = ClearrDimens.dp7
+                                    ),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp6)
                                 ) {
@@ -760,7 +852,7 @@ fun LogExpenseDialog(
                                         cat.category.name,
                                         fontSize = ClearrTextSizes.sp13,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = if (active) ClearrColors.Surface else tk.color
+                                        color = if (active) ClearrColors.Surface else catTk.color
                                     )
                                 }
                             }
@@ -768,6 +860,8 @@ fun LogExpenseDialog(
                     }
 
                     Spacer(Modifier.height(ClearrDimens.dp16))
+
+                    // ── Note ─────────────────────────────────────────────────
                     Text(
                         "NOTE (OPTIONAL)",
                         fontSize = ClearrTextSizes.sp11,
@@ -786,8 +880,12 @@ fun LogExpenseDialog(
                     )
 
                     Spacer(Modifier.height(ClearrDimens.dp16))
+
+                    // ── CTA ──────────────────────────────────────────────────
                     Button(
-                        onClick = { selectedCategory?.let { onSave(it, amountNaira, note.ifBlank { null }) } },
+                        onClick = {
+                            selectedCategory?.let { onSave(it, amountNaira, note.ifBlank { null }) }
+                        },
                         enabled = canSave,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(ClearrDimens.dp14),
