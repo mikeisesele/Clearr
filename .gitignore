@@ -2,25 +2,8 @@
 .gradle
 /local.properties
 
-# Android Studio IDE files — keep only gradle.xml, vcs.xml, runConfigurations.xml
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-/.idea/deploymentTargetDropDown.xml
-/.idea/deploymentTargetSelector.xml
-/.idea/deviceManager.xml
-/.idea/migrations.xml
-/.idea/misc.xml
-/.idea/kotlinc.xml
-/.idea/compiler.xml
-/.idea/inspectionProfiles
-/.idea/material_theme_project_new.xml
-/.idea/AndroidProjectSystem.xml
-/.idea/copilot.data.migration.agent.xml
-/.idea/firebender
+# Android Studio IDE files (machine-local)
+/.idea/
 
 # Build outputs
 .DS_Store
