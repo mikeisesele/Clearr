@@ -45,6 +45,7 @@ import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 fun RemittanceHomeScreen(
     onTrackerClick: (Long) -> Unit,
     onCreateRemittance: () -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: TrackerListViewModel = hiltViewModel()
 ) {
     val colors = LocalDuesColors.current
@@ -66,7 +67,12 @@ fun RemittanceHomeScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            ClearrTopBar(title = "Remittance", showLeading = false)
+            ClearrTopBar(
+                title = "Remittance",
+                showLeading = false,
+                actionIcon = "⚙",
+                onActionClick = onOpenSettings
+            )
 
             if (state.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

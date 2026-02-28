@@ -165,11 +165,11 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     selectedItem = currentRoute?.toBottomNavItem(),
                     onSelect = { item ->
                         when (item) {
-                            AppBottomNavItem.REMITTANCE -> navController.navigateTopLevel(NavRoutes.RemittanceHome.route)
-                            AppBottomNavItem.SETTINGS -> navController.navigateTopLevel(NavRoutes.Settings.route)
+                            AppBottomNavItem.HOME -> navController.navigateTopLevel(NavRoutes.Dashboard.route)
                             AppBottomNavItem.BUDGET -> shellState.budgetTrackerId?.let { navController.navigateTopLevel(NavRoutes.BudgetRoot.createRoute(it)) }
                             AppBottomNavItem.TODOS -> shellState.todoTrackerId?.let { navController.navigateTopLevel(NavRoutes.TodoRoot.createRoute(it)) }
                             AppBottomNavItem.GOALS -> shellState.goalsTrackerId?.let { navController.navigateTopLevel(NavRoutes.GoalsRoot.createRoute(it)) }
+                            AppBottomNavItem.REMITTANCE -> navController.navigateTopLevel(NavRoutes.RemittanceHome.route)
                         }
                     }
                 )
@@ -198,7 +198,8 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                         onTrackerClick = { trackerId ->
                             navController.navigate(NavRoutes.TrackerDetail.createRoute(trackerId))
                         },
-                        onCreateRemittance = { navController.navigate(NavRoutes.Setup.route) }
+                        onCreateRemittance = { navController.navigate(NavRoutes.Setup.route) },
+                        onOpenSettings = { navController.navigate(NavRoutes.Settings.route) }
                     )
                 }
 
@@ -337,11 +338,11 @@ private fun String?.isTopLevelNonDashboardRoute(): Boolean = when {
 }
 
 private fun String.toBottomNavItem(): AppBottomNavItem? = when {
-    this == NavRoutes.RemittanceHome.route -> AppBottomNavItem.REMITTANCE
-    this == NavRoutes.Settings.route -> AppBottomNavItem.SETTINGS
+    this == NavRoutes.Dashboard.route -> AppBottomNavItem.HOME
     this.startsWith(NavRoutes.BudgetRoot.baseRoute) -> AppBottomNavItem.BUDGET
     this.startsWith(NavRoutes.TodoRoot.baseRoute) -> AppBottomNavItem.TODOS
     this.startsWith(NavRoutes.GoalsRoot.baseRoute) -> AppBottomNavItem.GOALS
+    this == NavRoutes.RemittanceHome.route -> AppBottomNavItem.REMITTANCE
     else -> null
 }
 
@@ -360,7 +361,6 @@ private fun String?.isBottomNavRoute(): Boolean = when {
     this == null -> false
     this == NavRoutes.Dashboard.route -> true
     this == NavRoutes.RemittanceHome.route -> true
-    this == NavRoutes.Settings.route -> true
     this.startsWith(NavRoutes.BudgetRoot.baseRoute) -> true
     this.startsWith(NavRoutes.TodoRoot.baseRoute) -> true
     this.startsWith(NavRoutes.GoalsRoot.baseRoute) -> true

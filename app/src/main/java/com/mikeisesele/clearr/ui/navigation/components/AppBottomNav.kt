@@ -5,8 +5,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -22,11 +22,11 @@ internal enum class AppBottomNavItem(
     val label: String,
     val icon: ImageVector
 ) {
-    REMITTANCE("Remittance", Icons.Filled.Payments),
+    HOME("Home", Icons.Filled.Home),
     BUDGET("Budget", Icons.Filled.AccountBalanceWallet),
     TODOS("Todos", Icons.Filled.Checklist),
     GOALS("Goals", Icons.Filled.CheckCircle),
-    SETTINGS("Settings", Icons.Filled.Settings)
+    REMITTANCE("Remittance", Icons.Filled.Payments)
 }
 
 @Composable

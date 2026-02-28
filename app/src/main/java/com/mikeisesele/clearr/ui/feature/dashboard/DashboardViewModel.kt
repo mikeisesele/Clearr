@@ -3,6 +3,7 @@ package com.mikeisesele.clearr.ui.feature.dashboard
 import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
 import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
+import com.mikeisesele.clearr.ui.feature.dashboard.utils.primarySummaryOf
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.previewEmptyDashboardUi
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.toDashboardUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +23,16 @@ class DashboardViewModel @Inject constructor(
             trackerBootstrapper.ensureStaticTrackers()
             observeTrackerSummaries().collectLatest { summaries ->
                 updateState { state ->
-                    val model = summaries.toDashboardUiModel()
+                    val model = listOfNotNull(
+                        summaries.primarySummaryOf(com.mikeisesele.clearr.data.model.TrackerType.BUDGET),
+                        summaries.primarySummaryOf(com.mikeisesele.clearr.data.model.TrackerType.GOALS),
+                        summaries.primarySummaryOf(com.mikeisesele.clearr.data.model.TrackerType.TODO)
+                    ).plus(
+                        summaries.filter {
+                            it.type == com.mikeisesele.clearr.data.model.TrackerType.DUES ||
+                                it.type == com.mikeisesele.clearr.data.model.TrackerType.EXPENSES
+                        }
+                    ).toDashboardUiModel()
                     state.copy(
                         model = model.copy(urgencyItems = model.urgencyItems.filterNot { it.id in state.dismissedUrgencyIds }),
                         isLoading = false

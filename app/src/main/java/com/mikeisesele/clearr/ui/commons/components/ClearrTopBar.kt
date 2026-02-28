@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
@@ -42,16 +44,21 @@ fun ClearrTopBar(
     modifier: Modifier = Modifier
 ) {
     val colors = LocalDuesColors.current
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(colors.surface)
+    Surface(
+        color = colors.surface,
+        shadowElevation = ClearrDimens.dp2,
+        modifier = modifier.fillMaxWidth()
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colors.surface)
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp10),
+                .padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp8),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -119,12 +126,20 @@ fun ClearrTopBar(
                     color = actionContainerColor
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            actionIcon,
-                            fontSize = ClearrTextSizes.sp18,
-                            color = colors.surface,
-                            fontWeight = FontWeight.Bold
-                        )
+                        if (actionIcon == "⚙" || actionIcon == "⚙️") {
+                            Icon(
+                                imageVector = Icons.Filled.Settings,
+                                contentDescription = "Settings",
+                                tint = colors.text
+                            )
+                        } else {
+                            Text(
+                                actionIcon,
+                                fontSize = ClearrTextSizes.sp18,
+                                color = colors.text,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             } else {
@@ -132,5 +147,6 @@ fun ClearrTopBar(
             }
         }
         HorizontalDivider(color = colors.border)
+        }
     }
 }

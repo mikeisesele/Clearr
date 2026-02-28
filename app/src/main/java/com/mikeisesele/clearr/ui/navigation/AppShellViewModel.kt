@@ -3,18 +3,19 @@ package com.mikeisesele.clearr.ui.navigation
 import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.core.base.contract.BaseState
 import com.mikeisesele.clearr.core.base.contract.ViewEvent
-import com.mikeisesele.clearr.data.model.Tracker
+import com.mikeisesele.clearr.data.model.TrackerSummary
 import com.mikeisesele.clearr.data.model.TrackerType
-import com.mikeisesele.clearr.domain.repository.DuesRepository
+import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
 import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
+import com.mikeisesele.clearr.ui.feature.dashboard.utils.primarySummaryOf
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 
 @HiltViewModel
 class AppShellViewModel @Inject constructor(
-    private val repository: DuesRepository,
-    private val trackerBootstrapper: TrackerBootstrapper
+    private val trackerBootstrapper: TrackerBootstrapper,
+    private val observeTrackerSummaries: ObserveTrackerSummariesUseCase
 ) : BaseViewModel<AppShellUiState, AppShellAction, AppShellEvent>(
     initialState = AppShellUiState(isLoading = true)
 ) {
@@ -32,14 +33,14 @@ class AppShellViewModel @Inject constructor(
     private fun observeTrackers() {
         launch {
             trackerBootstrapper.ensureStaticTrackers()
-            repository.getAllTrackers().collectLatest { trackers ->
+            observeTrackerSummaries().collectLatest { summaries ->
                 updateState {
                     it.copy(
-                        budgetTrackerId = trackers.firstIdOf(TrackerType.BUDGET),
-                        todoTrackerId = trackers.firstIdOf(TrackerType.TODO),
-                        goalsTrackerId = trackers.firstIdOf(TrackerType.GOALS),
-                        remittanceCount = trackers.count { tracker ->
-                            tracker.type == TrackerType.DUES || tracker.type == TrackerType.EXPENSES
+                        budgetTrackerId = summaries.primarySummaryOf(TrackerType.BUDGET)?.trackerId,
+                        todoTrackerId = summaries.primarySummaryOf(TrackerType.TODO)?.trackerId,
+                        goalsTrackerId = summaries.primarySummaryOf(TrackerType.GOALS)?.trackerId,
+                        remittanceCount = summaries.count { summary ->
+                            summary.type == TrackerType.DUES || summary.type == TrackerType.EXPENSES
                         },
                         isLoading = false
                     )
@@ -62,6 +63,3 @@ sealed interface AppShellAction {
 }
 
 sealed interface AppShellEvent : ViewEvent
-
-private fun List<Tracker>.firstIdOf(type: TrackerType): Long? =
-    firstOrNull { tracker -> tracker.type == type }?.id
