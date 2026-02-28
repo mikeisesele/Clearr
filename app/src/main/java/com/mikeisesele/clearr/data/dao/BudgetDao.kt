@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
 import com.mikeisesele.clearr.data.model.BudgetEntry
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.BudgetPeriod
@@ -46,6 +47,27 @@ interface BudgetDao {
 
     @Query("SELECT * FROM budget_entries WHERE trackerId = :trackerId ORDER BY loggedAt ASC")
     fun getEntriesForTracker(trackerId: Long): Flow<List<BudgetEntry>>
+
+    @Query("SELECT * FROM budget_category_plans WHERE trackerId = :trackerId ORDER BY createdAt ASC")
+    fun getCategoryPlansForTracker(trackerId: Long): Flow<List<BudgetCategoryPlan>>
+
+    @Query("SELECT * FROM budget_category_plans WHERE periodId = :periodId ORDER BY createdAt ASC")
+    suspend fun getCategoryPlansForPeriod(periodId: Long): List<BudgetCategoryPlan>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCategoryPlan(plan: BudgetCategoryPlan): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCategoryPlans(plans: List<BudgetCategoryPlan>)
+
+    @Query("DELETE FROM budget_category_plans WHERE periodId = :periodId")
+    suspend fun deleteCategoryPlansForPeriod(periodId: Long)
+
+    @Query("DELETE FROM budget_category_plans WHERE categoryId = :categoryId")
+    suspend fun deleteCategoryPlansByCategory(categoryId: Long)
+
+    @Query("DELETE FROM budget_category_plans WHERE trackerId = :trackerId")
+    suspend fun deleteCategoryPlansByTracker(trackerId: Long)
 
     @Query("SELECT * FROM budget_entries WHERE periodId = :periodId ORDER BY loggedAt ASC")
     fun getEntriesForPeriod(periodId: Long): Flow<List<BudgetEntry>>

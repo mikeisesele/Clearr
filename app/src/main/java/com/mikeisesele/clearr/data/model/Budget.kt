@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.data.model
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 enum class BudgetFrequency {
@@ -43,6 +44,20 @@ data class BudgetEntry(
     val amountKobo: Long,
     val note: String? = null,
     val loggedAt: Long = System.currentTimeMillis()
+)
+
+@Entity(
+    tableName = "budget_category_plans",
+    indices = [Index(value = ["categoryId", "periodId"], unique = true)]
+)
+data class BudgetCategoryPlan(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val trackerId: Long,
+    val categoryId: Long,
+    val periodId: Long,
+    val plannedAmountKobo: Long,
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 enum class BudgetStatus {

@@ -13,6 +13,7 @@ import com.mikeisesele.clearr.data.dao.YearConfigDao
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.BudgetCategory
 import com.mikeisesele.clearr.data.model.BudgetEntry
+import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
 import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.Member
 import com.mikeisesele.clearr.data.model.PaymentRecord
@@ -37,12 +38,13 @@ import com.mikeisesele.clearr.data.model.YearConfig
         TrackerRecord::class,
         BudgetPeriod::class,
         BudgetCategory::class,
+        BudgetCategoryPlan::class,
         BudgetEntry::class,
         TodoEntity::class,
         GoalEntity::class,
         GoalCompletionEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class DuesDatabase : RoomDatabase() {

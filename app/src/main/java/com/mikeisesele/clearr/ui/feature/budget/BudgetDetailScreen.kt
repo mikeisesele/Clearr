@@ -1,7 +1,10 @@
 package com.mikeisesele.clearr.ui.feature.budget
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,8 +26,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -44,19 +49,28 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -67,14 +81,18 @@ import androidx.compose.foundation.text.KeyboardOptions
 import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.BudgetStatus
 import com.mikeisesele.clearr.data.model.BudgetSummary
+import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.ui.feature.budget.BudgetPlanDraft
 import com.mikeisesele.clearr.data.model.CategorySummary
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
+import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.DuesColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import com.mikeisesele.clearr.ui.theme.fromToken
+import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
 
 @Composable
@@ -102,8 +120,8 @@ fun BudgetDetailScreen(
                 title = state.trackerName,
                 leadingIcon = "←",
                 onLeadingClick = onNavigateBack,
-                actionIcon = null,
-                onActionClick = null,
+                actionText = "Edit month",
+                onActionClick = { viewModel.onAction(BudgetAction.OpenBudgetSetup) },
                 leadingContainerColor = ClearrColors.Transparent
             )
 
@@ -122,6 +140,7 @@ fun BudgetDetailScreen(
                         summaries = state.categorySummaries,
                         overBudgetNames = state.budgetSummary.overBudgetCategories.map { it.category.name },
                         aiInsight = state.aiInsight,
+                        showSwipeHint = state.showSwipeHint,
                         onCategoryTap = { cat ->
                             loggingCategory = cat
                             showLogDialog = true
@@ -129,10 +148,7 @@ fun BudgetDetailScreen(
                         onCategoryDelete = { categoryId ->
                             viewModel.onAction(BudgetAction.DeleteCategory(categoryId))
                         },
-                        onLogExpenseTap = {
-                            loggingCategory = null
-                            showLogDialog = true
-                        },
+                        onSwipeHintDisplayed = { viewModel.onAction(BudgetAction.OnSwipeHintDisplayed) },
                         colors = colors
                     )
                 }
@@ -180,6 +196,19 @@ fun BudgetDetailScreen(
             }
         )
     }
+
+    if (state.showBudgetSetup) {
+        BudgetPlanSetupDialog(
+            periodLabel = state.budgetSetupPeriodLabel,
+            sourceLabel = state.budgetSetupSourceLabel,
+            drafts = state.budgetSetupDrafts,
+            onDismiss = { viewModel.onAction(BudgetAction.DismissBudgetSetup) },
+            onAmountChange = { categoryId, amountNaira ->
+                viewModel.onAction(BudgetAction.UpdateBudgetDraft(categoryId, amountNaira))
+            },
+            onConfirm = { viewModel.onAction(BudgetAction.ConfirmBudgetSetup) }
+        )
+    }
 }
 
 @Composable
@@ -192,6 +221,14 @@ private fun BudgetHeroSection(
 ) {
     val over = summary.totalRemainingKobo < 0
     val balanceColor = if (over) colors.red else colors.green
+    val monthsListState = rememberLazyListState()
+
+    LaunchedEffect(periods, selectedPeriodId) {
+        val selectedIndex = periods.indexOfFirst { it.id == selectedPeriodId }
+        if (selectedIndex >= 0) {
+            monthsListState.animateScrollToItem(selectedIndex)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -234,7 +271,10 @@ private fun BudgetHeroSection(
 
         Spacer(Modifier.height(ClearrDimens.dp16))
 
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp6)) {
+        LazyRow(
+            state = monthsListState,
+            horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp6)
+        ) {
             items(periods, key = { it.id }) { period ->
                 val selected = period.id == selectedPeriodId
                 Surface(
@@ -252,6 +292,211 @@ private fun BudgetHeroSection(
                         fontWeight = FontWeight.SemiBold,
                         color = if (selected) ClearrColors.Surface else colors.text
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BudgetPlanSetupDialog(
+    periodLabel: String?,
+    sourceLabel: String?,
+    drafts: List<BudgetPlanDraft>,
+    onDismiss: () -> Unit,
+    onAmountChange: (Long, Double) -> Unit,
+    onConfirm: () -> Unit
+) {
+    val colors = LocalDuesColors.current
+    val totalPlanned = drafts.sumOf { it.plannedAmountKobo }
+
+    BackHandler(onBack = onDismiss)
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colors.text.copy(alpha = 0.35f))
+                .padding(horizontal = ClearrDimens.dp16),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(ClearrDimens.dp20),
+                color = colors.surface
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp12)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Spacer(Modifier.size(ClearrDimens.dp34))
+                        Text(
+                            text = periodLabel?.let { "Set $it budget" } ?: "Set month budget",
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = ClearrTextSizes.sp16,
+                            color = colors.text
+                        )
+                        Surface(
+                            modifier = Modifier
+                                .size(ClearrDimens.dp34)
+                                .clickable { onDismiss() },
+                            shape = RoundedCornerShape(ClearrDimens.dp10),
+                            color = colors.card
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Close",
+                                    tint = colors.muted
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(ClearrDimens.dp10))
+                    Text(
+                        text = sourceLabel?.let { "Copied from $it. Adjust any amount for this period." }
+                            ?: "Set how much you plan to spend across categories for this period.",
+                        fontSize = ClearrTextSizes.sp12,
+                        color = colors.muted
+                    )
+                    Spacer(Modifier.height(ClearrDimens.dp14))
+
+                    drafts.forEach { draft ->
+                        val token = ClearrColors.fromToken(draft.colorToken)
+                        var amountInput by rememberSaveable(draft.categoryId, draft.plannedAmountKobo) {
+                            mutableStateOf(
+                                if (draft.plannedAmountKobo == 0L) "" else (draft.plannedAmountKobo / 100).toString()
+                            )
+                        }
+
+                        Surface(
+                            color = colors.card,
+                            shape = RoundedCornerShape(ClearrDimens.dp14),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = ClearrDimens.dp12, vertical = ClearrDimens.dp10),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp12)
+                            ) {
+                                Surface(
+                                    color = token.background,
+                                    shape = RoundedCornerShape(ClearrDimens.dp10),
+                                    modifier = Modifier.size(ClearrDimens.dp36)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(draft.icon, fontSize = ClearrTextSizes.sp18)
+                                    }
+                                }
+                                Text(
+                                    text = draft.name,
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    fontSize = ClearrTextSizes.sp12,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = colors.text
+                                )
+                                Surface(
+                                    color = colors.surface,
+                                    shape = RoundedCornerShape(ClearrDimens.dp10),
+                                    border = BorderStroke(1.dp, colors.border),
+                                    modifier = Modifier.width(112.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = ClearrDimens.dp10, vertical = ClearrDimens.dp8),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp4)
+                                    ) {
+                                        Text(
+                                            text = "₦",
+                                            color = colors.muted,
+                                            fontSize = ClearrTextSizes.sp13,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        BasicTextField(
+                                            value = amountInput,
+                                            onValueChange = { next ->
+                                                amountInput = next.filter { it.isDigit() }
+                                                onAmountChange(draft.categoryId, amountInput.toDoubleOrNull() ?: 0.0)
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            singleLine = true,
+                                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                                color = colors.text,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = ClearrTextSizes.sp13
+                                            ),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            cursorBrush = SolidColor(colors.accent),
+                                            decorationBox = { innerTextField ->
+                                                if (amountInput.isBlank()) {
+                                                    Text(
+                                                        text = "0",
+                                                        color = colors.muted.copy(alpha = 0.7f),
+                                                        fontSize = ClearrTextSizes.sp13,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                }
+                                                innerTextField()
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(ClearrDimens.dp10))
+                    }
+
+                    Surface(
+                        color = colors.card,
+                        shape = RoundedCornerShape(ClearrDimens.dp14),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp12),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Total planned", color = colors.muted, fontSize = ClearrTextSizes.sp12)
+                            Text(
+                                formatKobo(totalPlanned),
+                                color = colors.text,
+                                fontSize = ClearrTextSizes.sp16,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(ClearrDimens.dp16))
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(ClearrDimens.dp14),
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.accent),
+                        contentPadding = PaddingValues(vertical = ClearrDimens.dp16)
+                    ) {
+                        Text(
+                            "Save Month Budget",
+                            color = ClearrColors.Surface,
+                            fontSize = ClearrTextSizes.sp15,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -331,17 +576,26 @@ private fun BudgetCategoryTable(
     summaries: List<CategorySummary>,
     overBudgetNames: List<String>,
     aiInsight: String?,
+    showSwipeHint: Boolean,
     onCategoryTap: (CategorySummary) -> Unit,
     onCategoryDelete: (Long) -> Unit,
-    onLogExpenseTap: () -> Unit,
+    onSwipeHintDisplayed: () -> Unit,
     colors: DuesColors
 ) {
+    var hintedCategoryId by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    LaunchedEffect(summaries, showSwipeHint) {
+        if (showSwipeHint && summaries.isNotEmpty()) {
+            hintedCategoryId = summaries.take(4).random().category.id
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(colors.bg)
             .clip(RoundedCornerShape(topStart = ClearrDimens.dp24, topEnd = ClearrDimens.dp24))
-            .padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp20)
+            .padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp12)
     ) {
         Box(
             modifier = Modifier
@@ -350,7 +604,7 @@ private fun BudgetCategoryTable(
                 .background(colors.border, RoundedCornerShape(ClearrDimens.dp99))
                 .align(Alignment.CenterHorizontally)
         )
-        Spacer(Modifier.height(ClearrDimens.dp16))
+        Spacer(Modifier.height(ClearrDimens.dp8))
 
         if (overBudgetNames.isNotEmpty()) {
             Surface(
@@ -391,85 +645,55 @@ private fun BudgetCategoryTable(
         //     Spacer(Modifier.height(ClearrDimens.dp12))
         // }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = ClearrDimens.dp12, vertical = ClearrDimens.dp4)
-        ) {
-            Spacer(Modifier.width(ClearrDimens.dp32))
-            Spacer(Modifier.width(ClearrDimens.dp8))
-            Text(
-                "CATEGORY", modifier = Modifier.weight(1f),
-                fontSize = ClearrTextSizes.sp10, fontWeight = FontWeight.Bold,
-                color = colors.muted, letterSpacing = 0.6.sp
-            )
-            Text(
-                "SPENT", modifier = Modifier.width(70.dp),
-                fontSize = ClearrTextSizes.sp10, fontWeight = FontWeight.Bold,
-                color = colors.muted, textAlign = TextAlign.End,
-                letterSpacing = 0.6.sp
-            )
-            Text(
-                "LEFT", modifier = Modifier.width(56.dp),
-                fontSize = ClearrTextSizes.sp10, fontWeight = FontWeight.Bold,
-                color = colors.muted, textAlign = TextAlign.End,
-                letterSpacing = 0.6.sp
-            )
-        }
-
-        Surface(
-            color = colors.surface,
-            shape = RoundedCornerShape(ClearrDimens.dp14),
+        Column(
+            verticalArrangement = Arrangement.spacedBy(ClearrDimens.dp10),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column {
-                summaries.forEachIndexed { index, summary ->
-                    key(summary.category.id) {
-                        SwipeableBudgetCategoryRow(
-                            summary = summary,
-                            colors = colors,
-                            onTap = { onCategoryTap(summary) },
-                            onDelete = { onCategoryDelete(summary.category.id) },
-                            isLast = index == summaries.lastIndex
-                        )
+            summaries.forEach { summary ->
+                key(summary.category.id) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp10)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            SwipeableBudgetCategoryRow(
+                                summary = summary,
+                                colors = colors,
+                                onDelete = { onCategoryDelete(summary.category.id) },
+                                shouldHintSwipe = showSwipeHint && summary.category.id == hintedCategoryId,
+                                onSwipeHintFinished = {
+                                    hintedCategoryId = null
+                                    onSwipeHintDisplayed()
+                                }
+                            )
+                        }
+                        Surface(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clickable { onCategoryTap(summary) },
+                            shape = RoundedCornerShape(ClearrDimens.dp16),
+                            color = ClearrColors.fromToken(summary.category.colorToken).background
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    "+",
+                                    fontSize = ClearrTextSizes.sp22,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = when (summary.status) {
+                                        BudgetStatus.OVER_BUDGET -> colors.red
+                                        BudgetStatus.CLEARED -> colors.green
+                                        else -> ClearrColors.fromToken(summary.category.colorToken).color
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
 
         Spacer(Modifier.height(ClearrDimens.dp12))
-
-        Surface(
-            color = colors.surface,
-            shape = RoundedCornerShape(ClearrDimens.dp14),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onLogExpenseTap() }
-        ) {
-            Row(
-                modifier = Modifier.padding(
-                    horizontal = ClearrDimens.dp16,
-                    vertical = ClearrDimens.dp13
-                ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp12)
-            ) {
-                Surface(
-                    color = colors.green.copy(alpha = if (colors.isDark) 0.20f else 0.12f),
-                    shape = RoundedCornerShape(ClearrDimens.dp10),
-                    modifier = Modifier.size(ClearrDimens.dp36)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text("₦", color = colors.green, fontSize = ClearrTextSizes.sp18, fontWeight = FontWeight.Bold)
-                    }
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Log Expense", fontSize = ClearrTextSizes.sp14, fontWeight = FontWeight.SemiBold, color = colors.text)
-                    Text("Tap a category row or here", fontSize = ClearrTextSizes.sp11, color = colors.muted)
-                }
-                Text("+", color = colors.green, fontSize = ClearrTextSizes.sp22, fontWeight = FontWeight.Bold)
-            }
-        }
     }
 }
 
@@ -478,10 +702,12 @@ private fun BudgetCategoryTable(
 private fun SwipeableBudgetCategoryRow(
     summary: CategorySummary,
     colors: DuesColors,
-    onTap: () -> Unit,
     onDelete: () -> Unit,
-    isLast: Boolean
+    shouldHintSwipe: Boolean,
+    onSwipeHintFinished: () -> Unit
 ) {
+    val cardShape = RoundedCornerShape(ClearrDimens.dp10)
+    val hintOffset = remember { Animatable(0f) }
     val dismissState = rememberSwipeToDismissBoxState(
         positionalThreshold = { it * 0.35f },
         confirmValueChange = { value ->
@@ -492,6 +718,15 @@ private fun SwipeableBudgetCategoryRow(
         }
     )
 
+    LaunchedEffect(shouldHintSwipe) {
+        if (shouldHintSwipe) {
+            delay(300)
+            hintOffset.animateTo(-24f, animationSpec = tween(durationMillis = 220))
+            hintOffset.animateTo(0f, animationSpec = tween(durationMillis = 280))
+            onSwipeHintFinished()
+        }
+    }
+
     SwipeToDismissBox(
         state = dismissState,
         enableDismissFromStartToEnd = false,
@@ -500,30 +735,40 @@ private fun SwipeableBudgetCategoryRow(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(colors.red)
-            )
+                    .clip(cardShape)
+                    .background(colors.red),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Text(
+                    "Delete",
+                    modifier = Modifier.padding(end = ClearrDimens.dp16),
+                    color = Color.White,
+                    fontSize = ClearrTextSizes.sp13,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     ) {
-        BudgetCategoryRow(
-            summary = summary,
-            colors = colors,
-            onClick = onTap
-        )
-    }
-
-    if (!isLast) {
-        HorizontalDivider(
-            color = colors.border,
-            modifier = Modifier.padding(start = 52.dp)
-        )
+        Surface(
+            color = colors.surface,
+            shape = cardShape,
+            shadowElevation = 2.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer { translationX = hintOffset.value }
+        ) {
+            BudgetCategoryRow(
+                summary = summary,
+                colors = colors
+            )
+        }
     }
 }
 
 @Composable
 private fun BudgetCategoryRow(
     summary: CategorySummary,
-    colors: DuesColors,
-    onClick: () -> Unit
+    colors: DuesColors
 ) {
     val pct = summary.percentUsed.coerceAtMost(1f)
     val animPct by animateFloatAsState(targetValue = pct, label = "row_pct")
@@ -533,69 +778,122 @@ private fun BudgetCategoryRow(
         BudgetStatus.CLEARED -> colors.green
         else -> token.color
     }
+    val glow = when (summary.status) {
+        BudgetStatus.OVER_BUDGET -> colors.red.copy(alpha = 0.35f)
+        BudgetStatus.CLEARED -> colors.green.copy(alpha = 0.35f)
+        else -> token.color.copy(alpha = 0.30f)
+    }
     val leftText = when (summary.status) {
-        BudgetStatus.OVER_BUDGET -> "-${formatKobo(summary.remainingAmountKobo.absoluteValue)}"
-        BudgetStatus.CLEARED -> "✓"
-        else -> formatKobo(summary.remainingAmountKobo.coerceAtLeast(0L))
+        BudgetStatus.OVER_BUDGET -> "over ${formatKobo(summary.remainingAmountKobo.absoluteValue)}"
+        BudgetStatus.CLEARED -> "cleared ✓"
+        else -> "${formatKobo(summary.remainingAmountKobo.coerceAtLeast(0L))} left"
     }
     val leftColor = when (summary.status) {
         BudgetStatus.OVER_BUDGET -> colors.red
         BudgetStatus.CLEARED -> colors.green
         else -> colors.muted
     }
+    var expanded by remember { mutableStateOf(false) }
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(colors.surface)
-            .clickable { onClick() }
-            .padding(horizontal = ClearrDimens.dp12, vertical = ClearrDimens.dp11),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp8)
+            .padding(horizontal = ClearrDimens.dp12, vertical = ClearrDimens.dp11)
     ) {
-        Text(summary.category.icon, fontSize = ClearrTextSizes.sp18, modifier = Modifier.width(ClearrDimens.dp32))
-
-        Column(modifier = Modifier.weight(1f)) {
+        Row(
+            modifier = Modifier.clickable { expanded = !expanded },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp8)
+        ) {
+            Text(
+                summary.category.icon,
+                fontSize = ClearrTextSizes.sp18,
+                modifier = Modifier.width(ClearrDimens.dp32)
+            )
             Text(
                 summary.category.name,
                 fontSize = ClearrTextSizes.sp14,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.text
+                color = colors.text,
+                modifier = Modifier.weight(1f)
             )
-            Spacer(Modifier.height(ClearrDimens.dp4))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(ClearrDimens.dp4)
-                    .clip(RoundedCornerShape(ClearrDimens.dp99))
-                    .background(colors.border)
-            ) {
+            Text(
+                leftText,
+                fontSize = ClearrTextSizes.sp12,
+                fontWeight = FontWeight.Medium,
+                color = leftColor
+            )
+            Text(
+                if (expanded) "▲" else "▼",
+                fontSize = ClearrTextSizes.sp9,
+                color = colors.muted
+            )
+        }
+
+        Spacer(Modifier.height(ClearrDimens.dp8))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = ClearrDimens.dp40)
+                .height(ClearrDimens.dp5)
+                .clip(RoundedCornerShape(ClearrDimens.dp99))
+                .background(colors.border)
+        ) {
+            if (animPct > 0f) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(animPct)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(ClearrDimens.dp99))
                         .background(barColor)
+                        .drawBehind {
+                            drawRect(
+                                color = glow,
+                                blendMode = BlendMode.Screen
+                            )
+                        }
                 )
             }
         }
 
-        Text(
-            formatKobo(summary.spentAmountKobo),
-            modifier = Modifier.width(70.dp),
-            fontSize = ClearrTextSizes.sp13,
-            fontWeight = FontWeight.Bold,
-            color = barColor,
-            textAlign = TextAlign.End
-        )
-        Text(
-            leftText,
-            modifier = Modifier.width(56.dp),
-            fontSize = ClearrTextSizes.sp12,
-            fontWeight = FontWeight.Bold,
-            color = leftColor,
-            textAlign = TextAlign.End
-        )
+        AnimatedVisibility(visible = expanded) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = ClearrDimens.dp40, top = ClearrDimens.dp10),
+                horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp20)
+            ) {
+                Column {
+                    Text(
+                        "SPENT",
+                        fontSize = ClearrTextSizes.sp9,
+                        color = colors.muted,
+                        letterSpacing = 0.5.sp
+                    )
+                    Text(
+                        formatKoboFull(summary.spentAmountKobo),
+                        fontSize = ClearrTextSizes.sp13,
+                        fontWeight = FontWeight.Bold,
+                        color = barColor
+                    )
+                }
+                Column {
+                    Text(
+                        "PLANNED",
+                        fontSize = ClearrTextSizes.sp9,
+                        color = colors.muted,
+                        letterSpacing = 0.5.sp
+                    )
+                    Text(
+                        formatKoboFull(summary.plannedAmountKobo),
+                        fontSize = ClearrTextSizes.sp13,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.muted
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -611,8 +909,14 @@ fun LogExpenseDialog(
     var note by rememberSaveable { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(preselectedCategory) }
     val amountNaira = amount.toDoubleOrNull() ?: 0.0
+    val amountKobo = (amountNaira * 100).toLong()
     val canSave = amountNaira > 0.0 && selectedCategory != null
     val hasAmount = amountNaira > 0.0
+    val amountFocusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        amountFocusRequester.requestFocus()
+    }
 
     BackHandler(onBack = onDismiss)
     Dialog(
@@ -688,48 +992,6 @@ fun LogExpenseDialog(
                         Column(
                             modifier = Modifier.padding(ClearrDimens.dp16)
                         ) {
-                            // Row: "AMOUNT" label  ←→  selected category badge
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    "AMOUNT",
-                                    fontSize = ClearrTextSizes.sp11,
-                                    fontWeight = FontWeight.Bold,
-                                    color = colors.muted,
-                                    letterSpacing = 0.8.sp
-                                )
-                                // Category badge — only shown when one is selected
-                                selectedCategory?.let { cat ->
-                                    val catTk = ClearrColors.fromToken(cat.category.colorToken)
-                                    Surface(
-                                        color = catTk.background,
-                                        shape = RoundedCornerShape(ClearrDimens.dp99)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(
-                                                horizontal = ClearrDimens.dp10,
-                                                vertical = ClearrDimens.dp5
-                                            ),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp5)
-                                        ) {
-                                            Text(cat.category.icon, fontSize = ClearrTextSizes.sp13)
-                                            Text(
-                                                cat.category.name,
-                                                fontSize = ClearrTextSizes.sp12,
-                                                fontWeight = FontWeight.SemiBold,
-                                                color = catTk.color
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(Modifier.height(ClearrDimens.dp14))
-
                             // Row: ₦ icon tile + amount input
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -754,67 +1016,78 @@ fun LogExpenseDialog(
                                     }
                                 }
 
-                                OutlinedTextField(
+                                BasicTextField(
                                     value = amount,
                                     onValueChange = { amount = it.filter { ch -> ch.isDigit() } },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .focusRequester(amountFocusRequester),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    cursorBrush = SolidColor(colors.text),
                                     textStyle = MaterialTheme.typography.headlineLarge.copy(
                                         color = colors.text,
                                         fontWeight = FontWeight.Black,
                                         letterSpacing = (-1).sp
                                     ),
-                                    placeholder = {
-                                        Text(
-                                            "0",
-                                            fontSize = 44.sp,
-                                            color = colors.muted
-                                        )
-                                    },
-                                    singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = ClearrColors.Transparent,
-                                        unfocusedBorderColor = ClearrColors.Transparent
-                                    )
+                                    decorationBox = { innerTextField ->
+                                        Box(
+                                            modifier = Modifier.padding(vertical = ClearrDimens.dp2),
+                                            contentAlignment = Alignment.CenterStart
+                                        ) {
+                                            if (amount.isBlank()) {
+                                                Text(
+                                                    "0",
+                                                    fontSize = 44.sp,
+                                                    color = colors.muted,
+                                                    fontWeight = FontWeight.Black
+                                                )
+                                            }
+                                            innerTextField()
+                                        }
+                                    }
                                 )
                             }
 
                             // Over-budget banner — only shown when category selected
 
                             selectedCategory?.let { cat ->
-                                val isOverBudget = cat.remainingAmountKobo <= 0
-                                Spacer(Modifier.height(ClearrDimens.dp12))
-                                Surface(
-                                    color = if (isOverBudget)
-                                        ClearrColors.BrandDanger.copy(alpha = 0.12f)
-                                    else
-                                        colors.green.copy(alpha = 0.10f),
-                                    shape = RoundedCornerShape(ClearrDimens.dp10),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(
-                                            horizontal = ClearrDimens.dp12,
-                                            vertical = ClearrDimens.dp8
-                                        ),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp8)
+                                if (hasAmount) {
+                                    val projectedRemainingKobo = cat.remainingAmountKobo - amountKobo
+                                    val isOverBudget = projectedRemainingKobo < 0L
+                                    Spacer(Modifier.height(ClearrDimens.dp12))
+                                    Surface(
+                                        color = if (isOverBudget)
+                                            ClearrColors.BrandDanger.copy(alpha = 0.12f)
+                                        else
+                                            colors.green.copy(alpha = 0.10f),
+                                        shape = RoundedCornerShape(ClearrDimens.dp10),
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text(
-                                            if (isOverBudget) "⚠️" else "✅",
-                                            fontSize = ClearrTextSizes.sp13
-                                        )
-                                        Text(
-                                            text = if (isOverBudget)
-                                                "over budget in ${cat.category.name}"
-                                            else
-                                                "${formatKobo(cat.remainingAmountKobo)} remaining in ${cat.category.name}",
-                                            fontSize = ClearrTextSizes.sp12,
-                                            color = if (isOverBudget) ClearrColors.BrandDanger else colors.green
-                                        )
+                                        Row(
+                                            modifier = Modifier.padding(
+                                                horizontal = ClearrDimens.dp12,
+                                                vertical = ClearrDimens.dp8
+                                            ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp8)
+                                        ) {
+                                            Text(
+                                                if (isOverBudget) "⚠️" else "✅",
+                                                fontSize = ClearrTextSizes.sp13
+                                            )
+                                            Text(
+                                                text = if (isOverBudget) {
+                                                    "Over budget in ${cat.category.name}"
+                                                } else {
+                                                    "${formatKobo(projectedRemainingKobo.coerceAtLeast(0L))} remaining in ${cat.category.name}"
+                                                },
+                                                fontSize = ClearrTextSizes.sp12,
+                                                color = if (isOverBudget) ClearrColors.BrandDanger else colors.green
+                                            )
+                                        }
                                     }
                                 }
-
                             }
                         }
                     }
@@ -1169,8 +1442,17 @@ private fun AddCategoryDetailDialog(
 }
 
 private fun formatKobo(kobo: Long): String {
-    val naira = kobo / 100
-    return "₦" + "%,d".format(naira)
+    val naira = kobo / 100.0
+    return when {
+        naira >= 1_000_000 -> "₦" + "%.1f".format(naira / 1_000_000).trimEnd('0').trimEnd('.') + "M"
+        naira >= 100_000 -> "₦" + "%.0f".format(naira / 1_000) + "k"
+        naira >= 10_000 -> "₦" + "%.1f".format(naira / 1_000).trimEnd('0').trimEnd('.') + "k"
+        else -> "₦" + "%,d".format(naira.toLong())
+    }
+}
+
+private fun formatKoboFull(kobo: Long): String {
+    return "₦" + "%,d".format(kobo / 100)
 }
 
 private data class CategoryPreset(
@@ -1183,7 +1465,6 @@ private val categoryPresets = listOf(
     CategoryPreset("Housing", "🏠", "Violet"),
     CategoryPreset("Food", "🍔", "Orange"),
     CategoryPreset("Transport", "🚗", "Blue"),
-    CategoryPreset("Health", "💊", "Teal"),
     CategoryPreset("Savings", "💰", "Amber"),
     CategoryPreset("Entertainment", "🎬", "Purple"),
     CategoryPreset("Utilities", "💡", "Violet"),
@@ -1191,3 +1472,195 @@ private val categoryPresets = listOf(
     CategoryPreset("Education", "📚", "Blue"),
     CategoryPreset("Custom", "✦", "Teal")
 )
+
+@Preview(showBackground = true, widthDp = 412, heightDp = 900)
+@Composable
+fun BudgetDetailScreenPreview() {
+    ClearrTheme {
+        val colors = LocalDuesColors.current
+        val periods = listOf(
+            BudgetPeriod(
+                id = 1L,
+                trackerId = 1L,
+                frequency = com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY,
+                label = "Nov 2025",
+                startDate = 0L,
+                endDate = 0L
+            ),
+            BudgetPeriod(
+                id = 2L,
+                trackerId = 1L,
+                frequency = com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY,
+                label = "Dec 2025",
+                startDate = 0L,
+                endDate = 0L
+            ),
+            BudgetPeriod(
+                id = 3L,
+                trackerId = 1L,
+                frequency = com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY,
+                label = "Jan 2026",
+                startDate = 0L,
+                endDate = 0L
+            ),
+            BudgetPeriod(
+                id = 4L,
+                trackerId = 1L,
+                frequency = com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY,
+                label = "Feb 2026",
+                startDate = 0L,
+                endDate = 0L
+            )
+        )
+        val summaries = listOf(
+            CategorySummary(
+                category = BudgetCategory(
+                    id = 1L,
+                    trackerId = 1L,
+                    frequency = com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY,
+                    name = "Entertainment",
+                    icon = "🎬",
+                    colorToken = "Purple",
+                    plannedAmountKobo = 20_000_00L,
+                    sortOrder = 0
+                ),
+                plannedAmountKobo = 20_000_00L,
+                spentAmountKobo = 7_500_00L,
+                remainingAmountKobo = 12_500_00L,
+                percentUsed = 0.375f,
+                status = BudgetStatus.ON_TRACK
+            ),
+            CategorySummary(
+                category = BudgetCategory(
+                    id = 2L,
+                    trackerId = 1L,
+                    frequency = com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY,
+                    name = "Food",
+                    icon = "🍔",
+                    colorToken = "Orange",
+                    plannedAmountKobo = 25_000_00L,
+                    sortOrder = 1
+                ),
+                plannedAmountKobo = 25_000_00L,
+                spentAmountKobo = 0L,
+                remainingAmountKobo = 25_000_00L,
+                percentUsed = 0f,
+                status = BudgetStatus.ON_TRACK
+            ),
+            CategorySummary(
+                category = BudgetCategory(
+                    id = 3L,
+                    trackerId = 1L,
+                    frequency = com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY,
+                    name = "Housing",
+                    icon = "🏠",
+                    colorToken = "Violet",
+                    plannedAmountKobo = 50_000_00L,
+                    sortOrder = 2
+                ),
+                plannedAmountKobo = 50_000_00L,
+                spentAmountKobo = 5_000_00L,
+                remainingAmountKobo = 45_000_00L,
+                percentUsed = 0.10f,
+                status = BudgetStatus.ON_TRACK
+            ),
+            CategorySummary(
+                category = BudgetCategory(
+                    id = 4L,
+                    trackerId = 1L,
+                    frequency = com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY,
+                    name = "Savings",
+                    icon = "💰",
+                    colorToken = "Teal",
+                    plannedAmountKobo = 15_000_00L,
+                    sortOrder = 3
+                ),
+                plannedAmountKobo = 15_000_00L,
+                spentAmountKobo = 0L,
+                remainingAmountKobo = 15_000_00L,
+                percentUsed = 0f,
+                status = BudgetStatus.ON_TRACK
+            ),
+            CategorySummary(
+                category = BudgetCategory(
+                    id = 5L,
+                    trackerId = 1L,
+                    frequency = com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY,
+                    name = "Transport",
+                    icon = "🚗",
+                    colorToken = "Blue",
+                    plannedAmountKobo = 15_000_00L,
+                    sortOrder = 4
+                ),
+                plannedAmountKobo = 15_000_00L,
+                spentAmountKobo = 0L,
+                remainingAmountKobo = 15_000_00L,
+                percentUsed = 0f,
+                status = BudgetStatus.ON_TRACK
+            ),
+            CategorySummary(
+                category = BudgetCategory(
+                    id = 6L,
+                    trackerId = 1L,
+                    frequency = com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY,
+                    name = "Utilities",
+                    icon = "💡",
+                    colorToken = "Violet",
+                    plannedAmountKobo = 15_000_00L,
+                    sortOrder = 5
+                ),
+                plannedAmountKobo = 15_000_00L,
+                spentAmountKobo = 0L,
+                remainingAmountKobo = 15_000_00L,
+                percentUsed = 0f,
+                status = BudgetStatus.ON_TRACK
+            )
+        )
+        val summary = BudgetSummary(
+            totalPlannedKobo = summaries.sumOf { it.plannedAmountKobo },
+            totalSpentKobo = summaries.sumOf { it.spentAmountKobo },
+            totalRemainingKobo = summaries.sumOf { it.remainingAmountKobo },
+            percentUsed = summaries.sumOf { it.spentAmountKobo }.toFloat() / summaries.sumOf { it.plannedAmountKobo },
+            isOverBudget = false,
+            overBudgetCategories = emptyList()
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colors.bg)
+        ) {
+            ClearrTopBar(
+                title = "Budget",
+                leadingIcon = "←",
+                onLeadingClick = {},
+                actionIcon = "✎",
+                onActionClick = {},
+                leadingContainerColor = ClearrColors.Transparent
+            )
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                item {
+                    BudgetHeroSection(
+                        summary = summary,
+                        periods = periods,
+                        selectedPeriodId = 4L,
+                        onPeriodSelect = {},
+                        colors = colors
+                    )
+                }
+                item {
+                    BudgetCategoryTable(
+                        summaries = summaries,
+                        overBudgetNames = emptyList(),
+                        aiInsight = null,
+                        showSwipeHint = true,
+                        onCategoryTap = {},
+                        onCategoryDelete = {},
+                        onSwipeHintDisplayed = {},
+                        colors = colors
+                    )
+                }
+            }
+        }
+    }
+}

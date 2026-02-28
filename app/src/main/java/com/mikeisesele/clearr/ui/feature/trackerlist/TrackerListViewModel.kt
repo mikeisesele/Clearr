@@ -59,15 +59,21 @@ class TrackerListViewModel @Inject constructor(
                                         repository.getBudgetCategories(tracker.id, budgetFrequency)
                                             .flatMapLatest { categories ->
                                                 repository.getBudgetEntriesForTracker(tracker.id)
-                                                    .map { entries ->
+                                                    .flatMapLatest { entries ->
+                                                        repository.getBudgetCategoryPlansForTracker(tracker.id)
+                                                            .map { plans ->
                                                         val latestPeriod = periods.lastOrNull()
                                                         val periodEntries = entries.filter { it.periodId == latestPeriod?.id }
+                                                        val periodPlans = plans.filter { it.periodId == latestPeriod?.id }
+                                                            .associateBy { it.categoryId }
                                                         val clearedCount = categories.count { category ->
                                                             val spent = periodEntries
                                                                 .asSequence()
                                                                 .filter { it.categoryId == category.id }
                                                                 .sumOf { it.amountKobo }
-                                                            spent >= category.plannedAmountKobo
+                                                            val planned = periodPlans[category.id]?.plannedAmountKobo
+                                                                ?: category.plannedAmountKobo
+                                                            planned > 0L && spent >= planned
                                                         }
                                                         TrackerSummary(
                                                             trackerId = tracker.id,
@@ -85,6 +91,7 @@ class TrackerListViewModel @Inject constructor(
                                                             isNew = tracker.isNew,
                                                             createdAt = tracker.createdAt
                                                         )
+                                                    }
                                                     }
                                             }
                                     }

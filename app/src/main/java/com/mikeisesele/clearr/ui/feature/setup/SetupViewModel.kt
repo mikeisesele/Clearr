@@ -206,7 +206,7 @@ class SetupViewModel @Inject constructor(
             BudgetCategoryPreset("Transport", "🚗", "Blue", 30_000_00),
             BudgetCategoryPreset("Savings", "💰", "Teal", 50_000_00),
             BudgetCategoryPreset("Entertainment", "🎬", "Purple", 20_000_00),
-            BudgetCategoryPreset("Health", "💊", "Teal", 15_000_00)
+            BudgetCategoryPreset("Utilities", "💡", "Violet", 15_000_00)
         )
 
         val SAMPLE_MEMBERS = listOf(

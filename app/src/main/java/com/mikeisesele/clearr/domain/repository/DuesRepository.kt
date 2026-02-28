@@ -2,6 +2,7 @@ package com.mikeisesele.clearr.domain.repository
 
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
 import com.mikeisesele.clearr.data.model.BudgetEntry
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.BudgetPeriod
@@ -95,6 +96,9 @@ interface DuesRepository {
     suspend fun updateBudgetCategory(category: BudgetCategory)
     suspend fun deleteBudgetCategory(categoryId: Long)
     suspend fun reorderBudgetCategories(trackerId: Long, frequency: BudgetFrequency, orderedIds: List<Long>)
+    fun getBudgetCategoryPlansForTracker(trackerId: Long): Flow<List<BudgetCategoryPlan>>
+    suspend fun getBudgetCategoryPlansForPeriod(periodId: Long): List<BudgetCategoryPlan>
+    suspend fun saveBudgetCategoryPlans(periodId: Long, plans: List<BudgetCategoryPlan>)
     fun getBudgetEntriesForTracker(trackerId: Long): Flow<List<BudgetEntry>>
     suspend fun addBudgetEntry(entry: BudgetEntry): Long
 

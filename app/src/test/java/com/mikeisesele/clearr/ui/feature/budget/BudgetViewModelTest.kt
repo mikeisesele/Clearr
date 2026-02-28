@@ -2,6 +2,7 @@ package com.mikeisesele.clearr.ui.feature.budget
 
 import androidx.lifecycle.SavedStateHandle
 import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
 import com.mikeisesele.clearr.data.model.BudgetEntry
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.BudgetPeriod
@@ -9,6 +10,7 @@ import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
+import com.mikeisesele.clearr.data.repository.BudgetPreferencesRepository
 import com.mikeisesele.clearr.domain.repository.DuesRepository
 import com.mikeisesele.clearr.testutil.MainDispatcherRule
 import io.mockk.coEvery
@@ -35,6 +37,7 @@ class BudgetViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val repository = mockk<DuesRepository>()
+    private val budgetPreferencesRepository = mockk<BudgetPreferencesRepository>()
     private val trackerId = 77L
 
     @Test
@@ -97,6 +100,7 @@ class BudgetViewModelTest {
 
         val viewModel = BudgetViewModel(
             repository = repository,
+            budgetPreferencesRepository = budgetPreferencesRepository,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -134,6 +138,7 @@ class BudgetViewModelTest {
 
         val viewModel = BudgetViewModel(
             repository = repository,
+            budgetPreferencesRepository = budgetPreferencesRepository,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -168,6 +173,7 @@ class BudgetViewModelTest {
 
         val viewModel = BudgetViewModel(
             repository = repository,
+            budgetPreferencesRepository = budgetPreferencesRepository,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -242,9 +248,15 @@ class BudgetViewModelTest {
         every { repository.getBudgetPeriods(trackerId, BudgetFrequency.WEEKLY) } returns weeklyPeriods
         every { repository.getBudgetCategories(trackerId, any()) } returns MutableStateFlow(emptyList())
         every { repository.getBudgetEntriesForTracker(trackerId) } returns MutableStateFlow(emptyList())
+        every { repository.getBudgetCategoryPlansForTracker(trackerId) } returns MutableStateFlow(emptyList())
+        coEvery { repository.getBudgetCategoryPlansForPeriod(any()) } returns emptyList()
+        coEvery { repository.saveBudgetCategoryPlans(any(), any()) } just runs
+        coEvery { budgetPreferencesRepository.shouldShowSwipeHint(any()) } returns false
+        coEvery { budgetPreferencesRepository.markSwipeHintShown(any()) } just runs
 
         val viewModel = BudgetViewModel(
             repository = repository,
+            budgetPreferencesRepository = budgetPreferencesRepository,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -260,10 +272,98 @@ class BudgetViewModelTest {
         assertTrue(viewModel.uiState.value.periods.any { it.frequency == BudgetFrequency.WEEKLY })
     }
 
+    @Test
+    fun `opens budget setup for new period using previous period planned amounts`() = runTest {
+        val periodsFlow = MutableStateFlow(
+            listOf(
+                BudgetPeriod(
+                    id = 10L,
+                    trackerId = trackerId,
+                    frequency = BudgetFrequency.MONTHLY,
+                    label = "Jan 2026",
+                    startDate = 0L,
+                    endDate = 1L
+                ),
+                BudgetPeriod(
+                    id = 11L,
+                    trackerId = trackerId,
+                    frequency = BudgetFrequency.MONTHLY,
+                    label = "Feb 2026",
+                    startDate = 2L,
+                    endDate = 3L
+                )
+            )
+        )
+        val categoriesFlow = MutableStateFlow(
+            listOf(
+                BudgetCategory(
+                    id = 1L,
+                    trackerId = trackerId,
+                    frequency = BudgetFrequency.MONTHLY,
+                    name = "Housing",
+                    icon = "🏠",
+                    colorToken = "Violet",
+                    plannedAmountKobo = 0L,
+                    sortOrder = 0
+                ),
+                BudgetCategory(
+                    id = 2L,
+                    trackerId = trackerId,
+                    frequency = BudgetFrequency.MONTHLY,
+                    name = "Food",
+                    icon = "🍔",
+                    colorToken = "Orange",
+                    plannedAmountKobo = 0L,
+                    sortOrder = 1
+                )
+            )
+        )
+        val plansFlow = MutableStateFlow(
+            listOf(
+                BudgetCategoryPlan(
+                    trackerId = trackerId,
+                    categoryId = 1L,
+                    periodId = 10L,
+                    plannedAmountKobo = 75_000_00L
+                ),
+                BudgetCategoryPlan(
+                    trackerId = trackerId,
+                    categoryId = 2L,
+                    periodId = 10L,
+                    plannedAmountKobo = 12_500_00L
+                )
+            )
+        )
+
+        stubBaseFlows(
+            periodsFlow = periodsFlow,
+            categoriesFlow = categoriesFlow,
+            entriesFlow = MutableStateFlow(emptyList()),
+            plansFlow = plansFlow
+        )
+
+        val viewModel = BudgetViewModel(
+            repository = repository,
+            budgetPreferencesRepository = budgetPreferencesRepository,
+            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
+        )
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(11L, state.selectedPeriodId)
+        assertTrue(state.showBudgetSetup)
+        assertEquals("Feb 2026", state.budgetSetupPeriodLabel)
+        assertEquals("Jan 2026", state.budgetSetupSourceLabel)
+        assertEquals(2, state.budgetSetupDrafts.size)
+        assertEquals(75_000_00L, state.budgetSetupDrafts.first { it.categoryId == 1L }.plannedAmountKobo)
+        assertEquals(12_500_00L, state.budgetSetupDrafts.first { it.categoryId == 2L }.plannedAmountKobo)
+    }
+
     private fun stubBaseFlows(
         periodsFlow: MutableStateFlow<List<BudgetPeriod>>,
         categoriesFlow: MutableStateFlow<List<BudgetCategory>>,
-        entriesFlow: MutableStateFlow<List<BudgetEntry>>
+        entriesFlow: MutableStateFlow<List<BudgetEntry>>,
+        plansFlow: MutableStateFlow<List<BudgetCategoryPlan>> = MutableStateFlow(emptyList())
     ) {
         every { repository.getTrackerByIdFlow(trackerId) } returns flowOf(
             Tracker(
@@ -283,5 +383,10 @@ class BudgetViewModelTest {
         every { repository.getBudgetPeriods(trackerId, BudgetFrequency.WEEKLY) } returns MutableStateFlow(emptyList())
         every { repository.getBudgetCategories(trackerId, any()) } returns categoriesFlow
         every { repository.getBudgetEntriesForTracker(trackerId) } returns entriesFlow
+        every { repository.getBudgetCategoryPlansForTracker(trackerId) } returns plansFlow
+        coEvery { repository.getBudgetCategoryPlansForPeriod(any()) } returns emptyList()
+        coEvery { repository.saveBudgetCategoryPlans(any(), any()) } just runs
+        coEvery { budgetPreferencesRepository.shouldShowSwipeHint(any()) } returns false
+        coEvery { budgetPreferencesRepository.markSwipeHintShown(any()) } just runs
     }
 }

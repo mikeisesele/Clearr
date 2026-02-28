@@ -34,6 +34,7 @@ fun ClearrTopBar(
     showLeading: Boolean = true,
     leadingIcon: String = "←",
     onLeadingClick: (() -> Unit)? = null,
+    actionText: String? = null,
     actionIcon: String? = null,
     onActionClick: (() -> Unit)? = null,
     actionContainerColor: Color = ClearrColors.NavBg,
@@ -95,7 +96,21 @@ fun ClearrTopBar(
                 }
             }
 
-            if (!actionIcon.isNullOrBlank() && onActionClick != null) {
+            if (!actionText.isNullOrBlank() && onActionClick != null) {
+                Box(
+                    modifier = Modifier
+                        .clickable { onActionClick() }
+                        .padding(horizontal = ClearrDimens.dp4, vertical = ClearrDimens.dp6),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Text(
+                        text = actionText,
+                        fontSize = ClearrTextSizes.sp12,
+                        color = colors.accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            } else if (!actionIcon.isNullOrBlank() && onActionClick != null) {
                 Surface(
                     modifier = Modifier
                         .size(ClearrDimens.dp34)

@@ -15,6 +15,10 @@ data class BudgetUiState(
     val selectedPeriodId: Long? = null,
     val categorySummaries: List<CategorySummary> = emptyList(),
     val aiInsight: String? = null,
+    val budgetSetupPeriodLabel: String? = null,
+    val budgetSetupSourceLabel: String? = null,
+    val budgetSetupDrafts: List<BudgetPlanDraft> = emptyList(),
+    val showBudgetSetup: Boolean = false,
     val budgetSummary: BudgetSummary = BudgetSummary(
         totalPlannedKobo = 0,
         totalSpentKobo = 0,
@@ -23,12 +27,26 @@ data class BudgetUiState(
         isOverBudget = false,
         overBudgetCategories = emptyList()
     ),
+    val showSwipeHint: Boolean = false,
     val isLoading: Boolean = true
 ) : BaseState
+
+data class BudgetPlanDraft(
+    val categoryId: Long,
+    val icon: String,
+    val name: String,
+    val colorToken: String,
+    val plannedAmountKobo: Long
+)
 
 sealed interface BudgetAction {
     data class SetFrequency(val frequency: BudgetFrequency) : BudgetAction
     data class SelectPeriod(val periodId: Long) : BudgetAction
+    data object OpenBudgetSetup : BudgetAction
+    data object DismissBudgetSetup : BudgetAction
+    data class UpdateBudgetDraft(val categoryId: Long, val amountNaira: Double) : BudgetAction
+    data object ConfirmBudgetSetup : BudgetAction
+    data object OnSwipeHintDisplayed : BudgetAction
     data class LogExpense(val categoryId: Long, val amountNaira: Double, val note: String?) : BudgetAction
     data class DeleteCategory(val categoryId: Long) : BudgetAction
     data class AddCategory(
