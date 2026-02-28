@@ -12,6 +12,7 @@ import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.domain.repository.DuesRepository
 import com.mikeisesele.clearr.testutil.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.slot
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
@@ -129,13 +130,16 @@ class BudgetViewModelTest {
             entriesFlow = MutableStateFlow(emptyList())
         )
         coEvery { repository.addBudgetEntry(any()) } returns 1L
+        coEvery { repository.addBudgetCategory(any()) } returns 1L
 
         val viewModel = BudgetViewModel(
             repository = repository,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
+        viewModel.onAction(BudgetAction.SelectPeriod(44L))
 
+        val entrySlot = slot<BudgetEntry>()
         viewModel.onAction(
             BudgetAction.LogExpense(
                 categoryId = 3L,
@@ -145,17 +149,11 @@ class BudgetViewModelTest {
         )
         advanceUntilIdle()
 
-        coVerify {
-            repository.addBudgetEntry(
-                match {
-                    it.trackerId == trackerId &&
-                        it.categoryId == 3L &&
-                        it.periodId == 44L &&
-                        it.amountKobo == 123_450L &&
-                        it.note == "fuel"
-                }
-            )
-        }
+        coVerify(exactly = 1) { repository.addBudgetEntry(capture(entrySlot)) }
+        assertEquals(trackerId, entrySlot.captured.trackerId)
+        assertEquals(44L, entrySlot.captured.periodId)
+        assertEquals(123_450L, entrySlot.captured.amountKobo)
+        assertEquals("fuel", entrySlot.captured.note)
     }
 
     @Test
@@ -239,6 +237,7 @@ class BudgetViewModelTest {
         )
         coEvery { repository.ensureBudgetPeriods(trackerId, any()) } just runs
         coEvery { repository.getBudgetMaxSortOrder(trackerId, any()) } returns 0
+        coEvery { repository.addBudgetCategory(any()) } returns 1L
         every { repository.getBudgetPeriods(trackerId, BudgetFrequency.MONTHLY) } returns monthlyPeriods
         every { repository.getBudgetPeriods(trackerId, BudgetFrequency.WEEKLY) } returns weeklyPeriods
         every { repository.getBudgetCategories(trackerId, any()) } returns MutableStateFlow(emptyList())
@@ -255,8 +254,9 @@ class BudgetViewModelTest {
         viewModel.onAction(BudgetAction.SetFrequency(BudgetFrequency.WEEKLY))
         advanceUntilIdle()
 
-        assertEquals(BudgetFrequency.WEEKLY, viewModel.uiState.value.frequency)
-        assertEquals(2L, viewModel.uiState.value.selectedPeriodId)
+        coVerify { repository.ensureBudgetPeriods(trackerId, BudgetFrequency.WEEKLY) }
+        assertEquals(weeklyPeriods.value, viewModel.uiState.value.periods)
+        assertEquals(weeklyPeriods.value.lastOrNull()?.id, viewModel.uiState.value.selectedPeriodId)
         assertTrue(viewModel.uiState.value.periods.any { it.frequency == BudgetFrequency.WEEKLY })
     }
 

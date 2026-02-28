@@ -1,7 +1,6 @@
 package com.mikeisesele.clearr.ui.theme
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -126,11 +125,9 @@ fun ClearrTheme(
     useDynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val darkTheme = when (themeMode) {
-        ThemeMode.DARK   -> true
-        ThemeMode.LIGHT  -> false
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-    }
+    // Light mode is temporarily forced globally. Keep ThemeMode in the API so
+    // dynamic behavior can be restored later without changing call sites.
+    val darkTheme = false
 
     // Dynamic color on API 31+ (Material You), falls back to Clearr palette
     val colorScheme = when {

@@ -33,7 +33,7 @@ import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
-    onThemeChange: (ThemeMode) -> Unit
+    onThemeChange: (ThemeMode) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = LocalDuesColors.current
@@ -161,32 +161,6 @@ fun SettingsScreen(
                     Text("Applies only to the current Dues tracker.", style = MaterialTheme.typography.bodySmall, color = colors.dim)
                 } else {
                     Text("Open a Dues tracker to edit due amount.", style = MaterialTheme.typography.bodySmall, color = colors.dim)
-                }
-            }
-
-            // ── Appearance ────────────────────────────────────────────────────────
-            SectionCard(
-                title = "Appearance",
-                colors = colors,
-                modifier = Modifier.padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
-            ) {
-                Text("Theme", style = MaterialTheme.typography.bodyMedium, color = colors.muted)
-                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
-                Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {
-                    ThemeMode.entries.forEach { mode ->
-                        val selected = state.themeMode == mode
-                        FilterChip(
-                            selected = selected,
-                            onClick = { viewModel.onAction(SettingsAction.SetThemeMode(mode)); onThemeChange(mode) },
-                            label = { Text(mode.name.lowercase().replaceFirstChar { it.uppercase() }) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = colors.accent,
-                                selectedLabelColor = ClearrColors.Surface,
-                                containerColor = colors.card,
-                                labelColor = colors.muted
-                            )
-                        )
-                    }
                 }
             }
 

@@ -44,7 +44,7 @@ import com.mikeisesele.clearr.ui.theme.LocalDuesColors
  *  3. Onboarding complete → main app
  */
 @Composable
-fun DuesNavHost(onThemeChange: (ThemeMode) -> Unit) {
+fun DuesNavHost(onThemeChange: (ThemeMode) -> Unit = {}) {
 
     val onboardingVm: OnboardingViewModel = hiltViewModel()
     val appConfigVm: AppConfigViewModel   = hiltViewModel()
