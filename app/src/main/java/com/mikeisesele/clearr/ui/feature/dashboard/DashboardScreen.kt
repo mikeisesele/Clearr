@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.ui.feature.dashboard.components.AllClearCard
 import com.mikeisesele.clearr.ui.feature.dashboard.components.ClearanceScoreSection
+import com.mikeisesele.clearr.ui.feature.dashboard.components.DashboardEmptyState
 import com.mikeisesele.clearr.ui.feature.dashboard.components.PeriodContextBar
 import com.mikeisesele.clearr.ui.feature.dashboard.components.QuickActionRow
 import com.mikeisesele.clearr.ui.feature.dashboard.components.UrgencyHeader
@@ -91,28 +92,46 @@ internal fun DashboardContent(
             ),
             verticalArrangement = Arrangement.spacedBy(ClearrDimens.dp20)
         ) {
-            item {
-                ClearanceScoreSection(score = state.score)
-            }
+            if (!isLoading) {
+                if (state.visibleTiles.isNotEmpty()) {
+                    item {
+                        ClearanceScoreSection(
+                            score = state.score,
+                            visibleTiles = state.visibleTiles
+                        )
+                    }
+                }
 
-            if (state.urgencyItems.isEmpty()) {
-                item {
-                    AllClearCard(
-                        hasTrackers = state.hasTrackers,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            } else {
-                item {
-                    UrgencyHeader(modifier = Modifier.fillMaxWidth())
-                }
-                item {
-                    UrgencyStrip(
-                        state = state,
-                        onDismissUrgency = onDismissUrgency,
-                        onQuickAction = onQuickAction,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                when {
+                    state.visibleTiles.isEmpty() -> item {
+                        DashboardEmptyState(
+                            onNavigateToTab = onQuickAction,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillParentMaxHeight()
+                        )
+                    }
+
+                    state.urgencyItems.isNotEmpty() -> {
+                        item {
+                            UrgencyHeader(modifier = Modifier.fillMaxWidth())
+                        }
+                        item {
+                            UrgencyStrip(
+                                state = state,
+                                onDismissUrgency = onDismissUrgency,
+                                onQuickAction = onQuickAction,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    state.score.hasAnyClearedTile() -> item {
+                        AllClearCard(
+                            hasTrackers = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
         }
@@ -125,6 +144,9 @@ internal fun DashboardContent(
         )
     }
 }
+
+private fun com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardClearanceScore.hasAnyClearedTile(): Boolean =
+    listOf(budget, goals, dues, todos).any { it.percent >= 90 }
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 917)
 @Composable

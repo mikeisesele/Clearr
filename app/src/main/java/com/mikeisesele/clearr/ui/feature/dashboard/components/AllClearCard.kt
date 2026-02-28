@@ -1,10 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.dashboard.components
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -41,16 +38,12 @@ internal fun AllClearCard(
                     textAlign = TextAlign.Center
                 )
             } else {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    AmbientMorphBlob()
-                    Spacer(Modifier.height(ClearrDimens.dp16))
-                    Text(
-                        text = "Set up your first tracker to see your score.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.text,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                Text(
+                    text = "Set up your first tracker to see your score.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.text,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

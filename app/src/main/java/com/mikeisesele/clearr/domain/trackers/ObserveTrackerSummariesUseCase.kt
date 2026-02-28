@@ -7,6 +7,7 @@ import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerMember
 import com.mikeisesele.clearr.data.model.TrackerPeriod
+import com.mikeisesele.clearr.data.model.TrackerRecord
 import com.mikeisesele.clearr.data.model.TrackerSummary
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.data.model.TodoStatus
@@ -56,6 +57,10 @@ class ObserveTrackerSummariesUseCase @Inject constructor(
                                             val periodEntries = entries.filter { it.periodId == latestPeriod?.id }
                                             val periodPlans = plans.filter { it.periodId == latestPeriod?.id }
                                                 .associateBy { it.categoryId }
+                                            val totalPlannedKobo = categories.sumOf { category ->
+                                                periodPlans[category.id]?.plannedAmountKobo ?: category.plannedAmountKobo
+                                            }
+                                            val totalSpentKobo = periodEntries.sumOf { it.amountKobo }
                                             val clearedCount = categories.count { category ->
                                                 val spent = periodEntries
                                                     .asSequence()
@@ -78,6 +83,8 @@ class ObserveTrackerSummariesUseCase @Inject constructor(
                                                 } else {
                                                     0
                                                 },
+                                                amountCompletedKobo = totalSpentKobo,
+                                                amountTargetKobo = totalPlannedKobo,
                                                 isNew = tracker.isNew,
                                                 createdAt = tracker.createdAt
                                             )
@@ -128,6 +135,8 @@ class ObserveTrackerSummariesUseCase @Inject constructor(
                             } else {
                                 0
                             },
+                            amountCompletedKobo = 0L,
+                            amountTargetKobo = 0L,
                             isNew = tracker.isNew,
                             createdAt = tracker.createdAt
                         )
@@ -136,20 +145,15 @@ class ObserveTrackerSummariesUseCase @Inject constructor(
 
         else -> repository.getActiveMembersForTracker(tracker.id)
             .flatMapLatest { members ->
-                repository.getCurrentPeriodFlow(tracker.id)
-                    .flatMapLatest { period ->
-                        if (period == null) {
-                            flowOf(buildSummary(tracker, members, period, 0))
-                        } else {
-                            repository.getRecordsForPeriod(tracker.id, period.id)
-                                .map { records ->
-                                    val completedCount = records.count { record ->
-                                        record.status.name in completedStatuses(tracker.type)
-                                    }
-                                    buildSummary(tracker, members, period, completedCount)
-                                }
+                    repository.getCurrentPeriodFlow(tracker.id)
+                        .flatMapLatest { period ->
+                            if (period == null) {
+                                flowOf(buildSummary(tracker, members, period, emptyList()))
+                            } else {
+                                repository.getRecordsForPeriod(tracker.id, period.id)
+                                    .map { records -> buildSummary(tracker, members, period, records) }
+                            }
                         }
-                    }
             }
     }
 
@@ -157,10 +161,26 @@ class ObserveTrackerSummariesUseCase @Inject constructor(
         tracker: Tracker,
         members: List<TrackerMember>,
         period: TrackerPeriod?,
-        completedCount: Int
+        records: List<TrackerRecord>
     ): TrackerSummary {
         val total = members.size
-        val percent = if (total > 0) ((completedCount.toDouble() / total) * 100).toInt().coerceIn(0, 100) else 0
+        val completedCount = records.count { record ->
+            record.status.name in completedStatuses(tracker.type)
+        }
+        val amountTargetKobo = when (tracker.type) {
+            TrackerType.DUES,
+            TrackerType.EXPENSES -> (tracker.defaultAmount * 100).toLong().coerceAtLeast(0L) * total
+            else -> 0L
+        }
+        val amountCompletedKobo = when (tracker.type) {
+            TrackerType.DUES,
+            TrackerType.EXPENSES -> records.sumOf { (it.amountPaid * 100).toLong().coerceAtLeast(0L) }
+            else -> 0L
+        }
+        val percent = when {
+            total > 0 -> ((completedCount.toDouble() / total) * 100).toInt().coerceIn(0, 100)
+            else -> 0
+        }
         return TrackerSummary(
             trackerId = tracker.id,
             name = tracker.name,
@@ -170,6 +190,8 @@ class ObserveTrackerSummariesUseCase @Inject constructor(
             totalMembers = total,
             completedCount = completedCount,
             completionPercent = percent,
+            amountCompletedKobo = amountCompletedKobo,
+            amountTargetKobo = amountTargetKobo,
             isNew = tracker.isNew,
             createdAt = tracker.createdAt
         )

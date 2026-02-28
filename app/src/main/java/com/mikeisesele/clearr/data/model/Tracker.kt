@@ -99,6 +99,8 @@ data class TrackerSummary(
     val totalMembers: Int,
     val completedCount: Int,
     val completionPercent: Int,
+    val amountCompletedKobo: Long = 0L,
+    val amountTargetKobo: Long = 0L,
     val isNew: Boolean,
     val createdAt: Long
 )
