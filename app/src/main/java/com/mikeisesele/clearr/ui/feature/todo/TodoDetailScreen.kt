@@ -126,20 +126,20 @@ fun TodoDetailScreen(
                 onSelect = { viewModel.onAction(TodoAction.SetFilter(it)) },
                 colors = colors
             )
-            state.aiInsight?.let { insight ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colors.bg)
-                        .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
-                ) {
-                    Text(
-                        text = insight,
-                        color = colors.muted,
-                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12
-                    )
-                }
-            }
+            // state.aiInsight?.let { insight ->
+            //     Box(
+            //         modifier = Modifier
+            //             .fillMaxWidth()
+            //             .background(colors.bg)
+            //             .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
+            //     ) {
+            //         Text(
+            //             text = insight,
+            //             color = colors.muted,
+            //             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12
+            //         )
+            //     }
+            // }
 
             if (!state.isLoading && state.displayedTodos.isEmpty()) {
                 TodoEmptyState(filter = state.filter)
@@ -609,22 +609,22 @@ fun AddTodoScreen(
             )
 
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-            if (title.isNotBlank()) {
-                Text(
-                    text = if (aiLoading) {
-                        "AI: Thinking..."
-                    } else {
-                        "AI: ${aiDraft.suggestedPriority.name.lowercase().replaceFirstChar { it.uppercase() }} priority${
-                            aiDraft.suggestedDueDate?.let {
-                                " · due ${it.format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))}"
-                            } ?: ""
-                        }"
-                    },
-                    fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                    color = colors.muted
-                )
-                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
-            }
+            // if (title.isNotBlank()) {
+            //     Text(
+            //         text = if (aiLoading) {
+            //             "AI: Thinking..."
+            //         } else {
+            //             "AI: ${aiDraft.suggestedPriority.name.lowercase().replaceFirstChar { it.uppercase() }} priority${
+            //                 aiDraft.suggestedDueDate?.let {
+            //                     " · due ${it.format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))}"
+            //                 } ?: ""
+            //             }"
+            //         },
+            //         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
+            //         color = colors.muted
+            //     )
+            //     Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+            // }
             Text("PRIORITY", fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12, color = colors.muted, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
             Row(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {

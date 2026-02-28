@@ -121,20 +121,20 @@ fun GoalsDetailScreen(
             ) {
                 AllClearedBanner(colors = colors)
             }
-            state.aiInsight?.let { insight ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colors.bg)
-                        .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
-                ) {
-                    Text(
-                        text = insight,
-                        color = colors.muted,
-                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12
-                    )
-                }
-            }
+            // state.aiInsight?.let { insight ->
+            //     Box(
+            //         modifier = Modifier
+            //             .fillMaxWidth()
+            //             .background(colors.bg)
+            //             .padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp6)
+            //     ) {
+            //         Text(
+            //             text = insight,
+            //             color = colors.muted,
+            //             fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12
+            //         )
+            //     }
+            // }
 
             if (!state.isLoading && state.summaries.isEmpty()) {
                 GoalsEmptyState(modifier = Modifier.weight(1f))
@@ -798,23 +798,23 @@ fun AddGoalScreen(
                 }
 
                 Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16))
-                if (title.isNotBlank()) {
-                    Text(
-                        text = when {
-                            aiLoading -> "AI: Thinking..."
-                            aiDraft != null -> {
-                                val draft = aiDraft!!
-                                val freq = draft.suggestedFrequency.name.lowercase().replaceFirstChar { it.uppercase() }
-                                "AI: ${draft.suggestedEmoji} $freq${draft.suggestedTarget?.let { " · target $it" } ?: ""}"
-                            }
-                            else -> "AI: No suggestion yet"
-                        },
-                        fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
-                        color = colors.muted,
-                        modifier = Modifier.padding(start = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
-                    )
-                    Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
-                }
+                // if (title.isNotBlank()) {
+                //     Text(
+                //         text = when {
+                //             aiLoading -> "AI: Thinking..."
+                //             aiDraft != null -> {
+                //                 val draft = aiDraft!!
+                //                 val freq = draft.suggestedFrequency.name.lowercase().replaceFirstChar { it.uppercase() }
+                //                 "AI: ${draft.suggestedEmoji} $freq${draft.suggestedTarget?.let { " · target $it" } ?: ""}"
+                //             }
+                //             else -> "AI: No suggestion yet"
+                //         },
+                //         fontSize = com.mikeisesele.clearr.ui.theme.ClearrTextSizes.sp12,
+                //         color = colors.muted,
+                //         modifier = Modifier.padding(start = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp4)
+                //     )
+                //     Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8))
+                // }
                 SectionTitle("ICON")
                 Column(modifier = Modifier.animateContentSize()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8), verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)) {

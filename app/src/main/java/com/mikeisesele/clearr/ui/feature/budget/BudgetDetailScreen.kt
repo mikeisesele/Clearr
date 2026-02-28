@@ -369,27 +369,27 @@ private fun BudgetCategoryTable(
             Spacer(Modifier.height(ClearrDimens.dp12))
         }
 
-        if (!aiInsight.isNullOrBlank()) {
-            Surface(
-                color = colors.amber.copy(alpha = if (colors.isDark) 0.22f else 0.16f),
-                shape = RoundedCornerShape(ClearrDimens.dp10),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(ClearrDimens.dp12),
-                    horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp8)
-                ) {
-                    Text("💡", fontSize = ClearrTextSizes.sp16)
-                    Text(
-                        text = aiInsight,
-                        fontSize = ClearrTextSizes.sp12,
-                        color = colors.text,
-                        lineHeight = 18.sp
-                    )
-                }
-            }
-            Spacer(Modifier.height(ClearrDimens.dp12))
-        }
+        // if (!aiInsight.isNullOrBlank()) {
+        //     Surface(
+        //         color = colors.amber.copy(alpha = if (colors.isDark) 0.22f else 0.16f),
+        //         shape = RoundedCornerShape(ClearrDimens.dp10),
+        //         modifier = Modifier.fillMaxWidth()
+        //     ) {
+        //         Row(
+        //             modifier = Modifier.padding(ClearrDimens.dp12),
+        //             horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp8)
+        //         ) {
+        //             Text("💡", fontSize = ClearrTextSizes.sp16)
+        //             Text(
+        //                 text = aiInsight,
+        //                 fontSize = ClearrTextSizes.sp12,
+        //                 color = colors.text,
+        //                 lineHeight = 18.sp
+        //             )
+        //         }
+        //     }
+        //     Spacer(Modifier.height(ClearrDimens.dp12))
+        // }
 
         Row(
             modifier = Modifier
