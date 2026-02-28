@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -27,13 +28,15 @@ object GeminiNanoEngine {
                     FeatureStatus.DOWNLOADABLE,
                     FeatureStatus.DOWNLOADING -> {
                         var completed = false
-                        client.download().collectLatest { dl: DownloadStatus ->
-                            when (dl) {
-                                is DownloadStatus.DownloadCompleted -> completed = true
-                                is DownloadStatus.DownloadFailed -> completed = false
-                                else -> Unit
+                        client.download()
+                            .catch { completed = false }
+                            .collectLatest { dl: DownloadStatus ->
+                                when (dl) {
+                                    is DownloadStatus.DownloadCompleted -> completed = true
+                                    is DownloadStatus.DownloadFailed -> completed = false
+                                    else -> Unit
+                                }
                             }
-                        }
                         initialized = completed
                         completed
                     }
@@ -54,7 +57,7 @@ object GeminiNanoEngine {
         prompt: String
     ): String? {
         if (!initialized && !isReady(context)) return null
-        return runCatching {
+        return try {
             val client = Generation.getClient()
             val response = client.generateContent(prompt)
             val candidate = response.candidates.firstOrNull()
@@ -63,6 +66,9 @@ object GeminiNanoEngine {
                 method?.invoke(candidate) as? String
             }.getOrNull()?.trim()
             text?.takeIf { it.isNotBlank() }
-        }.getOrNull()
+        } catch (_: Throwable) {
+            initialized = false
+            null
+        }
     }
 }

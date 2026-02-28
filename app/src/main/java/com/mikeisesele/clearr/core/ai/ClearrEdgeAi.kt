@@ -52,15 +52,17 @@ object ClearrEdgeAi {
         selectedDueDate: LocalDate?
     ): TodoAiResult {
         val fallback = inferTodo(title, note, selectedPriority, selectedDueDate)
-        val prompt = """
-            Extract todo metadata. Respond strictly as JSON with keys:
-            title, note, priority(HIGH|MEDIUM|LOW), dueDate(yyyy-MM-dd or null).
-            Input title: "$title"
-            Input note: "${note.orEmpty()}"
-        """.trimIndent()
-        val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
-        val output = GeminiNanoEngine.generateText(context, prompt) ?: return fallback
-        return parseTodoJson(output) ?: fallback
+        return runCatching {
+            val prompt = """
+                Extract todo metadata. Respond strictly as JSON with keys:
+                title, note, priority(HIGH|MEDIUM|LOW), dueDate(yyyy-MM-dd or null).
+                Input title: "$title"
+                Input note: "${note.orEmpty()}"
+            """.trimIndent()
+            val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
+            val output = GeminiNanoEngine.generateText(context, prompt) ?: return fallback
+            parseTodoJson(output) ?: fallback
+        }.getOrElse { fallback }
     }
 
     suspend fun inferGoalNanoAware(
@@ -71,16 +73,18 @@ object ClearrEdgeAi {
         colorToken: String
     ): GoalAiResult {
         val fallback = inferGoal(title, target, frequency, emoji, colorToken)
-        val prompt = """
-            Suggest goal metadata. Respond strictly as JSON with keys:
-            title,target,frequency(DAILY|WEEKLY),emoji,colorToken(Purple|Emerald|Blue|Amber|Coral).
-            Title: "$title"
-            Target: "${target.orEmpty()}"
-            Infer based on goal intent, not UI defaults.
-        """.trimIndent()
-        val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
-        val output = GeminiNanoEngine.generateText(context, prompt) ?: return fallback
-        return parseGoalJson(output) ?: fallback
+        return runCatching {
+            val prompt = """
+                Suggest goal metadata. Respond strictly as JSON with keys:
+                title,target,frequency(DAILY|WEEKLY),emoji,colorToken(Purple|Emerald|Blue|Amber|Coral).
+                Title: "$title"
+                Target: "${target.orEmpty()}"
+                Infer based on goal intent, not UI defaults.
+            """.trimIndent()
+            val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
+            val output = GeminiNanoEngine.generateText(context, prompt) ?: return fallback
+            parseGoalJson(output) ?: fallback
+        }.getOrElse { fallback }
     }
 
     suspend fun inferBudgetCategoryIdNanoAware(
@@ -89,74 +93,84 @@ object ClearrEdgeAi {
     ): Long? {
         val heuristic = inferBudgetCategoryId(note, categories)
         if (categories.isEmpty()) return heuristic
-        val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return heuristic
-        val prompt = """
-            Choose the best category name for this expense note.
-            Respond strictly as JSON: {"categoryName":"<exact name from list or empty>"}
-            Categories: ${categories.joinToString { it.name }}
-            Note: "${note.orEmpty()}"
-        """.trimIndent()
-        val output = GeminiNanoEngine.generateText(context, prompt) ?: return heuristic
-        val extractedName = extractJson(output)?.optString("categoryName")?.trim().orEmpty()
-        val chosen = categories.firstOrNull { it.name.equals(extractedName, ignoreCase = true) }?.id
-        return chosen ?: heuristic
+        return runCatching {
+            val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return heuristic
+            val prompt = """
+                Choose the best category name for this expense note.
+                Respond strictly as JSON: {"categoryName":"<exact name from list or empty>"}
+                Categories: ${categories.joinToString { it.name }}
+                Note: "${note.orEmpty()}"
+            """.trimIndent()
+            val output = GeminiNanoEngine.generateText(context, prompt) ?: return heuristic
+            val extractedName = extractJson(output)?.optString("categoryName")?.trim().orEmpty()
+            val chosen = categories.firstOrNull { it.name.equals(extractedName, ignoreCase = true) }?.id
+            chosen ?: heuristic
+        }.getOrElse { heuristic }
     }
 
     suspend fun parseSetupIntentNanoAware(text: String): SetupAiResult {
         val fallback = parseSetupIntent(text)
-        val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
-        val prompt = """
-            Parse setup intent. Respond strictly as JSON with keys:
-            trackerType(DUES|GOALS|TODO|BUDGET|null),
-            frequency(MONTHLY|WEEKLY|QUARTERLY|ANNUAL|null),
-            defaultAmount(number|null),
-            trackerName(string|null)
-            Input: "$text"
-        """.trimIndent()
-        val output = GeminiNanoEngine.generateText(context, prompt) ?: return fallback
-        return parseSetupJson(output) ?: fallback
+        return runCatching {
+            val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
+            val prompt = """
+                Parse setup intent. Respond strictly as JSON with keys:
+                trackerType(DUES|GOALS|TODO|BUDGET|null),
+                frequency(MONTHLY|WEEKLY|QUARTERLY|ANNUAL|null),
+                defaultAmount(number|null),
+                trackerName(string|null)
+                Input: "$text"
+            """.trimIndent()
+            val output = GeminiNanoEngine.generateText(context, prompt) ?: return fallback
+            parseSetupJson(output) ?: fallback
+        }.getOrElse { fallback }
     }
 
     suspend fun todoInsightNanoAware(todos: List<TodoItem>): String? {
         val fallback = todoInsight(todos)
         if (todos.isEmpty()) return fallback
-        val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
-        val prompt = """
-            Summarize this todo list in one short actionable sentence.
-            pending=${todos.count { it.derivedStatus() == TodoStatus.PENDING }},
-            overdue=${todos.count { it.derivedStatus() == TodoStatus.OVERDUE }},
-            done=${todos.count { it.derivedStatus() == TodoStatus.DONE }}
-        """.trimIndent()
-        return GeminiNanoEngine.generateText(context, prompt) ?: fallback
+        return runCatching {
+            val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
+            val prompt = """
+                Summarize this todo list in one short actionable sentence.
+                pending=${todos.count { it.derivedStatus() == TodoStatus.PENDING }},
+                overdue=${todos.count { it.derivedStatus() == TodoStatus.OVERDUE }},
+                done=${todos.count { it.derivedStatus() == TodoStatus.DONE }}
+            """.trimIndent()
+            GeminiNanoEngine.generateText(context, prompt) ?: fallback
+        }.getOrElse { fallback }
     }
 
     suspend fun goalsInsightNanoAware(summaries: List<GoalSummary>): String? {
         val fallback = goalsInsight(summaries)
         if (summaries.isEmpty()) return fallback
-        val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
-        val done = summaries.count { it.isDoneThisPeriod }
-        val total = summaries.size
-        val avgRate = (summaries.map { it.completionRate }.average() * 100).roundToLong()
-        val prompt = """
-            Summarize goals progress in one short actionable sentence.
-            done=$done,total=$total,averageCompletionRatePercent=$avgRate
-        """.trimIndent()
-        return GeminiNanoEngine.generateText(context, prompt) ?: fallback
+        return runCatching {
+            val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
+            val done = summaries.count { it.isDoneThisPeriod }
+            val total = summaries.size
+            val avgRate = (summaries.map { it.completionRate }.average() * 100).roundToLong()
+            val prompt = """
+                Summarize goals progress in one short actionable sentence.
+                done=$done,total=$total,averageCompletionRatePercent=$avgRate
+            """.trimIndent()
+            GeminiNanoEngine.generateText(context, prompt) ?: fallback
+        }.getOrElse { fallback }
     }
 
     suspend fun budgetInsightNanoAware(summaries: List<CategorySummary>): String? {
         val fallback = budgetInsight(summaries)
         if (summaries.isEmpty()) return fallback
-        val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
-        val over = summaries.count { it.status == BudgetStatus.OVER_BUDGET }
-        val near = summaries.count { it.status == BudgetStatus.NEAR_LIMIT }
-        val cleared = summaries.count { it.status == BudgetStatus.CLEARED }
-        val onTrack = summaries.count { it.status == BudgetStatus.ON_TRACK }
-        val prompt = """
-            Summarize budget state in one short actionable sentence.
-            overBudget=$over,nearLimit=$near,cleared=$cleared,onTrack=$onTrack
-        """.trimIndent()
-        return GeminiNanoEngine.generateText(context, prompt) ?: fallback
+        return runCatching {
+            val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
+            val over = summaries.count { it.status == BudgetStatus.OVER_BUDGET }
+            val near = summaries.count { it.status == BudgetStatus.NEAR_LIMIT }
+            val cleared = summaries.count { it.status == BudgetStatus.CLEARED }
+            val onTrack = summaries.count { it.status == BudgetStatus.ON_TRACK }
+            val prompt = """
+                Summarize budget state in one short actionable sentence.
+                overBudget=$over,nearLimit=$near,cleared=$cleared,onTrack=$onTrack
+            """.trimIndent()
+            GeminiNanoEngine.generateText(context, prompt) ?: fallback
+        }.getOrElse { fallback }
     }
 
     fun normalizeTitle(input: String): String {
