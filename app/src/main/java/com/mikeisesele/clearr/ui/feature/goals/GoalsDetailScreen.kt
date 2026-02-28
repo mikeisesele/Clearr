@@ -905,7 +905,7 @@ fun AddGoalScreen(
                 SectionTitle("GOAL NAME")
                 GoalSheetInput(
                     value = title,
-                    onValueChange = { title = it },
+                    onValueChange = { title = capitalizeFirstTypedCharacter(it) },
                     placeholder = "e.g. Exercise",
                     singleLine = true,
                     modifier = Modifier
@@ -1073,4 +1073,17 @@ private data class GoalPalette(
 private fun goalPalette(token: String): GoalPalette {
     val scheme = ClearrColors.fromToken(token)
     return GoalPalette(color = scheme.color, background = scheme.background)
+}
+
+private fun capitalizeFirstTypedCharacter(input: String): String {
+    val firstVisibleIndex = input.indexOfFirst { !it.isWhitespace() }
+    if (firstVisibleIndex == -1) return input
+    val char = input[firstVisibleIndex]
+    val upper = char.uppercaseChar()
+    if (char == upper) return input
+    return buildString(input.length) {
+        append(input, 0, firstVisibleIndex)
+        append(upper)
+        append(input.substring(firstVisibleIndex + 1))
+    }
 }
