@@ -8,10 +8,8 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -19,10 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,18 +30,16 @@ import com.mikeisesele.clearr.ui.commons.components.DuesSnackbar
 import com.mikeisesele.clearr.ui.commons.components.EditMemberDialog
 import com.mikeisesele.clearr.ui.commons.components.MemberDetailSheet
 import com.mikeisesele.clearr.ui.commons.components.PartialPaymentDialog
-import com.mikeisesele.clearr.ui.commons.util.captureViewWithPixelCopy
 import com.mikeisesele.clearr.ui.commons.util.currentMonth
 import com.mikeisesele.clearr.ui.commons.util.currentYear
-import com.mikeisesele.clearr.ui.commons.util.formatAmount
 import com.mikeisesele.clearr.ui.commons.util.isFuture
-import com.mikeisesele.clearr.ui.commons.util.redactSensitiveZones
-import com.mikeisesele.clearr.ui.commons.util.saveBitmapToCache
-import com.mikeisesele.clearr.ui.commons.util.shareImageUri
+import com.mikeisesele.clearr.ui.feature.home.components.DeleteMemberDialog
+import com.mikeisesele.clearr.ui.feature.home.components.LayoutPickerSheet
+import com.mikeisesele.clearr.ui.feature.home.components.MemberContextDialog
 import com.mikeisesele.clearr.ui.feature.home.components.StatsRow
 import com.mikeisesele.clearr.ui.feature.home.components.TrackerGrid
+import com.mikeisesele.clearr.ui.feature.home.utils.shareHomeScreenshot
 import com.mikeisesele.clearr.ui.theme.ClearrColors
-import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 
 @Composable
@@ -144,7 +138,7 @@ fun HomeScreen(
                 onBack = onBack,
                 onLayoutClick = { showLayoutSheet = true },
                 onShareClick = {
-                    shareScreenshot(
+                    shareHomeScreenshot(
                         context,
                         view,
                         state.trackerType == com.mikeisesele.clearr.data.model.TrackerType.DUES ||
@@ -299,118 +293,37 @@ fun HomeScreen(
     }
 
     contextTarget?.let { member ->
-        val previewColors = LocalDuesColors.current
-        AlertDialog(
-            onDismissRequest = { contextTarget = null },
-            containerColor = previewColors.surface,
-            title = { Text(member.name, color = previewColors.text, style = MaterialTheme.typography.titleMedium) },
-            text = {
-                Column {
-                    TextButton(onClick = { editTarget = member; contextTarget = null }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Edit", color = previewColors.accent)
-                    }
-                    TextButton(
-                        onClick = { viewModel.onAction(HomeAction.SetMemberArchived(member.id, !member.isArchived)); contextTarget = null },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(if (member.isArchived) "Restore" else "Archive", color = if (member.isArchived) previewColors.green else previewColors.red)
-                    }
-                    TextButton(onClick = { deleteTarget = member; contextTarget = null }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Delete", color = previewColors.red)
-                    }
-                }
+        MemberContextDialog(
+            member = member,
+            onDismiss = { contextTarget = null },
+            onEdit = { editTarget = member; contextTarget = null },
+            onArchiveToggle = {
+                viewModel.onAction(HomeAction.SetMemberArchived(member.id, !member.isArchived))
+                contextTarget = null
             },
-            confirmButton = {},
-            dismissButton = { TextButton(onClick = { contextTarget = null }) { Text("Cancel", color = previewColors.muted) } },
-            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
+            onDelete = { deleteTarget = member; contextTarget = null }
         )
     }
 
     deleteTarget?.let { member ->
-        val previewColors = LocalDuesColors.current
-        AlertDialog(
-            onDismissRequest = { deleteTarget = null },
-            containerColor = previewColors.surface,
-            title = { Text("Delete ${member.name}?", color = previewColors.text) },
-            text = { Text("This removes the member and all their payment history. This cannot be undone.", color = previewColors.muted) },
-            confirmButton = {
-                Button(
-                    onClick = { viewModel.onAction(HomeAction.DeleteMember(member.id, trackerId.takeIf { it > 0 })); deleteTarget = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = previewColors.red)
-                ) { Text("Delete") }
-            },
-            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Cancel", color = previewColors.muted) } },
-            shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16)
+        DeleteMemberDialog(
+            member = member,
+            onDismiss = { deleteTarget = null },
+            onConfirm = {
+                viewModel.onAction(HomeAction.DeleteMember(member.id, trackerId.takeIf { it > 0 }))
+                deleteTarget = null
+            }
         )
     }
 
     if (showLayoutSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showLayoutSheet = false },
-            containerColor = colors.surface
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp16, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8),
-                verticalArrangement = Arrangement.spacedBy(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp8)
-            ) {
-                Text("Choose Layout", style = MaterialTheme.typography.titleMedium, color = colors.text)
-                listOf(
-                    LayoutStyle.GRID to "⊞ Grid",
-                    LayoutStyle.KANBAN to "🗂 Kanban",
-                    LayoutStyle.CARDS to "🃏 Cards",
-                    LayoutStyle.RECEIPT to "🧾 Receipt"
-                ).forEach { (style, label) ->
-                    val selected = state.layoutStyle == style
-                    Surface(
-                        color = if (selected) colors.accent.copy(alpha = 0.12f) else colors.card,
-                        shape = RoundedCornerShape(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
-                        modifier = Modifier.fillMaxWidth().clickable {
-                            viewModel.onAction(HomeAction.SetLayoutStyleForCurrentTracker(style))
-                            showLayoutSheet = false
-                        }
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp14, vertical = com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(label, color = if (selected) colors.accent else colors.text)
-                            if (selected) Text("✓", color = colors.accent)
-                        }
-                    }
-                }
-                Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
+        LayoutPickerSheet(
+            selectedLayout = state.layoutStyle,
+            onDismiss = { showLayoutSheet = false },
+            onSelect = { style ->
+                viewModel.onAction(HomeAction.SetLayoutStyleForCurrentTracker(style))
+                showLayoutSheet = false
             }
-        }
-    }
-}
-
-private fun shareScreenshot(
-    context: android.content.Context,
-    view: android.view.View,
-    redactSensitive: Boolean
-) {
-    val window = (context as? android.app.Activity)?.window ?: return
-    captureViewWithPixelCopy(view, window) { bitmap ->
-        if (bitmap != null) {
-            try {
-                val processed = if (redactSensitive) redactSensitiveZones(bitmap) else bitmap
-                val uri = saveBitmapToCache(context, processed, "dues_tracker_${System.currentTimeMillis()}.png")
-                shareImageUri(context, uri, "Share Dues Summary")
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HomeScreenPreview() {
-    ClearrTheme {
-        val colors = LocalDuesColors.current
-        Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
-            StatsRow(totalCollected = 45000.0, totalExpected = 60000.0, outstanding = 15000.0, pct = 75, colors = colors)
-        }
+        )
     }
 }

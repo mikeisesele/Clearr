@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.TrackerSummary
 import com.mikeisesele.clearr.data.model.TrackerType
+import com.mikeisesele.clearr.ui.feature.trackerlist.extensions.displayName
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDS
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
@@ -180,20 +181,6 @@ internal fun TrackerCard(
             }
         }
     }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Extension: human-readable frequency labels
-// ─────────────────────────────────────────────────────────────────────────────
-
-internal fun Frequency.displayName(): String = when (this) {
-    Frequency.MONTHLY   -> "Monthly"
-    Frequency.WEEKLY    -> "Weekly"
-    Frequency.QUARTERLY -> "Quarterly"
-    Frequency.TERMLY    -> "Termly"
-    Frequency.BIANNUAL  -> "Biannual"
-    Frequency.ANNUAL    -> "Annual"
-    Frequency.CUSTOM    -> "Custom"
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
