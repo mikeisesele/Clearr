@@ -45,7 +45,7 @@ import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 @Composable
 fun GoalsDetailScreen(
     trackerId: Long,
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
     onAddGoal: () -> Unit,
     viewModel: GoalsViewModel = hiltViewModel()
 ) {

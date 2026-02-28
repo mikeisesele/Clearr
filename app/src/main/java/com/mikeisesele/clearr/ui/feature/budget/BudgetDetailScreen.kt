@@ -36,7 +36,7 @@ import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 @Composable
 fun BudgetDetailScreen(
     trackerId: Long,
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
     onAddCategory: () -> Unit,
     viewModel: BudgetViewModel = hiltViewModel()
 ) {
@@ -51,6 +51,7 @@ fun BudgetDetailScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             ClearrTopBar(
                 title = state.trackerName,
+                showLeading = onNavigateBack != null,
                 leadingIcon = "←",
                 onLeadingClick = onNavigateBack,
                 actionText = "Edit month",

@@ -70,9 +70,10 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 @Composable
-internal fun GoalsNavBar(title: String, onBack: () -> Unit) {
+internal fun GoalsNavBar(title: String, onBack: (() -> Unit)? = null) {
     ClearrTopBar(
         title = title,
+        showLeading = onBack != null,
         leadingIcon = "←",
         onLeadingClick = onBack,
         actionIcon = null,

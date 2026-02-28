@@ -56,6 +56,7 @@ fun SettingsScreen(
     ) {
         ClearrTopBar(
             title = "Settings",
+            showLeading = false,
             onLeadingClick = null,
             actionIcon = null,
             onActionClick = null,

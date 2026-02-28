@@ -4,11 +4,17 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,9 +22,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import com.mikeisesele.clearr.ui.feature.budget.AddBudgetCategoryScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetDetailScreen
+import com.mikeisesele.clearr.ui.feature.dashboard.DashboardScreen
 import com.mikeisesele.clearr.ui.feature.goals.AddGoalScreen
 import com.mikeisesele.clearr.ui.feature.goals.GoalsDetailScreen
 import com.mikeisesele.clearr.ui.feature.home.HomeScreen
@@ -31,25 +39,17 @@ import com.mikeisesele.clearr.ui.feature.settings.SettingsScreen
 import com.mikeisesele.clearr.ui.feature.setup.SetupWizardScreen
 import com.mikeisesele.clearr.ui.feature.todo.AddTodoScreen
 import com.mikeisesele.clearr.ui.feature.todo.TodoDetailScreen
-import com.mikeisesele.clearr.ui.feature.trackerlist.TrackerListScreen
-import com.mikeisesele.clearr.data.model.TrackerType
+import com.mikeisesele.clearr.ui.feature.trackerlist.RemittanceHomeScreen
+import com.mikeisesele.clearr.ui.navigation.components.AppBottomNav
+import com.mikeisesele.clearr.ui.navigation.components.AppBottomNavItem
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 
-/**
- * Root composable — resolves the correct start destination:
- *
- *  1. Still loading DataStore or Room → blank screen (avoid flash)
- *  2. Onboarding NOT complete → splash / onboarding / completion flow
- *  3. Onboarding complete → main app
- */
 @Composable
 fun DuesNavHost(onThemeChange: (ThemeMode) -> Unit = {}) {
-
     val onboardingVm: OnboardingViewModel = hiltViewModel()
-    val appConfigVm: AppConfigViewModel   = hiltViewModel()
+    val appConfigVm: AppConfigViewModel = hiltViewModel()
 
-    // null = still loading DataStore
     val onboardingState by onboardingVm.uiState.collectAsStateWithLifecycle()
     val appConfigState by appConfigVm.uiState.collectAsStateWithLifecycle()
     val onboardingComplete = onboardingState.isComplete
@@ -57,7 +57,6 @@ fun DuesNavHost(onThemeChange: (ThemeMode) -> Unit = {}) {
 
     val colors = LocalDuesColors.current
 
-    // Show blank until both DataStore and Room have emitted at least once.
     if (onboardingComplete == null || appConfigLoading) {
         ApplySystemBars(darkIcons = false)
         Box(
@@ -69,17 +68,11 @@ fun DuesNavHost(onThemeChange: (ThemeMode) -> Unit = {}) {
     }
 
     if (onboardingComplete == false) {
-        // ── ONBOARDING FLOW ────────────────────────────────────────────────────
         OnboardingNavHost(onboardingVm = onboardingVm)
     } else {
-        // ── MAIN APP ──────────────────────────────────────────────────────────
         MainNavHost(onThemeChange = onThemeChange)
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Onboarding sub-nav  Splash → Slides → Completion → SetupWizard
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun OnboardingNavHost(onboardingVm: OnboardingViewModel) {
@@ -144,25 +137,18 @@ private fun OnboardingNavHost(onboardingVm: OnboardingViewModel) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main app navigation
-// ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
 private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val navController = rememberNavController()
+    val shellViewModel: AppShellViewModel = hiltViewModel()
+    val shellState by shellViewModel.uiState.collectAsStateWithLifecycle()
     val colors = LocalDuesColors.current
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
     ApplySystemBars(darkIcons = !colors.isDark)
 
-    val topLevelNonHomeRoutes = setOf(
-        NavRoutes.Settings.route,
-        NavRoutes.Setup.route
-    )
-
-    BackHandler(enabled = currentRoute in topLevelNonHomeRoutes) {
-        navController.navigate(NavRoutes.TrackerList.route) {
+    BackHandler(enabled = currentRoute.isTopLevelNonDashboardRoute()) {
+        navController.navigate(NavRoutes.Dashboard.route) {
             popUpTo(navController.graph.findStartDestination().id) {
                 saveState = true
             }
@@ -171,112 +157,212 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
         }
     }
 
-    Surface(color = colors.bg) {
-        NavHost(
-            navController = navController,
-            startDestination = NavRoutes.TrackerList.route
-        ) {
-            composable(NavRoutes.TrackerList.route) {
-                TrackerListScreen(
-                    onTrackerClick = { trackerId ->
-                        navController.navigate(NavRoutes.TrackerDetail.createRoute(trackerId))
-                    },
-                    onCreateTracker = {
-                        navController.navigate(NavRoutes.Setup.route) { launchSingleTop = true }
-                    },
-                    onOpenSettings = {
-                        navController.navigate(NavRoutes.Settings.route) { launchSingleTop = true }
-                    }
-                )
-            }
-
-            composable(NavRoutes.Setup.route) {
-                SetupWizardScreen(
-                    onSetupComplete = {
-                        navController.navigate(NavRoutes.TrackerList.route) {
-                            popUpTo(NavRoutes.TrackerList.route) { inclusive = false }
-                            launchSingleTop = true
+    Scaffold(
+        containerColor = colors.bg,
+        bottomBar = {
+            if (currentRoute.isBottomNavRoute()) {
+                AppBottomNav(
+                    selectedItem = currentRoute?.toBottomNavItem(),
+                    onSelect = { item ->
+                        when (item) {
+                            AppBottomNavItem.REMITTANCE -> navController.navigateTopLevel(NavRoutes.RemittanceHome.route)
+                            AppBottomNavItem.SETTINGS -> navController.navigateTopLevel(NavRoutes.Settings.route)
+                            AppBottomNavItem.BUDGET -> shellState.budgetTrackerId?.let { navController.navigateTopLevel(NavRoutes.BudgetRoot.createRoute(it)) }
+                            AppBottomNavItem.TODOS -> shellState.todoTrackerId?.let { navController.navigateTopLevel(NavRoutes.TodoRoot.createRoute(it)) }
+                            AppBottomNavItem.GOALS -> shellState.goalsTrackerId?.let { navController.navigateTopLevel(NavRoutes.GoalsRoot.createRoute(it)) }
                         }
                     }
                 )
             }
-
-            composable(
-                route = NavRoutes.TrackerDetail.route,
-                arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
-                val detailVm: TrackerDetailHostViewModel = hiltViewModel()
-                val detailState by detailVm.uiState.collectAsStateWithLifecycle()
-                if (detailState.isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(colors.bg),
-                        contentAlignment = androidx.compose.ui.Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = colors.accent)
-                    }
-                } else if (detailState.trackerType == TrackerType.BUDGET) {
-                    BudgetDetailScreen(
-                        trackerId = trackerId,
-                        onNavigateBack = { navController.popBackStack() },
-                        onAddCategory = { navController.navigate(NavRoutes.BudgetAddCategory.createRoute(trackerId)) }
-                    )
-                } else if (detailState.trackerType == TrackerType.TODO) {
-                    TodoDetailScreen(
-                        trackerId = trackerId,
-                        onNavigateBack = { navController.popBackStack() },
-                        onAddTodo = { navController.navigate(NavRoutes.TodoAdd.createRoute(trackerId)) }
-                    )
-                } else if (detailState.trackerType == TrackerType.GOALS) {
-                    GoalsDetailScreen(
-                        trackerId = trackerId,
-                        onNavigateBack = { navController.popBackStack() },
-                        onAddGoal = { navController.navigate(NavRoutes.GoalAdd.createRoute(trackerId)) }
-                    )
-                } else {
-                    HomeScreen(
-                        trackerId = trackerId,
-                        onBack = { navController.popBackStack() }
+        }
+    ) { innerPadding ->
+        Surface(color = colors.bg) {
+            NavHost(
+                navController = navController,
+                startDestination = NavRoutes.Dashboard.route,
+                modifier = Modifier
+                    .background(colors.bg)
+                    .padding(innerPadding)
+            ) {
+                composable(NavRoutes.Dashboard.route) {
+                    DashboardScreen(
+                        onOpenBudget = { shellState.budgetTrackerId?.let { navController.navigate(NavRoutes.BudgetRoot.createRoute(it)) } },
+                        onOpenTodos = { shellState.todoTrackerId?.let { navController.navigate(NavRoutes.TodoRoot.createRoute(it)) } },
+                        onOpenGoals = { shellState.goalsTrackerId?.let { navController.navigate(NavRoutes.GoalsRoot.createRoute(it)) } },
+                        onOpenRemittance = { navController.navigateTopLevel(NavRoutes.RemittanceHome.route) }
                     )
                 }
-            }
 
-            composable(
-                route = NavRoutes.TodoAdd.route,
-                arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
-                AddTodoScreen(
-                    trackerId = trackerId,
-                    onClose = { navController.popBackStack() }
-                )
-            }
+                composable(NavRoutes.RemittanceHome.route) {
+                    RemittanceHomeScreen(
+                        onTrackerClick = { trackerId ->
+                            navController.navigate(NavRoutes.TrackerDetail.createRoute(trackerId))
+                        },
+                        onCreateRemittance = { navController.navigate(NavRoutes.Setup.route) }
+                    )
+                }
 
-            composable(
-                route = NavRoutes.GoalAdd.route,
-                arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
-                AddGoalScreen(
-                    trackerId = trackerId,
-                    onClose = { navController.popBackStack() }
-                )
-            }
+                composable(
+                    route = NavRoutes.BudgetRoot.route,
+                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    BudgetDetailScreen(
+                        trackerId = trackerId,
+                        onAddCategory = { navController.navigate(NavRoutes.BudgetAddCategory.createRoute(trackerId)) }
+                    )
+                }
 
-            composable(
-                route = NavRoutes.BudgetAddCategory.route,
-                arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
-                AddBudgetCategoryScreen(
-                    trackerId = trackerId,
-                    onClose = { navController.popBackStack() }
-                )
-            }
+                composable(
+                    route = NavRoutes.TodoRoot.route,
+                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    TodoDetailScreen(
+                        trackerId = trackerId,
+                        onAddTodo = { navController.navigate(NavRoutes.TodoAdd.createRoute(trackerId)) }
+                    )
+                }
 
-            composable(NavRoutes.Settings.route)   { SettingsScreen(onThemeChange = onThemeChange) }
+                composable(
+                    route = NavRoutes.GoalsRoot.route,
+                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    GoalsDetailScreen(
+                        trackerId = trackerId,
+                        onAddGoal = { navController.navigate(NavRoutes.GoalAdd.createRoute(trackerId)) }
+                    )
+                }
+
+                composable(NavRoutes.Setup.route) {
+                    SetupWizardScreen(
+                        onSetupComplete = {
+                            navController.navigateTopLevel(NavRoutes.RemittanceHome.route)
+                        }
+                    )
+                }
+
+                composable(
+                    route = NavRoutes.TrackerDetail.route,
+                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    val detailVm: TrackerDetailHostViewModel = hiltViewModel()
+                    val detailState by detailVm.uiState.collectAsStateWithLifecycle()
+                    if (detailState.isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(colors.bg),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = colors.accent)
+                        }
+                    } else if (detailState.trackerType == TrackerType.BUDGET) {
+                        BudgetDetailScreen(
+                            trackerId = trackerId,
+                            onNavigateBack = { navController.popBackStack() },
+                            onAddCategory = { navController.navigate(NavRoutes.BudgetAddCategory.createRoute(trackerId)) }
+                        )
+                    } else if (detailState.trackerType == TrackerType.TODO) {
+                        TodoDetailScreen(
+                            trackerId = trackerId,
+                            onNavigateBack = { navController.popBackStack() },
+                            onAddTodo = { navController.navigate(NavRoutes.TodoAdd.createRoute(trackerId)) }
+                        )
+                    } else if (detailState.trackerType == TrackerType.GOALS) {
+                        GoalsDetailScreen(
+                            trackerId = trackerId,
+                            onNavigateBack = { navController.popBackStack() },
+                            onAddGoal = { navController.navigate(NavRoutes.GoalAdd.createRoute(trackerId)) }
+                        )
+                    } else {
+                        HomeScreen(
+                            trackerId = trackerId,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                }
+
+                composable(
+                    route = NavRoutes.TodoAdd.route,
+                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    AddTodoScreen(
+                        trackerId = trackerId,
+                        onClose = { navController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = NavRoutes.GoalAdd.route,
+                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    AddGoalScreen(
+                        trackerId = trackerId,
+                        onClose = { navController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = NavRoutes.BudgetAddCategory.route,
+                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    AddBudgetCategoryScreen(
+                        trackerId = trackerId,
+                        onClose = { navController.popBackStack() }
+                    )
+                }
+
+                composable(NavRoutes.Settings.route) {
+                    SettingsScreen(onThemeChange = onThemeChange)
+                }
+            }
         }
     }
+}
+
+private fun String?.isTopLevelNonDashboardRoute(): Boolean = when {
+    this == null -> false
+    this == NavRoutes.RemittanceHome.route -> true
+    this == NavRoutes.Settings.route -> true
+    this.startsWith(NavRoutes.BudgetRoot.baseRoute) -> true
+    this.startsWith(NavRoutes.TodoRoot.baseRoute) -> true
+    this.startsWith(NavRoutes.GoalsRoot.baseRoute) -> true
+    else -> false
+}
+
+private fun String.toBottomNavItem(): AppBottomNavItem? = when {
+    this == NavRoutes.RemittanceHome.route -> AppBottomNavItem.REMITTANCE
+    this == NavRoutes.Settings.route -> AppBottomNavItem.SETTINGS
+    this.startsWith(NavRoutes.BudgetRoot.baseRoute) -> AppBottomNavItem.BUDGET
+    this.startsWith(NavRoutes.TodoRoot.baseRoute) -> AppBottomNavItem.TODOS
+    this.startsWith(NavRoutes.GoalsRoot.baseRoute) -> AppBottomNavItem.GOALS
+    else -> null
+}
+
+private fun androidx.navigation.NavController.navigateTopLevel(route: String) {
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
+
+private fun String?.isBottomNavRoute(): Boolean = when {
+    this == null -> false
+    this == NavRoutes.Dashboard.route -> true
+    this == NavRoutes.RemittanceHome.route -> true
+    this == NavRoutes.Settings.route -> true
+    this.startsWith(NavRoutes.BudgetRoot.baseRoute) -> true
+    this.startsWith(NavRoutes.TodoRoot.baseRoute) -> true
+    this.startsWith(NavRoutes.GoalsRoot.baseRoute) -> true
+    else -> false
 }

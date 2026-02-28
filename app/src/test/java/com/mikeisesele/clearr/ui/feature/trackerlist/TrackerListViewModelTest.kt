@@ -9,6 +9,8 @@ import com.mikeisesele.clearr.data.model.TrackerPeriod
 import com.mikeisesele.clearr.data.model.TrackerRecord
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.domain.repository.DuesRepository
+import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
+import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
 import com.mikeisesele.clearr.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -33,8 +35,10 @@ class TrackerListViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val repository = mockk<DuesRepository>()
+    private val trackerBootstrapper = mockk<TrackerBootstrapper>()
 
     private fun stubStaticBootstrap() {
+        coEvery { trackerBootstrapper.ensureStaticTrackers() } just runs
         coEvery { repository.insertTracker(any()) } returns 999L
         coEvery { repository.ensureBudgetPeriods(any(), any()) } just runs
     }
@@ -44,7 +48,7 @@ class TrackerListViewModelTest {
         stubStaticBootstrap()
         every { repository.getAllTrackers() } returns MutableStateFlow(emptyList())
 
-        val viewModel = TrackerListViewModel(repository)
+        val viewModel = TrackerListViewModel(repository, trackerBootstrapper, ObserveTrackerSummariesUseCase(repository))
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.summaries.isEmpty())
@@ -73,7 +77,7 @@ class TrackerListViewModelTest {
             )
         )
 
-        val viewModel = TrackerListViewModel(repository)
+        val viewModel = TrackerListViewModel(repository, trackerBootstrapper, ObserveTrackerSummariesUseCase(repository))
         advanceUntilIdle()
 
         val summary = viewModel.uiState.value.summaries.single()
@@ -84,6 +88,7 @@ class TrackerListViewModelTest {
 
     @Test
     fun `create tracker inserts tracker members period and current period`() = runTest {
+        coEvery { trackerBootstrapper.ensureStaticTrackers() } just runs
         coEvery { repository.ensureBudgetPeriods(any(), any()) } just runs
         every { repository.getAllTrackers() } returns MutableStateFlow(emptyList())
         coEvery { repository.insertTrackerMember(any()) } returns 1L
@@ -98,7 +103,7 @@ class TrackerListViewModelTest {
         }
         coEvery { repository.insertTrackerMember(capture(memberSlot)) } returns 1L
 
-        val viewModel = TrackerListViewModel(repository)
+        val viewModel = TrackerListViewModel(repository, trackerBootstrapper, ObserveTrackerSummariesUseCase(repository))
         viewModel.onAction(
             TrackerListAction.CreateTracker(
                 name = "  New Tracker  ",
@@ -127,7 +132,7 @@ class TrackerListViewModelTest {
         coEvery { repository.getTrackerById(8) } returns existing
         coEvery { repository.updateTracker(any()) } just runs
 
-        val viewModel = TrackerListViewModel(repository)
+        val viewModel = TrackerListViewModel(repository, trackerBootstrapper, ObserveTrackerSummariesUseCase(repository))
         viewModel.onAction(TrackerListAction.RenameTracker(8, "  New Name  "))
         advanceUntilIdle()
 
@@ -154,7 +159,7 @@ class TrackerListViewModelTest {
         }
         coEvery { repository.clearTrackerNewFlag(2) } just runs
 
-        val viewModel = TrackerListViewModel(repository)
+        val viewModel = TrackerListViewModel(repository, trackerBootstrapper, ObserveTrackerSummariesUseCase(repository))
         advanceUntilIdle()
         assertEquals(1, viewModel.uiState.value.summaries.size)
 

@@ -2,9 +2,20 @@ package com.mikeisesele.clearr.ui.navigation
 
 sealed class NavRoutes(val route: String) {
     object Setup : NavRoutes("setup")
-    /** Tracker list — the new home screen */
-    object TrackerList : NavRoutes("tracker_list")
-    /** Detail / dues grid for a specific tracker */
+    object Dashboard : NavRoutes("dashboard")
+    object RemittanceHome : NavRoutes("remittance_home")
+    object BudgetRoot : NavRoutes("budget_root/{trackerId}") {
+        fun createRoute(trackerId: Long) = "budget_root/$trackerId"
+        const val baseRoute = "budget_root"
+    }
+    object TodoRoot : NavRoutes("todo_root/{trackerId}") {
+        fun createRoute(trackerId: Long) = "todo_root/$trackerId"
+        const val baseRoute = "todo_root"
+    }
+    object GoalsRoot : NavRoutes("goals_root/{trackerId}") {
+        fun createRoute(trackerId: Long) = "goals_root/$trackerId"
+        const val baseRoute = "goals_root"
+    }
     object TrackerDetail : NavRoutes("tracker_detail/{trackerId}") {
         fun createRoute(trackerId: Long) = "tracker_detail/$trackerId"
     }
@@ -18,6 +29,5 @@ sealed class NavRoutes(val route: String) {
         fun createRoute(trackerId: Long) = "budget_add_category/$trackerId"
     }
     object Settings : NavRoutes("settings")
-    /** Kept for backward-compat: bottom nav still references Home route string */
-    object Home : NavRoutes("tracker_list")
+    object Home : NavRoutes("dashboard")
 }
