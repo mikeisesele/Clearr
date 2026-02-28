@@ -26,7 +26,6 @@ class SettingsViewModel @Inject constructor(
 ) : BaseViewModel<SettingsUiState, SettingsAction, SettingsEvent>(
     initialState = SettingsUiState()
 ) {
-
     private val themeModeFlow = MutableStateFlow(ThemeMode.SYSTEM)
 
     init {
