@@ -66,6 +66,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -590,13 +591,16 @@ fun AddTodoScreen(
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             StyledSheetInput(
                 value = title,
-                onValueChange = { title = capitalizeFirstTypedCharacter(it) },
+                onValueChange = { title = it },
                 placeholder = "What needs to be done?",
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(titleFocusRequester),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Sentences
+                )
             )
             Spacer(Modifier.height(com.mikeisesele.clearr.ui.theme.ClearrDimens.dp12))
             StyledSheetInput(
@@ -1062,18 +1066,5 @@ private fun dueDateFromOption(option: String, customDate: LocalDate? = null): Lo
         "Custom" -> customDate ?: today.plusDays(1)
         "No due date" -> null
         else -> today
-    }
-}
-
-private fun capitalizeFirstTypedCharacter(input: String): String {
-    val firstVisibleIndex = input.indexOfFirst { !it.isWhitespace() }
-    if (firstVisibleIndex == -1) return input
-    val char = input[firstVisibleIndex]
-    val upper = char.uppercaseChar()
-    if (char == upper) return input
-    return buildString(input.length) {
-        append(input, 0, firstVisibleIndex)
-        append(upper)
-        append(input.substring(firstVisibleIndex + 1))
     }
 }

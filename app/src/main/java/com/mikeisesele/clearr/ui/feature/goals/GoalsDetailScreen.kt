@@ -34,6 +34,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -66,6 +67,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -905,9 +907,10 @@ fun AddGoalScreen(
                 SectionTitle("GOAL NAME")
                 GoalSheetInput(
                     value = title,
-                    onValueChange = { title = capitalizeFirstTypedCharacter(it) },
+                    onValueChange = { title = it },
                     placeholder = "e.g. Exercise",
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(titleFocusRequester)
@@ -1005,6 +1008,7 @@ private fun GoalSheetInput(
     onValueChange: (String) -> Unit,
     placeholder: String,
     singleLine: Boolean,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalDuesColors.current
@@ -1024,6 +1028,7 @@ private fun GoalSheetInput(
                 value = value,
                 onValueChange = onValueChange,
                 singleLine = singleLine,
+                keyboardOptions = keyboardOptions,
                 cursorBrush = SolidColor(colors.muted),
                 textStyle = TextStyle(
                     color = colors.text,
@@ -1073,17 +1078,4 @@ private data class GoalPalette(
 private fun goalPalette(token: String): GoalPalette {
     val scheme = ClearrColors.fromToken(token)
     return GoalPalette(color = scheme.color, background = scheme.background)
-}
-
-private fun capitalizeFirstTypedCharacter(input: String): String {
-    val firstVisibleIndex = input.indexOfFirst { !it.isWhitespace() }
-    if (firstVisibleIndex == -1) return input
-    val char = input[firstVisibleIndex]
-    val upper = char.uppercaseChar()
-    if (char == upper) return input
-    return buildString(input.length) {
-        append(input, 0, firstVisibleIndex)
-        append(upper)
-        append(input.substring(firstVisibleIndex + 1))
-    }
 }
