@@ -43,7 +43,9 @@ class TodoViewModel @Inject constructor(
             is TodoAction.AddTodo -> addTodo(action.title, action.note, action.priority, action.dueDate)
             is TodoAction.Rename -> rename(action.id, action.title)
             is TodoAction.MarkDone -> markDone(action.id)
+            TodoAction.MarkAllDone -> markAllDone()
             is TodoAction.Delete -> delete(action.id)
+            TodoAction.ClearCompleted -> clearCompleted()
             TodoAction.OnFirstSwipeAction -> markHintSeen()
         }
     }
@@ -144,9 +146,29 @@ class TodoViewModel @Inject constructor(
         }
     }
 
+    private fun markAllDone() {
+        launch {
+            currentState.todos
+                .filter { todo -> todo.derivedStatus() != TodoStatus.DONE }
+                .forEach { todo ->
+                    repository.markTodoDone(todo.id, System.currentTimeMillis())
+                }
+        }
+    }
+
     private fun delete(id: String) {
         launch {
             repository.deleteTodo(id)
+        }
+    }
+
+    private fun clearCompleted() {
+        launch {
+            currentState.todos
+                .filter { todo -> todo.derivedStatus() == TodoStatus.DONE }
+                .forEach { todo ->
+                    repository.deleteTodo(todo.id)
+                }
         }
     }
 

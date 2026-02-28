@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -13,29 +14,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.font.FontWeight
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.ui.feature.todo.components.SwipeableTodoRow
+import com.mikeisesele.clearr.ui.feature.todo.components.TodoActionsDropdown
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoDetailSheet
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoEmptyState
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoFab
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoFilterTabs
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoNavBar
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoSwipeHintStrip
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
+import com.mikeisesele.clearr.ui.theme.LocalDuesColors
 
 @Composable
 fun TodoDetailScreen(
     trackerId: Long,
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
     onAddTodo: () -> Unit,
     viewModel: TodoViewModel = hiltViewModel()
 ) {
@@ -44,12 +48,27 @@ fun TodoDetailScreen(
     var detailTodo by remember { mutableStateOf<TodoItem?>(null) }
     var renameTarget by remember { mutableStateOf<TodoItem?>(null) }
     var renameValue by remember { mutableStateOf("") }
+    var showActionsMenu by remember { mutableStateOf(false) }
 
     if (state.trackerId != trackerId) return
 
     Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            TodoNavBar(onBack = onNavigateBack)
+            Box {
+                TodoNavBar(
+                    onBack = onNavigateBack,
+                    actionText = "Actions",
+                    onActionClick = { showActionsMenu = true }
+                )
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+                    TodoActionsDropdown(
+                        expanded = showActionsMenu,
+                        onDismiss = { showActionsMenu = false },
+                        onMarkAllDone = { viewModel.onAction(TodoAction.MarkAllDone) },
+                        onClearCompleted = { viewModel.onAction(TodoAction.ClearCompleted) }
+                    )
+                }
+            }
             TodoFilterTabs(
                 selected = state.filter,
                 overdueCount = state.counts.overdue,
@@ -107,12 +126,12 @@ fun TodoDetailScreen(
     }
 
     renameTarget?.let { todo ->
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = { renameTarget = null },
             containerColor = colors.surface,
             title = { Text("Rename Todo", color = colors.text) },
             text = {
-                androidx.compose.material3.OutlinedTextField(
+                OutlinedTextField(
                     value = renameValue,
                     onValueChange = { renameValue = it },
                     singleLine = true,
@@ -121,13 +140,20 @@ fun TodoDetailScreen(
                 )
             },
             confirmButton = {
-                Button(enabled = renameValue.isNotBlank(), onClick = {
-                    viewModel.onAction(TodoAction.Rename(todo.id, renameValue))
-                    renameTarget = null
-                }) { Text("Save") }
+                Button(
+                    enabled = renameValue.isNotBlank(),
+                    onClick = {
+                        viewModel.onAction(TodoAction.Rename(todo.id, renameValue))
+                        renameTarget = null
+                    }
+                ) {
+                    Text("Save")
+                }
             },
             dismissButton = {
-                TextButton(onClick = { renameTarget = null }) { Text("Cancel", color = colors.muted) }
+                TextButton(onClick = { renameTarget = null }) {
+                    Text("Cancel", color = colors.muted)
+                }
             }
         )
     }

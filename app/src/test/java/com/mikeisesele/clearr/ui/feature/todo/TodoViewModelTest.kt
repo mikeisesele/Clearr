@@ -195,6 +195,86 @@ class TodoViewModelTest {
     }
 
     @Test
+    fun `mark all done updates only incomplete todos`() = runTest {
+        val todosFlow = MutableStateFlow(
+            listOf(
+                TodoItem(
+                    id = "done",
+                    trackerId = trackerId,
+                    title = "Done",
+                    priority = TodoPriority.MEDIUM,
+                    status = TodoStatus.DONE,
+                    createdAt = 1L,
+                    completedAt = 10L
+                ),
+                TodoItem(
+                    id = "pending",
+                    trackerId = trackerId,
+                    title = "Pending",
+                    priority = TodoPriority.HIGH,
+                    status = TodoStatus.PENDING,
+                    createdAt = 2L
+                )
+            )
+        )
+        stubBaseFlows(todosFlow = todosFlow, hintSeen = false)
+        coEvery { repository.markTodoDone(any(), any()) } just runs
+
+        val viewModel = TodoViewModel(
+            repository = repository,
+            todoPreferencesRepository = preferencesRepository,
+            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(TodoAction.MarkAllDone)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { repository.markTodoDone("pending", any()) }
+        coVerify(exactly = 0) { repository.markTodoDone("done", any()) }
+    }
+
+    @Test
+    fun `clear completed deletes only done todos`() = runTest {
+        val todosFlow = MutableStateFlow(
+            listOf(
+                TodoItem(
+                    id = "done",
+                    trackerId = trackerId,
+                    title = "Done",
+                    priority = TodoPriority.MEDIUM,
+                    status = TodoStatus.DONE,
+                    createdAt = 1L,
+                    completedAt = 10L
+                ),
+                TodoItem(
+                    id = "pending",
+                    trackerId = trackerId,
+                    title = "Pending",
+                    priority = TodoPriority.HIGH,
+                    status = TodoStatus.PENDING,
+                    createdAt = 2L
+                )
+            )
+        )
+        stubBaseFlows(todosFlow = todosFlow, hintSeen = false)
+        coEvery { repository.deleteTodo(any()) } just runs
+
+        val viewModel = TodoViewModel(
+            repository = repository,
+            todoPreferencesRepository = preferencesRepository,
+            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(TodoAction.ClearCompleted)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { repository.deleteTodo("done") }
+        coVerify(exactly = 0) { repository.deleteTodo("pending") }
+    }
+
+    @Test
     fun `mark done delete and first swipe delegate to dependencies`() = runTest {
         stubBaseFlows(todosFlow = MutableStateFlow(emptyList()), hintSeen = false)
         coEvery { repository.markTodoDone("x", any()) } just runs

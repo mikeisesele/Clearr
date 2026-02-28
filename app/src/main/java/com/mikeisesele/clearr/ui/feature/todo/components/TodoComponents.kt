@@ -72,13 +72,18 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @Composable
-internal fun TodoNavBar(onBack: () -> Unit) {
+internal fun TodoNavBar(
+    onBack: (() -> Unit)? = null,
+    actionText: String? = null,
+    onActionClick: (() -> Unit)? = null
+) {
     ClearrTopBar(
         title = "Todos",
+        showLeading = onBack != null,
         leadingIcon = "←",
         onLeadingClick = onBack,
-        actionIcon = null,
-        onActionClick = null,
+        actionText = actionText,
+        onActionClick = onActionClick,
         leadingContainerColor = Color.Transparent
     )
 }

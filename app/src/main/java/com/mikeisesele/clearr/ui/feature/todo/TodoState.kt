@@ -35,7 +35,9 @@ sealed interface TodoAction {
     ) : TodoAction
     data class Rename(val id: String, val title: String) : TodoAction
     data class MarkDone(val id: String) : TodoAction
+    data object MarkAllDone : TodoAction
     data class Delete(val id: String) : TodoAction
+    data object ClearCompleted : TodoAction
     data object OnFirstSwipeAction : TodoAction
 }
 
