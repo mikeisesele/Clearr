@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.goals
+package com.mikeisesele.clearr.ui.feature.goals.previews
 
 import com.mikeisesele.clearr.data.model.Goal
 import com.mikeisesele.clearr.data.model.GoalFrequency

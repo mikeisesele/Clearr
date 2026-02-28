@@ -53,6 +53,7 @@ import com.mikeisesele.clearr.core.ai.GoalAiResult
 import com.mikeisesele.clearr.data.model.GoalFrequency
 import com.mikeisesele.clearr.ui.feature.goals.components.GoalSectionTitle
 import com.mikeisesele.clearr.ui.feature.goals.components.GoalSheetInput
+import com.mikeisesele.clearr.ui.feature.goals.utils.goalPalette
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes

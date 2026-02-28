@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.budget
+package com.mikeisesele.clearr.ui.feature.budget.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -45,6 +45,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.mikeisesele.clearr.ui.feature.budget.BudgetPlanDraft
+import com.mikeisesele.clearr.ui.feature.budget.previews.previewBudgetPlanDrafts
+import com.mikeisesele.clearr.ui.feature.budget.utils.formatKobo
+import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
@@ -114,7 +118,7 @@ internal fun BudgetPlanSetupDialog(
                     Spacer(Modifier.height(ClearrDimens.dp14))
 
                     drafts.forEach { draft ->
-                        val token = com.mikeisesele.clearr.ui.theme.ClearrColors.fromToken(draft.colorToken)
+                        val token = ClearrColors.fromToken(draft.colorToken)
                         var amountInput by rememberSaveable(draft.categoryId, draft.plannedAmountKobo) {
                             mutableStateOf(if (draft.plannedAmountKobo == 0L) "" else (draft.plannedAmountKobo / 100).toString())
                         }

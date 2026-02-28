@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.todo
+package com.mikeisesele.clearr.ui.feature.todo.previews
 
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority

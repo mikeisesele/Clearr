@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.budget
+package com.mikeisesele.clearr.ui.feature.budget.utils
 
 internal fun formatKobo(kobo: Long): String {
     val naira = kobo / 100.0

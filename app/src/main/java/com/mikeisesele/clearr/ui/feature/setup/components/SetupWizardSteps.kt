@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.setup
+package com.mikeisesele.clearr.ui.feature.setup.components
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable

@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -45,6 +44,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mikeisesele.clearr.ui.feature.budget.utils.CategoryPreset
+import com.mikeisesele.clearr.ui.feature.budget.utils.categoryPresets
+import com.mikeisesele.clearr.ui.feature.budget.utils.formatKobo
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
@@ -164,7 +166,11 @@ internal fun AddCategoryDetailDialog(
                             Column {
                                 Text(name.ifBlank { "Category name" }, fontSize = ClearrTextSizes.sp16, fontWeight = FontWeight.Bold, color = colors.text)
                                 Text(
-                                    if (plannedAmount.isBlank()) "Starts at ₦0" else "Budget: ${formatKobo((amountNaira * 100).toLong())}",
+                                    if (plannedAmount.isBlank()) "Starts at ₦0" else "Budget: ${
+                                        formatKobo(
+                                            (amountNaira * 100).toLong()
+                                        )
+                                    }",
                                     fontSize = ClearrTextSizes.sp12,
                                     color = colors.muted
                                 )

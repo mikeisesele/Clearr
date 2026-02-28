@@ -45,6 +45,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mikeisesele.clearr.ui.feature.setup.components.AmountStep
+import com.mikeisesele.clearr.ui.feature.setup.components.FrequencyStep
+import com.mikeisesele.clearr.ui.feature.setup.components.GroupInfoStep
+import com.mikeisesele.clearr.ui.feature.setup.components.LayoutStyleStep
+import com.mikeisesele.clearr.ui.feature.setup.components.ReviewStep
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme

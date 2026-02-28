@@ -52,6 +52,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.mikeisesele.clearr.R
+import com.mikeisesele.clearr.ui.feature.onboarding.components.Slide1Visual
+import com.mikeisesele.clearr.ui.feature.onboarding.components.Slide2Visual
+import com.mikeisesele.clearr.ui.feature.onboarding.components.Slide3Visual
+import com.mikeisesele.clearr.ui.feature.onboarding.components.slides
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes

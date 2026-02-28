@@ -31,6 +31,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.GoalSummary
+import com.mikeisesele.clearr.ui.feature.goals.components.AllClearedBanner
+import com.mikeisesele.clearr.ui.feature.goals.components.GoalDetailSheet
+import com.mikeisesele.clearr.ui.feature.goals.components.GoalsEmptyState
+import com.mikeisesele.clearr.ui.feature.goals.components.GoalsNavBar
+import com.mikeisesele.clearr.ui.feature.goals.components.GoalsSwipeHintStrip
+import com.mikeisesele.clearr.ui.feature.goals.components.SwipeableGoalRow
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes

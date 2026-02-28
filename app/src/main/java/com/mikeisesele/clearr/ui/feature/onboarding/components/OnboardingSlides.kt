@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.onboarding
+package com.mikeisesele.clearr.ui.feature.onboarding.components
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState

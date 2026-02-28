@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.budget
+package com.mikeisesele.clearr.ui.feature.budget.utils
 
 internal data class CategoryPreset(
     val name: String,

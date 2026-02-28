@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.budget
+package com.mikeisesele.clearr.ui.feature.budget.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.mikeisesele.clearr.data.model.CategorySummary
+import com.mikeisesele.clearr.ui.feature.budget.previews.previewBudgetSummaries
+import com.mikeisesele.clearr.ui.feature.budget.utils.formatKobo
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
@@ -158,7 +160,13 @@ internal fun LogExpenseDialog(
                                                 text = if (isOverBudget) {
                                                     "Over budget in ${category.category.name}"
                                                 } else {
-                                                    "${formatKobo(projectedRemainingKobo.coerceAtLeast(0L))} remaining in ${category.category.name}"
+                                                    "${
+                                                        formatKobo(
+                                                            projectedRemainingKobo.coerceAtLeast(
+                                                                0L
+                                                            )
+                                                        )
+                                                    } remaining in ${category.category.name}"
                                                 },
                                                 fontSize = ClearrTextSizes.sp12,
                                                 color = if (isOverBudget) ClearrColors.BrandDanger else colors.green

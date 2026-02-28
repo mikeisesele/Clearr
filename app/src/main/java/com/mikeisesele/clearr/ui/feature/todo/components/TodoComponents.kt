@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.todo
+package com.mikeisesele.clearr.ui.feature.todo.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
@@ -56,12 +56,17 @@ import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.data.model.derivedStatus
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
+import com.mikeisesele.clearr.ui.feature.todo.TodoFilter
+import com.mikeisesele.clearr.ui.feature.todo.previews.previewTodoItem
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.DuesColors
 import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.feature.todo.utils.dueLabel
+import com.mikeisesele.clearr.ui.feature.todo.utils.dueLabelColor
+import com.mikeisesele.clearr.ui.feature.todo.utils.priorityDotColor
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt

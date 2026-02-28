@@ -24,6 +24,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.data.model.CategorySummary
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
+import com.mikeisesele.clearr.ui.feature.budget.components.BudgetCategoryTable
+import com.mikeisesele.clearr.ui.feature.budget.components.BudgetHeroSection
+import com.mikeisesele.clearr.ui.feature.budget.components.BudgetPlanSetupDialog
+import com.mikeisesele.clearr.ui.feature.budget.components.LogExpenseDialog
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes

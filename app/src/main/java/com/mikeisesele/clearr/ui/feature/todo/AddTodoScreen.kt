@@ -51,6 +51,7 @@ import com.mikeisesele.clearr.core.ai.TodoAiResult
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.ui.feature.todo.components.CustomDatePickerDialog
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoSheetInput
+import com.mikeisesele.clearr.ui.feature.todo.utils.dueDateFromOption
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes

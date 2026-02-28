@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.budget
+package com.mikeisesele.clearr.ui.feature.budget.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -26,6 +26,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.BudgetSummary
+import com.mikeisesele.clearr.ui.feature.budget.previews.previewBudgetPeriods
+import com.mikeisesele.clearr.ui.feature.budget.previews.previewBudgetSummary
+import com.mikeisesele.clearr.ui.feature.budget.utils.formatKobo
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme

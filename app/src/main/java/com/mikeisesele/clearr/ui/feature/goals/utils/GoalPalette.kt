@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.goals
+package com.mikeisesele.clearr.ui.feature.goals.utils
 
 import androidx.compose.ui.graphics.Color
 import com.mikeisesele.clearr.ui.theme.ClearrColors

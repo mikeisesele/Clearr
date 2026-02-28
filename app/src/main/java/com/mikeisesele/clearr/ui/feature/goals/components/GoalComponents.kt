@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.goals
+package com.mikeisesele.clearr.ui.feature.goals.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -58,6 +58,8 @@ import com.mikeisesele.clearr.data.model.GoalFrequency
 import com.mikeisesele.clearr.data.model.GoalSummary
 import com.mikeisesele.clearr.data.model.HistoryEntry
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
+import com.mikeisesele.clearr.ui.feature.goals.previews.previewGoalSummary
+import com.mikeisesele.clearr.ui.feature.goals.utils.goalPalette
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes

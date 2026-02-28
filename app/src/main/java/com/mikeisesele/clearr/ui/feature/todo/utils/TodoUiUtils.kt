@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.todo
+package com.mikeisesele.clearr.ui.feature.todo.utils
 
 import androidx.compose.ui.graphics.Color
 import com.mikeisesele.clearr.data.model.TodoItem

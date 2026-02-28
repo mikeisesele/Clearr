@@ -1,4 +1,4 @@
-package com.mikeisesele.clearr.ui.feature.budget
+package com.mikeisesele.clearr.ui.feature.budget.previews
 
 import com.mikeisesele.clearr.data.model.BudgetCategory
 import com.mikeisesele.clearr.data.model.BudgetFrequency
@@ -6,6 +6,7 @@ import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.BudgetStatus
 import com.mikeisesele.clearr.data.model.BudgetSummary
 import com.mikeisesele.clearr.data.model.CategorySummary
+import com.mikeisesele.clearr.ui.feature.budget.BudgetPlanDraft
 
 internal val previewBudgetPeriods = listOf(
     BudgetPeriod(1L, 1L, BudgetFrequency.MONTHLY, "Nov 2025", 0L, 0L),
