@@ -10,6 +10,7 @@ import com.mikeisesele.clearr.data.model.derivedStatus
 import com.mikeisesele.clearr.data.repository.TodoPreferencesRepository
 import com.mikeisesele.clearr.domain.repository.DuesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
@@ -18,6 +19,7 @@ import java.time.LocalDate
 import java.util.UUID
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class TodoViewModel @Inject constructor(
     private val repository: DuesRepository,
