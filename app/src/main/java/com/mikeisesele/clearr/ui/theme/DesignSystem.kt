@@ -93,6 +93,7 @@ object ClearrDimens {
     val dp64 = 64.dp
     val dp72 = 72.dp
     val dp80 = 80.dp
+    val dp84 = 84.dp
     val dp90 = 90.dp
     val dp96 = 96.dp
     val dp99 = 99.dp
