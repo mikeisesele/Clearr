@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -33,12 +32,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import kotlinx.coroutines.delay
 
 internal data class SlideData(
@@ -82,18 +80,30 @@ internal fun Slide1Visual() {
     Column(verticalArrangement = Arrangement.spacedBy(ClearrDimens.dp6), modifier = Modifier.fillMaxWidth()) {
         budgetCategories.forEachIndexed { i, name ->
             val active = i in activeIndices
-            val rowOffset by animateDpAsState(targetValue = if (active) (-2).dp else ClearrDimens.dp2, animationSpec = tween(400), label = "row_offset_$i")
+            val rowOffset by animateDpAsState(
+                targetValue = if (active) (-2).dp else ClearrDimens.dp2,
+                animationSpec = tween(400),
+                label = "row_offset_$i"
+            )
             val avatarBg = if (active) ClearrColors.BlueBg else ClearrColors.Border
             val statusColor = if (active) ClearrColors.Blue else ClearrColors.TextMuted
 
-            Surface(color = ClearrColors.Surface, shape = RoundedCornerShape(ClearrDimens.dp14), shadowElevation = ClearrDimens.dp1, modifier = Modifier.fillMaxWidth().offset(x = rowOffset)) {
-                Row(modifier = Modifier.padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp10), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp10)) {
+            Surface(
+                color = ClearrColors.Surface,
+                shape = RoundedCornerShape(ClearrDimens.dp14),
+                shadowElevation = ClearrDimens.dp1,
+                modifier = Modifier.fillMaxWidth().offset(x = rowOffset)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp10),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp10)
+                ) {
                     Box(modifier = Modifier.size(ClearrDimens.dp30).clip(CircleShape).background(avatarBg), contentAlignment = Alignment.Center) {
                         Text(name.first().toString(), fontSize = ClearrTextSizes.sp13, color = if (active) ClearrColors.Blue else ClearrColors.TextSecondary)
                     }
                     Text(name, fontSize = ClearrTextSizes.sp13, color = ClearrColors.TextPrimary, modifier = Modifier.weight(1f))
                     Text(if (active) "Tracked" else "Waiting", fontSize = ClearrTextSizes.sp11, color = statusColor)
-                    Box(modifier = Modifier.size(ClearrDimens.dp7).clip(CircleShape).background(statusColor))
                 }
             }
         }
@@ -102,18 +112,38 @@ internal fun Slide1Visual() {
 
 @Composable
 internal fun Slide2Visual() {
-    var animated by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { delay(100); animated = true }
+    var animateCards by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { delay(80); animateCards = true }
 
-    Column(verticalArrangement = Arrangement.spacedBy(ClearrDimens.dp8), modifier = Modifier.fillMaxWidth()) {
-        mockTrackers.forEachIndexed { i, tracker ->
-            val pct = tracker.done.toFloat() / tracker.total
-            val animatedPct by animateFloatAsState(targetValue = if (animated) pct else 0f, animationSpec = tween(1000, delayMillis = i * 100, easing = FastOutSlowInEasing), label = "bar_$i")
-            val cardAlpha by animateFloatAsState(targetValue = if (animated) 1f else 0f, animationSpec = tween(300, delayMillis = i * 100), label = "card_alpha_$i")
-            val cardOffset by animateDpAsState(targetValue = if (animated) ClearrDimens.dp0 else ClearrDimens.dp12, animationSpec = tween(300, delayMillis = i * 100), label = "card_offset_$i")
+    Column(verticalArrangement = Arrangement.spacedBy(ClearrDimens.dp10), modifier = Modifier.fillMaxWidth()) {
+        mockTrackers.forEachIndexed { index, tracker ->
+            val cardOffset by animateDpAsState(
+                targetValue = if (animateCards) 0.dp else (18 + index * 8).dp,
+                animationSpec = tween(500 + index * 120, easing = FastOutSlowInEasing),
+                label = "tracker_card_offset_$index"
+            )
+            val cardAlpha by animateFloatAsState(
+                targetValue = if (animateCards) 1f else 0f,
+                animationSpec = tween(420 + index * 120),
+                label = "tracker_card_alpha_$index"
+            )
+            val animatedPct by animateFloatAsState(
+                targetValue = if (animateCards) tracker.done.toFloat() / tracker.total else 0f,
+                animationSpec = tween(900 + index * 120, easing = FastOutSlowInEasing),
+                label = "tracker_progress_$index"
+            )
 
-            Surface(color = ClearrColors.Surface, shape = RoundedCornerShape(ClearrDimens.dp14), shadowElevation = ClearrDimens.dp1, modifier = Modifier.fillMaxWidth().alpha(cardAlpha).offset(y = cardOffset)) {
-                Row(modifier = Modifier.padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp10), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp10)) {
+            Surface(
+                color = ClearrColors.Surface,
+                shape = RoundedCornerShape(ClearrDimens.dp14),
+                shadowElevation = ClearrDimens.dp1,
+                modifier = Modifier.fillMaxWidth().alpha(cardAlpha).offset(y = cardOffset)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp10),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp10)
+                ) {
                     Box(modifier = Modifier.size(ClearrDimens.dp32).clip(RoundedCornerShape(ClearrDimens.dp10)).background(tracker.bg), contentAlignment = Alignment.Center) {
                         Text(tracker.icon, fontSize = ClearrTextSizes.sp15, color = tracker.color)
                     }
@@ -147,8 +177,8 @@ internal fun Slide3Visual() {
     Surface(color = ClearrColors.Surface, shape = RoundedCornerShape(ClearrDimens.dp16), shadowElevation = ClearrDimens.dp2, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(ClearrDimens.dp16)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("This week", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = ClearrTextSizes.sp14, color = ClearrColors.TextPrimary)
-                Text("${(pct * 100).toInt()}%", fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, fontSize = ClearrTextSizes.sp14, color = ClearrColors.Blue)
+                Text("This week", fontWeight = FontWeight.Bold, fontSize = ClearrTextSizes.sp14, color = ClearrColors.TextPrimary)
+                Text("${(pct * 100).toInt()}%", fontWeight = FontWeight.ExtraBold, fontSize = ClearrTextSizes.sp14, color = ClearrColors.Blue)
             }
             Spacer(Modifier.height(ClearrDimens.dp8))
             Box(modifier = Modifier.fillMaxWidth().height(ClearrDimens.dp6).clip(RoundedCornerShape(ClearrDimens.dp99)).background(ClearrColors.Border)) {
@@ -180,10 +210,4 @@ internal fun OnboardingStatTile(label: String, value: String, color: Color, bg: 
             Text(label, fontSize = ClearrTextSizes.sp10, color = color.copy(alpha = 0.7f))
         }
     }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun Slide1VisualPreview() {
-    ClearrTheme { Slide1Visual() }
 }

@@ -10,7 +10,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -46,12 +44,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import com.mikeisesele.clearr.R
 import com.mikeisesele.clearr.ui.feature.onboarding.components.Slide1Visual
 import com.mikeisesele.clearr.ui.feature.onboarding.components.Slide2Visual
 import com.mikeisesele.clearr.ui.feature.onboarding.components.Slide3Visual
@@ -59,7 +53,6 @@ import com.mikeisesele.clearr.ui.feature.onboarding.components.slides
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.ClearrTheme
 
 @Composable
 fun OnboardingScreen(
@@ -86,7 +79,10 @@ fun OnboardingScreen(
                         color = slide.accentColor.copy(alpha = 0.7f),
                         fontSize = ClearrTextSizes.sp13,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clip(RoundedCornerShape(ClearrDimens.dp8)).clickable { onSkip() }.padding(horizontal = ClearrDimens.dp10, vertical = ClearrDimens.dp6)
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(ClearrDimens.dp8))
+                            .clickable { onSkip() }
+                            .padding(horizontal = ClearrDimens.dp10, vertical = ClearrDimens.dp6)
                     )
                 }
 
@@ -110,10 +106,11 @@ fun OnboardingScreen(
                             modifier = Modifier.size(ClearrDimens.dp64).clip(RoundedCornerShape(ClearrDimens.dp18)).background(s.accentColor.copy(alpha = 0.12f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.clear_icon_vector),
-                                contentDescription = "Clearr icon",
-                                modifier = Modifier.size(ClearrDimens.dp200)
+                            Text(
+                                text = s.icon,
+                                fontSize = ClearrTextSizes.sp36,
+                                fontWeight = FontWeight.Black,
+                                color = s.accentColor
                             )
                         }
                         Spacer(Modifier.height(ClearrDimens.dp20))
@@ -182,10 +179,4 @@ fun OnboardingScreen(
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun OnboardingScreenPreview() {
-    ClearrTheme { OnboardingScreen(onComplete = {}, onSkip = {}) }
 }
