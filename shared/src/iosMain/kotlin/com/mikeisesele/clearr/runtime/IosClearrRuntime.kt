@@ -14,6 +14,11 @@ class IosClearrRuntime(
     private val delegate: ClearrRuntime = InMemoryClearrRuntime(
         repository = IosClearrRepository(defaults),
         onboardingStatusRepository = IosOnboardingStatusRepository(defaults),
+        budgetPreferencesRepository = IosBudgetPreferencesRepository(defaults),
+        todoPreferencesRepository = IosTodoPreferencesRepository(defaults),
+        budgetAiService = IosBudgetAiService(),
+        todoAiService = IosTodoAiService(),
+        goalsAiService = IosGoalsAiService(),
         nowMillis = {
             memScoped {
                 val tv = alloc<timeval>()
