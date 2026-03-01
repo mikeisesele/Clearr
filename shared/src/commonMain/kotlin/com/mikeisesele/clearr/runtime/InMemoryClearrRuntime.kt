@@ -1,6 +1,8 @@
 package com.mikeisesele.clearr.runtime
 
 import com.mikeisesele.clearr.core.time.nowEpochMillis
+import com.mikeisesele.clearr.domain.repository.ClearrRepository
+import com.mikeisesele.clearr.domain.repository.OnboardingStatusRepository
 import com.mikeisesele.clearr.preview.InMemoryBudgetPreferencesRepository
 import com.mikeisesele.clearr.preview.InMemoryClearrRepository
 import com.mikeisesele.clearr.preview.InMemoryOnboardingStatusRepository
@@ -10,10 +12,10 @@ import com.mikeisesele.clearr.preview.PreviewGoalsAiService
 import com.mikeisesele.clearr.preview.PreviewTodoAiService
 
 class InMemoryClearrRuntime(
-    override val repository: InMemoryClearrRepository = InMemoryClearrRepository.sample(),
-    override val onboardingStatusRepository: InMemoryOnboardingStatusRepository =
+    override val repository: ClearrRepository = InMemoryClearrRepository.sample(),
+    override val onboardingStatusRepository: OnboardingStatusRepository =
         InMemoryOnboardingStatusRepository(
-            initialComplete = repository.snapshotAppConfig()?.setupComplete == true
+            initialComplete = (repository as? InMemoryClearrRepository)?.snapshotAppConfig()?.setupComplete == true
         ),
     override val budgetPreferencesRepository: InMemoryBudgetPreferencesRepository = InMemoryBudgetPreferencesRepository(),
     override val todoPreferencesRepository: InMemoryTodoPreferencesRepository = InMemoryTodoPreferencesRepository(),

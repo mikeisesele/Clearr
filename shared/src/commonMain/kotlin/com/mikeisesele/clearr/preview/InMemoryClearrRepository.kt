@@ -240,7 +240,7 @@ class InMemoryClearrRepository private constructor(
     fun snapshotAppConfig(): AppConfig? = appConfigFlow.value
 
     companion object {
-        fun empty(setupComplete: Boolean = false): InMemoryClearrRepository = InMemoryClearrRepository(
+        fun empty(appConfig: AppConfig? = AppConfig(setupComplete = false)): InMemoryClearrRepository = InMemoryClearrRepository(
             trackers = emptyList(),
             budgetPeriods = emptyList(),
             budgetCategories = emptyList(),
@@ -249,7 +249,7 @@ class InMemoryClearrRepository private constructor(
             goals = emptyList(),
             goalCompletions = emptyList(),
             todos = emptyList(),
-            appConfig = AppConfig(setupComplete = setupComplete)
+            appConfig = appConfig
         )
 
         fun sample(): InMemoryClearrRepository {

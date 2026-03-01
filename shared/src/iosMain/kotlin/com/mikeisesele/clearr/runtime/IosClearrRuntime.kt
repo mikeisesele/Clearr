@@ -1,17 +1,19 @@
 package com.mikeisesele.clearr.runtime
 
-import com.mikeisesele.clearr.preview.InMemoryClearrRepository
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import platform.Foundation.NSUserDefaults
 import platform.posix.gettimeofday
 import platform.posix.timeval
 
 @OptIn(ExperimentalForeignApi::class)
 class IosClearrRuntime(
+    defaults: NSUserDefaults = NSUserDefaults.standardUserDefaults,
     private val delegate: ClearrRuntime = InMemoryClearrRuntime(
-        repository = InMemoryClearrRepository.empty(),
+        repository = IosClearrRepository(defaults),
+        onboardingStatusRepository = IosOnboardingStatusRepository(defaults),
         nowMillis = {
             memScoped {
                 val tv = alloc<timeval>()
