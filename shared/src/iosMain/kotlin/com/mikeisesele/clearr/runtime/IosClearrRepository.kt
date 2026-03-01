@@ -2,6 +2,9 @@ package com.mikeisesele.clearr.runtime
 
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.Frequency
+import com.mikeisesele.clearr.data.model.Goal
+import com.mikeisesele.clearr.data.model.GoalCompletion
+import com.mikeisesele.clearr.data.model.GoalFrequency
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
@@ -29,6 +32,8 @@ private const val IOS_APP_CONFIG_REMINDERS_ENABLED_KEY = "clearr.appconfig.remin
 private const val IOS_APP_CONFIG_REMINDER_DAY_KEY = "clearr.appconfig.reminderDayOfPeriod"
 private const val IOS_APP_CONFIG_SETUP_COMPLETE_KEY = "clearr.appconfig.setupComplete"
 private const val IOS_TRACKERS_KEY = "clearr.trackers"
+private const val IOS_GOALS_KEY = "clearr.goals"
+private const val IOS_GOAL_COMPLETIONS_KEY = "clearr.goalCompletions"
 private const val IOS_TODOS_KEY = "clearr.todos"
 private const val RECORD_SEPARATOR = "\u001E"
 private const val FIELD_SEPARATOR = "\u001F"
@@ -42,8 +47,8 @@ class IosClearrRepository(
         budgetCategories = emptyList(),
         budgetPlans = emptyList(),
         budgetEntries = emptyList(),
-        goals = emptyList(),
-        goalCompletions = emptyList(),
+        goals = loadGoals(defaults),
+        goalCompletions = loadGoalCompletions(defaults),
         todos = loadTodos(defaults),
         appConfig = loadAppConfig(defaults)
     )
@@ -74,6 +79,8 @@ class IosClearrRepository(
     override suspend fun deleteTracker(id: Long) {
         delegate.deleteTracker(id)
         persistTrackers()
+        persistGoals()
+        persistGoalCompletions()
         persistTodos()
     }
 
@@ -102,8 +109,35 @@ class IosClearrRepository(
         persistTodos()
     }
 
+    override suspend fun insertGoal(goal: Goal) {
+        delegate.insertGoal(goal)
+        persistGoals()
+    }
+
+    override suspend fun addGoalCompletion(completion: GoalCompletion) {
+        delegate.addGoalCompletion(completion)
+        persistGoalCompletions()
+    }
+
+    override suspend fun deleteGoal(goalId: String) {
+        delegate.deleteGoal(goalId)
+        persistGoals()
+        persistGoalCompletions()
+    }
+
     private fun persistTrackers() {
         defaults.setObject(encodeTrackers(delegate.snapshotTrackers()), forKey = IOS_TRACKERS_KEY)
+    }
+
+    private fun persistGoals() {
+        defaults.setObject(encodeGoals(delegate.snapshotGoals()), forKey = IOS_GOALS_KEY)
+    }
+
+    private fun persistGoalCompletions() {
+        defaults.setObject(
+            encodeGoalCompletions(delegate.snapshotGoalCompletions()),
+            forKey = IOS_GOAL_COMPLETIONS_KEY
+        )
     }
 
     private fun persistTodos() {
@@ -172,6 +206,42 @@ private fun loadTrackers(defaults: NSUserDefaults): List<Tracker> =
         }
         ?: emptyList()
 
+private fun loadGoals(defaults: NSUserDefaults): List<Goal> =
+    defaults.stringForKey(IOS_GOALS_KEY)
+        ?.takeIf { it.isNotEmpty() }
+        ?.split(RECORD_SEPARATOR)
+        ?.filter { it.isNotEmpty() }
+        ?.map { record ->
+            val fields = decodeRecord(record)
+            Goal(
+                id = fields[0],
+                trackerId = fields[1].toLong(),
+                title = fields[2],
+                emoji = fields[3],
+                colorToken = fields[4],
+                target = fields[5].takeUnless { it == NULL_TOKEN },
+                frequency = GoalFrequency.valueOf(fields[6]),
+                createdAt = fields[7].toLong()
+            )
+        }
+        ?: emptyList()
+
+private fun loadGoalCompletions(defaults: NSUserDefaults): List<GoalCompletion> =
+    defaults.stringForKey(IOS_GOAL_COMPLETIONS_KEY)
+        ?.takeIf { it.isNotEmpty() }
+        ?.split(RECORD_SEPARATOR)
+        ?.filter { it.isNotEmpty() }
+        ?.map { record ->
+            val fields = decodeRecord(record)
+            GoalCompletion(
+                id = fields[0],
+                goalId = fields[1],
+                periodKey = fields[2],
+                completedAt = fields[3].toLong()
+            )
+        }
+        ?: emptyList()
+
 private fun loadTodos(defaults: NSUserDefaults): List<TodoItem> =
     defaults.stringForKey(IOS_TODOS_KEY)
         ?.takeIf { it.isNotEmpty() }
@@ -205,6 +275,34 @@ private fun encodeTrackers(trackers: List<Tracker>): String =
                 tracker.defaultAmount.toString(),
                 tracker.isNew.toString(),
                 tracker.createdAt.toString()
+            )
+        )
+    }
+
+private fun encodeGoals(goals: List<Goal>): String =
+    goals.joinToString(RECORD_SEPARATOR) { goal ->
+        encodeRecord(
+            listOf(
+                goal.id,
+                goal.trackerId.toString(),
+                goal.title,
+                goal.emoji,
+                goal.colorToken,
+                goal.target ?: NULL_TOKEN,
+                goal.frequency.name,
+                goal.createdAt.toString()
+            )
+        )
+    }
+
+private fun encodeGoalCompletions(completions: List<GoalCompletion>): String =
+    completions.joinToString(RECORD_SEPARATOR) { completion ->
+        encodeRecord(
+            listOf(
+                completion.id,
+                completion.goalId,
+                completion.periodKey,
+                completion.completedAt.toString()
             )
         )
     }
