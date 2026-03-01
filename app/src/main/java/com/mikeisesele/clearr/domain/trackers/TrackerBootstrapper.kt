@@ -43,5 +43,13 @@ class TrackerBootstrapper @Inject constructor(
         createIfMissing(TrackerType.GOALS, "Goals")
         createIfMissing(TrackerType.TODO, "Todos")
         createIfMissing(TrackerType.BUDGET, "Budget")
+
+        existing
+            .filter { it.type == TrackerType.BUDGET }
+            .forEach { tracker ->
+                listOf(BudgetFrequency.MONTHLY, BudgetFrequency.WEEKLY).forEach { budgetFrequency ->
+                    repository.ensureBudgetPeriods(tracker.id, budgetFrequency)
+                }
+            }
     }
 }

@@ -80,20 +80,27 @@ internal fun DashboardContent(
             days = state.daysLabel
         )
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentPadding = PaddingValues(
-                start = ClearrDimens.dp20,
-                end = ClearrDimens.dp20,
-                top = ClearrDimens.dp8,
-                bottom = ClearrDimens.dp12
-            ),
-            verticalArrangement = Arrangement.spacedBy(ClearrDimens.dp20)
-        ) {
-            if (!isLoading) {
-                if (state.visibleTiles.isNotEmpty()) {
+        if (!isLoading && state.visibleTiles.isEmpty()) {
+            DashboardEmptyState(
+                onNavigateToTab = onQuickAction,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(
+                    start = ClearrDimens.dp20,
+                    end = ClearrDimens.dp20,
+                    top = ClearrDimens.dp8,
+                    bottom = ClearrDimens.dp12
+                ),
+                verticalArrangement = Arrangement.spacedBy(ClearrDimens.dp20)
+            ) {
+                if (!isLoading && state.visibleTiles.isNotEmpty()) {
                     item {
                         ClearanceScoreSection(
                             score = state.score,
@@ -102,46 +109,41 @@ internal fun DashboardContent(
                     }
                 }
 
-                when {
-                    state.visibleTiles.isEmpty() -> item {
-                        DashboardEmptyState(
-                            onNavigateToTab = onQuickAction,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillParentMaxHeight()
-                        )
-                    }
-
-                    state.urgencyItems.isNotEmpty() -> {
-                        item {
-                            UrgencyHeader(modifier = Modifier.fillMaxWidth())
+                if (!isLoading) {
+                    when {
+                        state.urgencyItems.isNotEmpty() -> {
+                            item {
+                                UrgencyHeader(modifier = Modifier.fillMaxWidth())
+                            }
+                            item {
+                                UrgencyStrip(
+                                    state = state,
+                                    onDismissUrgency = onDismissUrgency,
+                                    onQuickAction = onQuickAction,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
-                        item {
-                            UrgencyStrip(
-                                state = state,
-                                onDismissUrgency = onDismissUrgency,
-                                onQuickAction = onQuickAction,
+
+                        state.score.hasAnyClearedTile() -> item {
+                            AllClearCard(
+                                hasTrackers = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                    }
-
-                    state.score.hasAnyClearedTile() -> item {
-                        AllClearCard(
-                            hasTrackers = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
                 }
             }
         }
 
-        QuickActionRow(
-            onLogSpend = { onQuickAction(DashboardTrackerType.BUDGET) },
-            onMarkGoal = { onQuickAction(DashboardTrackerType.GOALS) },
-            onRecordDue = { onQuickAction(DashboardTrackerType.DUES) },
-            modifier = Modifier.navigationBarsPadding()
-        )
+        if (!isLoading && state.visibleTiles.isNotEmpty()) {
+            QuickActionRow(
+                onLogSpend = { onQuickAction(DashboardTrackerType.BUDGET) },
+                onMarkGoal = { onQuickAction(DashboardTrackerType.GOALS) },
+                onRecordDue = { onQuickAction(DashboardTrackerType.DUES) },
+                modifier = Modifier.navigationBarsPadding()
+            )
+        }
     }
 }
 
