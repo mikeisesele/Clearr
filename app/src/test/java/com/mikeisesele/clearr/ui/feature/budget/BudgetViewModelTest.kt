@@ -11,7 +11,7 @@ import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.domain.repository.BudgetPreferencesRepository
-import com.mikeisesele.clearr.domain.repository.ClearrRepository
+import com.mikeisesele.clearr.domain.repository.BudgetRepository
 import com.mikeisesele.clearr.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.slot
@@ -36,7 +36,7 @@ class BudgetViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = mockk<ClearrRepository>()
+    private val repository = mockk<BudgetRepository>()
     private val budgetPreferencesRepository = mockk<BudgetPreferencesRepository>()
     private val trackerId = 77L
 
