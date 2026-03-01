@@ -2,7 +2,7 @@ package com.mikeisesele.clearr.ui.navigation
 
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.di.AppStateHolder
-import com.mikeisesele.clearr.domain.repository.DuesRepository
+import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import com.mikeisesele.clearr.testutil.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
@@ -21,7 +21,7 @@ class AppConfigViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = mockk<DuesRepository>()
+    private val repository = mockk<ClearrRepository>()
     private val appState = AppStateHolder()
 
     @Test

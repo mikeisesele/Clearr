@@ -47,10 +47,10 @@ private val LightColorScheme = lightColorScheme(
 )
 
 /**
- * Theme-aware color bag used throughout the app via LocalDuesColors.current.
+ * Theme-aware color bag used throughout the app via LocalClearrUiColors.current.
  * Maps Clearr brand tokens to semantic slots used by existing composables.
  */
-data class DuesColors(
+data class ClearrUiColors(
     val bg: Color,
     val surface: Color,
     val card: Color,
@@ -61,7 +61,7 @@ data class DuesColors(
     val green: Color,
     /** Caution / pending — Clearr Amber */
     val amber: Color,
-    /** Danger / unpaid — Clearr Coral */
+    /** Danger — Clearr Coral */
     val red: Color,
     val text: Color,
     val muted: Color,
@@ -69,8 +69,8 @@ data class DuesColors(
     val isDark: Boolean
 )
 
-val LocalDuesColors = staticCompositionLocalOf {
-    DuesColors(
+val LocalClearrUiColors = staticCompositionLocalOf {
+    ClearrUiColors(
         bg      = ClearrColors.DarkBackground,
         surface = ClearrColors.DarkSurface,
         card    = ClearrColors.DarkCard,
@@ -86,8 +86,8 @@ val LocalDuesColors = staticCompositionLocalOf {
     )
 }
 
-/** Light-mode DuesColors instance using Clearr tokens */
-private fun lightDuesColors() = DuesColors(
+/** Light-mode ClearrUiColors instance using Clearr tokens */
+private fun lightClearrUiColors() = ClearrUiColors(
     bg      = ClearrColors.BrandBackground,
     surface = ClearrColors.Surface,
     card    = LightCard,
@@ -102,8 +102,8 @@ private fun lightDuesColors() = DuesColors(
     isDark  = false
 )
 
-/** Dark-mode DuesColors instance using Clearr tokens */
-private fun darkDuesColors() = DuesColors(
+/** Dark-mode ClearrUiColors instance using Clearr tokens */
+private fun darkClearrUiColors() = ClearrUiColors(
     bg      = ClearrColors.DarkBackground,
     surface = ClearrColors.DarkSurface,
     card    = ClearrColors.DarkCard,
@@ -139,10 +139,10 @@ fun ClearrTheme(
         else      -> LightColorScheme
     }
 
-    val duesColors = if (darkTheme) darkDuesColors() else lightDuesColors()
+    val uiColors = if (darkTheme) darkClearrUiColors() else lightClearrUiColors()
 
     CompositionLocalProvider(
-        LocalDuesColors provides duesColors,
+        LocalClearrUiColors provides uiColors,
         LocalClearrSpacing provides ClearrSpacing(),
         LocalClearrRadii provides ClearrRadii(),
         LocalClearrSizes provides ClearrSizes()

@@ -8,7 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.graphics.toArgb
 import dagger.hilt.android.AndroidEntryPoint
-import com.mikeisesele.clearr.ui.navigation.DuesNavHost
+import com.mikeisesele.clearr.ui.navigation.ClearrNavHost
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             ClearrTheme(themeMode = ThemeMode.LIGHT) {
-                DuesNavHost()
+                ClearrNavHost()
             }
         }
     }

@@ -5,14 +5,14 @@ import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
-import com.mikeisesele.clearr.domain.repository.DuesRepository
+import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class TrackerBootstrapper @Inject constructor(
-    private val repository: DuesRepository
+    private val repository: ClearrRepository
 ) {
     suspend fun ensureStaticTrackers() {
         val now = System.currentTimeMillis()

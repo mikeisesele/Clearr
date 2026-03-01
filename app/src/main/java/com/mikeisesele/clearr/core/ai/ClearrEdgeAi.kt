@@ -114,7 +114,7 @@ object ClearrEdgeAi {
             val context = runCatching { ClearrApplication.appContext }.getOrNull() ?: return fallback
             val prompt = """
                 Parse setup intent. Respond strictly as JSON with keys:
-                trackerType(DUES|GOALS|TODO|BUDGET|null),
+                trackerType(GOALS|TODO|BUDGET|null),
                 frequency(MONTHLY|WEEKLY|QUARTERLY|ANNUAL|null),
                 defaultAmount(number|null),
                 trackerName(string|null)
@@ -301,20 +301,6 @@ object ClearrEdgeAi {
         }
     }
 
-    fun remittanceRiskLabel(
-        memberName: String,
-        paidMonths: Int,
-        expectedMonths: Int
-    ): String? {
-        if (expectedMonths <= 0) return null
-        val ratio = paidMonths.toFloat() / expectedMonths
-        return when {
-            ratio < 0.5f -> "$memberName has high remittance risk."
-            ratio < 0.75f -> "$memberName may miss upcoming remittance."
-            else -> null
-        }
-    }
-
     fun prioritizeTrackers(list: List<TrackerSummary>): List<TrackerSummary> {
         return list.sortedWith(
             compareByDescending<TrackerSummary> { urgencyScore(it) }
@@ -325,7 +311,6 @@ object ClearrEdgeAi {
     fun parseSetupIntent(text: String): SetupAiResult {
         val lower = text.lowercase(Locale.getDefault())
         val type = when {
-            hasAny(lower, "remittance", "dues", "fees", "payment", "clients") -> TrackerType.DUES
             hasAny(lower, "goal", "habit", "streak") -> TrackerType.GOALS
             hasAny(lower, "todo", "task", "checklist") -> TrackerType.TODO
             hasAny(lower, "budget", "expense", "spend") -> TrackerType.BUDGET
@@ -346,8 +331,6 @@ object ClearrEdgeAi {
             ?.toDoubleOrNull()
 
         val trackerName = when (type) {
-            TrackerType.DUES -> "Remittance"
-            TrackerType.EXPENSES -> "Remittance"
             TrackerType.GOALS -> "Goals"
             TrackerType.TODO -> "Todos"
             TrackerType.BUDGET -> "Budget"
@@ -438,8 +421,6 @@ object ClearrEdgeAi {
         val incomplete = max(summary.totalMembers - summary.completedCount, 0)
         val incompleteScore = if (summary.totalMembers > 0) (100 - summary.completionPercent) else 20
         val typeBias = when (summary.type) {
-            TrackerType.DUES -> 35
-            TrackerType.EXPENSES -> 35
             TrackerType.TODO -> 25
             TrackerType.BUDGET -> 20
             TrackerType.GOALS -> 10

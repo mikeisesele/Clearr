@@ -6,7 +6,6 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -16,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.mikeisesele.clearr.ui.theme.ClearrColors
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 internal enum class AppBottomNavItem(
     val label: String,
@@ -25,8 +24,7 @@ internal enum class AppBottomNavItem(
     HOME("Home", Icons.Filled.Home),
     BUDGET("Budget", Icons.Filled.AccountBalanceWallet),
     TODOS("Todos", Icons.Filled.Checklist),
-    GOALS("Goals", Icons.Filled.CheckCircle),
-    REMITTANCE("Remittance", Icons.Filled.Payments)
+    GOALS("Goals", Icons.Filled.CheckCircle)
 }
 
 @Composable
@@ -34,7 +32,7 @@ internal fun AppBottomNav(
     selectedItem: AppBottomNavItem?,
     onSelect: (AppBottomNavItem) -> Unit
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     NavigationBar(
         containerColor = colors.surface,
         contentColor = colors.text,

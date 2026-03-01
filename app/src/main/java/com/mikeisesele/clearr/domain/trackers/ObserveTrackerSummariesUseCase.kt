@@ -3,40 +3,33 @@ package com.mikeisesele.clearr.domain.trackers
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.GoalPeriodKey
-import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
-import com.mikeisesele.clearr.data.model.TrackerMember
-import com.mikeisesele.clearr.data.model.TrackerPeriod
-import com.mikeisesele.clearr.data.model.TrackerRecord
 import com.mikeisesele.clearr.data.model.TrackerSummary
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.data.model.derivedStatus
-import com.mikeisesele.clearr.domain.repository.DuesRepository
+import com.mikeisesele.clearr.domain.repository.ClearrRepository
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class ObserveTrackerSummariesUseCase @Inject constructor(
-    private val repository: DuesRepository
+    private val repository: ClearrRepository
 ) {
     operator fun invoke(): Flow<List<TrackerSummary>> =
         repository.getAllTrackers().flatMapLatest { trackers ->
-            if (trackers.isEmpty()) {
-                flowOf(emptyList())
-            } else {
-                combine(trackers.map(::summaryFlow)) { summaries -> summaries.toList() }
-            }
+            if (trackers.isEmpty()) flowOf(emptyList())
+            else combine(trackers.map(::summaryFlow)) { it.toList() }
         }
 
     private fun summaryFlow(tracker: Tracker): Flow<TrackerSummary> = when (tracker.type) {
@@ -55,38 +48,22 @@ class ObserveTrackerSummariesUseCase @Inject constructor(
                                         .map { plans ->
                                             val latestPeriod = periods.lastOrNull()
                                             val periodEntries = entries.filter { it.periodId == latestPeriod?.id }
-                                            val periodPlans = plans.filter { it.periodId == latestPeriod?.id }
-                                                .associateBy { it.categoryId }
+                                            val periodPlans = plans.filter { it.periodId == latestPeriod?.id }.associateBy { it.categoryId }
                                             val totalPlannedKobo = categories.sumOf { category ->
                                                 periodPlans[category.id]?.plannedAmountKobo ?: category.plannedAmountKobo
                                             }
                                             val totalSpentKobo = periodEntries.sumOf { it.amountKobo }
                                             val clearedCount = categories.count { category ->
-                                                val spent = periodEntries
-                                                    .asSequence()
-                                                    .filter { it.categoryId == category.id }
-                                                    .sumOf { it.amountKobo }
-                                                val planned = periodPlans[category.id]?.plannedAmountKobo
-                                                    ?: category.plannedAmountKobo
+                                                val spent = periodEntries.filter { it.categoryId == category.id }.sumOf { it.amountKobo }
+                                                val planned = periodPlans[category.id]?.plannedAmountKobo ?: category.plannedAmountKobo
                                                 planned > 0L && spent >= planned
                                             }
-                                            TrackerSummary(
-                                                trackerId = tracker.id,
-                                                name = tracker.name,
-                                                type = tracker.type,
-                                                frequency = tracker.frequency,
+                                            tracker.toSummary(
                                                 currentPeriodLabel = latestPeriod?.label ?: currentPeriodLabel(tracker.frequency),
-                                                totalMembers = categories.size,
-                                                completedCount = clearedCount,
-                                                completionPercent = if (categories.isNotEmpty()) {
-                                                    ((clearedCount.toDouble() / categories.size) * 100).toInt().coerceIn(0, 100)
-                                                } else {
-                                                    0
-                                                },
+                                                total = categories.size,
+                                                completed = clearedCount,
                                                 amountCompletedKobo = totalSpentKobo,
-                                                amountTargetKobo = totalPlannedKobo,
-                                                isNew = tracker.isNew,
-                                                createdAt = tracker.createdAt
+                                                amountTargetKobo = totalPlannedKobo
                                             )
                                         }
                                 }
@@ -96,114 +73,49 @@ class ObserveTrackerSummariesUseCase @Inject constructor(
 
         TrackerType.TODO -> repository.getTodosForTracker(tracker.id).map { todos ->
             val doneCount = todos.count { it.derivedStatus() == TodoStatus.DONE }
-            TrackerSummary(
-                trackerId = tracker.id,
-                name = tracker.name,
-                type = tracker.type,
-                frequency = tracker.frequency,
+            tracker.toSummary(
                 currentPeriodLabel = "Todo List",
-                totalMembers = todos.size,
-                completedCount = doneCount,
-                completionPercent = if (todos.isNotEmpty()) {
-                    ((doneCount.toDouble() / todos.size) * 100).toInt().coerceIn(0, 100)
-                } else {
-                    0
-                },
-                isNew = tracker.isNew,
-                createdAt = tracker.createdAt
+                total = todos.size,
+                completed = doneCount
             )
         }
 
         TrackerType.GOALS -> repository.getGoalsForTracker(tracker.id)
             .flatMapLatest { goals ->
-                repository.getGoalCompletionsForTracker(tracker.id)
-                    .map { completions ->
-                        val doneCount = goals.count { goal ->
-                            val currentKey = GoalPeriodKey.currentKey(goal.frequency)
-                            completions.any { it.goalId == goal.id && it.periodKey == currentKey }
-                        }
-                        TrackerSummary(
-                            trackerId = tracker.id,
-                            name = tracker.name,
-                            type = tracker.type,
-                            frequency = tracker.frequency,
-                            currentPeriodLabel = "Today",
-                            totalMembers = goals.size,
-                            completedCount = doneCount,
-                            completionPercent = if (goals.isNotEmpty()) {
-                                ((doneCount.toDouble() / goals.size) * 100).toInt().coerceIn(0, 100)
-                            } else {
-                                0
-                            },
-                            amountCompletedKobo = 0L,
-                            amountTargetKobo = 0L,
-                            isNew = tracker.isNew,
-                            createdAt = tracker.createdAt
-                        )
+                repository.getGoalCompletionsForTracker(tracker.id).map { completions ->
+                    val doneCount = goals.count { goal ->
+                        val currentKey = GoalPeriodKey.currentKey(goal.frequency)
+                        completions.any { it.goalId == goal.id && it.periodKey == currentKey }
                     }
-            }
-
-        else -> repository.getActiveMembersForTracker(tracker.id)
-            .flatMapLatest { members ->
-                    repository.getCurrentPeriodFlow(tracker.id)
-                        .flatMapLatest { period ->
-                            if (period == null) {
-                                flowOf(buildSummary(tracker, members, period, emptyList()))
-                            } else {
-                                repository.getRecordsForPeriod(tracker.id, period.id)
-                                    .map { records -> buildSummary(tracker, members, period, records) }
-                            }
-                        }
+                    tracker.toSummary(
+                        currentPeriodLabel = "Today",
+                        total = goals.size,
+                        completed = doneCount
+                    )
+                }
             }
     }
 
-    private fun buildSummary(
-        tracker: Tracker,
-        members: List<TrackerMember>,
-        period: TrackerPeriod?,
-        records: List<TrackerRecord>
-    ): TrackerSummary {
-        val total = members.size
-        val completedCount = records.count { record ->
-            record.status.name in completedStatuses(tracker.type)
-        }
-        val amountTargetKobo = when (tracker.type) {
-            TrackerType.DUES,
-            TrackerType.EXPENSES -> (tracker.defaultAmount * 100).toLong().coerceAtLeast(0L) * total
-            else -> 0L
-        }
-        val amountCompletedKobo = when (tracker.type) {
-            TrackerType.DUES,
-            TrackerType.EXPENSES -> records.sumOf { (it.amountPaid * 100).toLong().coerceAtLeast(0L) }
-            else -> 0L
-        }
-        val percent = when {
-            total > 0 -> ((completedCount.toDouble() / total) * 100).toInt().coerceIn(0, 100)
-            else -> 0
-        }
-        return TrackerSummary(
-            trackerId = tracker.id,
-            name = tracker.name,
-            type = tracker.type,
-            frequency = tracker.frequency,
-            currentPeriodLabel = period?.label ?: currentPeriodLabel(tracker.frequency),
-            totalMembers = total,
-            completedCount = completedCount,
-            completionPercent = percent,
-            amountCompletedKobo = amountCompletedKobo,
-            amountTargetKobo = amountTargetKobo,
-            isNew = tracker.isNew,
-            createdAt = tracker.createdAt
-        )
-    }
-
-    private fun completedStatuses(type: TrackerType): Set<String> = when (type) {
-        TrackerType.DUES -> setOf("PAID")
-        TrackerType.EXPENSES -> setOf("PAID")
-        TrackerType.GOALS -> setOf("DONE")
-        TrackerType.TODO -> setOf("DONE")
-        TrackerType.BUDGET -> emptySet()
-    }
+    private fun Tracker.toSummary(
+        currentPeriodLabel: String,
+        total: Int,
+        completed: Int,
+        amountCompletedKobo: Long = 0L,
+        amountTargetKobo: Long = 0L
+    ) = TrackerSummary(
+        trackerId = id,
+        name = name,
+        type = type,
+        frequency = frequency,
+        currentPeriodLabel = currentPeriodLabel,
+        totalMembers = total,
+        completedCount = completed,
+        completionPercent = if (total > 0) ((completed.toDouble() / total) * 100).toInt().coerceIn(0, 100) else 0,
+        amountCompletedKobo = amountCompletedKobo,
+        amountTargetKobo = amountTargetKobo,
+        isNew = isNew,
+        createdAt = createdAt
+    )
 
     private fun currentPeriodLabel(frequency: Frequency): String {
         val calendar = Calendar.getInstance()
