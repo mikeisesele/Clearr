@@ -11,7 +11,7 @@ sealed interface AppDestination {
     data object Splash : AppDestination
     data object Onboarding : AppDestination
     data object Completion : AppDestination
-    data object Dashboard : AppDestination
+    data class MainShell(val destination: AppShellDestination = AppShellDestination.Dashboard) : AppDestination
 }
 
 data class AppNavigationState(
@@ -49,7 +49,20 @@ class AppNavigator(
 
     fun completeOnboarding() = replace(AppDestination.Completion)
 
-    fun openDashboard() = replace(AppDestination.Dashboard)
+    fun openDashboard() = replace(AppDestination.MainShell())
+
+    fun openMainShell(destination: AppShellDestination = AppShellDestination.Dashboard) {
+        replace(AppDestination.MainShell(destination))
+    }
+
+    fun openShellDestination(destination: AppShellDestination) {
+        mutableState.update { nav ->
+            when (nav.current) {
+                is AppDestination.MainShell -> AppNavigationState(backstack = nav.backstack.dropLast(1) + AppDestination.MainShell(destination))
+                else -> AppNavigationState(backstack = nav.backstack + AppDestination.MainShell(destination))
+            }
+        }
+    }
 }
 
 @Composable
