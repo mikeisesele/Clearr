@@ -101,7 +101,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val currentRoute = currentBackStack?.destination?.route
 
     BackHandler(enabled = currentRoute.isTopLevelNonDashboardRoute()) {
-        navController.navigate(NavRoutes.Dashboard.route) {
+        navController.navigateTopLevel(AppShellDestination.Dashboard) {
             popUpTo(navController.graph.findStartDestination().id) {
                 saveState = true
             }
@@ -117,7 +117,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                 AppBottomNav(
                     selectedItem = currentRoute?.toBottomNavItem(),
                     onSelect = { item ->
-                        shellState.routeFor(item)?.let(navController::navigateTopLevel)
+                        shellState.destinationFor(item)?.let(navController::navigateTopLevel)
                     }
                 )
             }
@@ -131,9 +131,9 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
             ) {
                 composable(NavRoutes.Dashboard.route) {
                     DashboardRoute(
-                        onOpenBudget = { shellState.budgetTrackerId?.let { navController.navigateTopLevel(NavRoutes.BudgetRoot.createRoute(it)) } },
-                        onOpenTodos = { shellState.todoTrackerId?.let { navController.navigateTopLevel(NavRoutes.TodoRoot.createRoute(it)) } },
-                        onOpenGoals = { shellState.goalsTrackerId?.let { navController.navigateTopLevel(NavRoutes.GoalsRoot.createRoute(it)) } }
+                        onOpenBudget = { shellState.budgetTrackerId?.let { navController.navigateTopLevel(AppShellDestination.BudgetRoot(it)) } },
+                        onOpenTodos = { shellState.todoTrackerId?.let { navController.navigateTopLevel(AppShellDestination.TodoRoot(it)) } },
+                        onOpenGoals = { shellState.goalsTrackerId?.let { navController.navigateTopLevel(AppShellDestination.GoalsRoot(it)) } }
                     )
                 }
                 composable(
@@ -141,21 +141,21 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
                 ) { backStackEntry ->
                     val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
-                    BudgetDetailScreen(trackerId = trackerId, onAddCategory = { navController.navigate(NavRoutes.BudgetAddCategory.createRoute(trackerId)) })
+                    BudgetDetailScreen(trackerId = trackerId, onAddCategory = { navController.navigate(AppShellDestination.BudgetAddCategory(trackerId).route) })
                 }
                 composable(
                     route = NavRoutes.TodoRoot.route,
                     arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
                 ) { backStackEntry ->
                     val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
-                    TodoRoute(trackerId = trackerId, onAddTodo = { navController.navigate(NavRoutes.TodoAdd.createRoute(trackerId)) })
+                    TodoRoute(trackerId = trackerId, onAddTodo = { navController.navigate(AppShellDestination.TodoAdd(trackerId).route) })
                 }
                 composable(
                     route = NavRoutes.GoalsRoot.route,
                     arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
                 ) { backStackEntry ->
                     val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
-                    GoalsDetailScreen(trackerId = trackerId, onAddGoal = { navController.navigate(NavRoutes.GoalAdd.createRoute(trackerId)) })
+                    GoalsDetailScreen(trackerId = trackerId, onAddGoal = { navController.navigate(AppShellDestination.GoalAdd(trackerId).route) })
                 }
                 composable(
                     route = NavRoutes.TodoAdd.route,
@@ -183,12 +183,16 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     }
 }
 
-private fun NavHostController.navigateTopLevel(route: String) {
-    navigate(route) {
+private fun NavHostController.navigateTopLevel(
+    destination: AppShellDestination,
+    builder: androidx.navigation.NavOptionsBuilder.() -> Unit = {}
+) {
+    navigate(destination.route) {
         popUpTo(graph.findStartDestination().id) {
             saveState = true
         }
         launchSingleTop = true
         restoreState = true
+        builder()
     }
 }
