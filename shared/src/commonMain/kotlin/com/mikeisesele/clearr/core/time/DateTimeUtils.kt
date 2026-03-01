@@ -1,7 +1,6 @@
 package com.mikeisesele.clearr.core.time
 
 import kotlin.random.Random
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Instant
@@ -17,9 +16,10 @@ import kotlinx.datetime.toLocalDateTime
 private val systemTimeZone: TimeZone
     get() = TimeZone.currentSystemDefault()
 
-fun nowEpochMillis(): Long = Clock.System.now().toEpochMilliseconds()
+fun nowEpochMillis(): Long = platformNowEpochMillis()
 
-fun todayLocalDate(): LocalDate = Clock.System.now().toLocalDateTime(systemTimeZone).date
+fun todayLocalDate(): LocalDate =
+    Instant.fromEpochMilliseconds(platformNowEpochMillis()).toLocalDateTime(systemTimeZone).date
 
 fun epochMillisToLocalDate(epochMillis: Long): LocalDate =
     Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(systemTimeZone).date

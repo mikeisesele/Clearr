@@ -1,7 +1,7 @@
 [versions]
 agp = "8.13.2"
-kotlin = "2.0.21"
-jetbrainsCompose = "1.7.3"
+kotlin = "2.3.10"
+jetbrainsCompose = "1.9.1"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -11,7 +11,7 @@ activityCompose = "1.12.4"
 composeBom = "2024.09.00"
 composeUi = "1.7.1"
 composeMaterial3 = "1.3.0"
-hilt = "2.51.1"
+hilt = "2.57.1"
 hiltNavigationCompose = "1.2.0"
 room = "2.7.1"
 navigation = "2.9.0"
@@ -19,12 +19,13 @@ lifecycle = "2.10.0"
 konfetti = "2.0.4"
 poi = "5.2.3"
 coroutines = "1.9.0"
-ksp = "2.0.21-1.0.28"
+ksp = "2.3.4"
 datastore = "1.1.1"
 mockk = "1.13.13"
 foundation = "1.10.3"
 genaiPrompt = "1.0.0-beta1"
-kotlinxDatetime = "0.6.1"
+kotlinxDatetime = "0.7.1"
+javapoet = "1.13.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -78,6 +79,7 @@ mlkit-genai-prompt = { group = "com.google.mlkit", name = "genai-prompt", versio
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
 androidx-compose-ui-explicit = { group = "androidx.compose.ui", name = "ui", version.ref = "composeUi" }
 androidx-compose-material3-explicit = { group = "androidx.compose.material3", name = "material3", version.ref = "composeMaterial3" }
+javapoet = { group = "com.squareup", name = "javapoet", version.ref = "javapoet" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }
