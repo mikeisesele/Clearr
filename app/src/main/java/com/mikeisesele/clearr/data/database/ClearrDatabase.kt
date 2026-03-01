@@ -7,7 +7,7 @@ import com.mikeisesele.clearr.data.dao.BudgetDao
 import com.mikeisesele.clearr.data.dao.GoalsDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
 import com.mikeisesele.clearr.data.dao.TodoDao
-import com.mikeisesele.clearr.data.model.AppConfig
+import com.mikeisesele.clearr.data.model.AppConfigEntity
 import com.mikeisesele.clearr.data.model.BudgetCategory
 import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
 import com.mikeisesele.clearr.data.model.BudgetEntry
@@ -19,7 +19,7 @@ import com.mikeisesele.clearr.data.model.Tracker
 
 @Database(
     entities = [
-        AppConfig::class,
+        AppConfigEntity::class,
         Tracker::class,
         BudgetPeriod::class,
         BudgetCategory::class,

@@ -35,9 +35,9 @@ class ClearrRepositoryImpl @Inject constructor(
     private val goalsDao: GoalsDao,
 ) : ClearrRepository {
 
-    override fun getAppConfigFlow(): Flow<AppConfig?> = appConfigDao.getConfigFlow()
-    override suspend fun getAppConfig(): AppConfig? = appConfigDao.getConfig()
-    override suspend fun upsertAppConfig(config: AppConfig) = appConfigDao.upsertConfig(config)
+    override fun getAppConfigFlow(): Flow<AppConfig?> = appConfigDao.getConfigFlow().map { it?.toDomain() }
+    override suspend fun getAppConfig(): AppConfig? = appConfigDao.getConfig()?.toDomain()
+    override suspend fun upsertAppConfig(config: AppConfig) = appConfigDao.upsertConfig(config.toEntity())
 
     override fun getAllTrackers(): Flow<List<Tracker>> = trackerDao.getAllTrackers()
     override suspend fun getTrackerById(id: Long): Tracker? = trackerDao.getTrackerById(id)

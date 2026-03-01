@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Clearr"
 include(":app")
+include(":shared")
  

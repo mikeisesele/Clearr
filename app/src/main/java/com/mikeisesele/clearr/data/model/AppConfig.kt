@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "app_config")
-data class AppConfig(
+data class AppConfigEntity(
     @PrimaryKey val id: Int = 1,
     val groupName: String = "Clearr",
     val adminName: String = "",
@@ -20,25 +20,34 @@ data class AppConfig(
     val setupComplete: Boolean = true
 )
 
-enum class TrackerType {
-    GOALS,
-    TODO,
-    BUDGET
-}
+fun AppConfigEntity.toDomain(): AppConfig = AppConfig(
+    id = id,
+    groupName = groupName,
+    adminName = adminName,
+    adminPhone = adminPhone,
+    trackerType = trackerType,
+    frequency = frequency,
+    defaultAmount = defaultAmount,
+    customPeriodLabels = customPeriodLabels,
+    variableAmounts = variableAmounts,
+    layoutStyle = layoutStyle,
+    remindersEnabled = remindersEnabled,
+    reminderDayOfPeriod = reminderDayOfPeriod,
+    setupComplete = setupComplete
+)
 
-enum class Frequency {
-    MONTHLY,
-    WEEKLY,
-    QUARTERLY,
-    TERMLY,
-    BIANNUAL,
-    ANNUAL,
-    CUSTOM
-}
-
-enum class LayoutStyle {
-    GRID,
-    KANBAN,
-    CARDS,
-    RECEIPT
-}
+fun AppConfig.toEntity(): AppConfigEntity = AppConfigEntity(
+    id = id,
+    groupName = groupName,
+    adminName = adminName,
+    adminPhone = adminPhone,
+    trackerType = trackerType,
+    frequency = frequency,
+    defaultAmount = defaultAmount,
+    customPeriodLabels = customPeriodLabels,
+    variableAmounts = variableAmounts,
+    layoutStyle = layoutStyle,
+    remindersEnabled = remindersEnabled,
+    reminderDayOfPeriod = reminderDayOfPeriod,
+    setupComplete = setupComplete
+)
