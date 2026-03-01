@@ -3,14 +3,13 @@ package com.mikeisesele.clearr.ui.feature.todo.utils
 import androidx.compose.ui.graphics.Color
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoStatus
-import com.mikeisesele.clearr.data.model.derivedStatus
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-internal fun priorityDotColor(todo: TodoItem, derived: TodoStatus): Color {
+fun priorityDotColor(todo: TodoItem, derived: TodoStatus): Color {
     if (derived == TodoStatus.DONE) return ClearrColors.Emerald
     return when (todo.priority) {
         com.mikeisesele.clearr.data.model.TodoPriority.HIGH -> ClearrColors.Coral
@@ -19,14 +18,14 @@ internal fun priorityDotColor(todo: TodoItem, derived: TodoStatus): Color {
     }
 }
 
-internal fun dueLabelColor(todo: TodoItem, derived: TodoStatus, mutedColor: Color): Color = when {
+fun dueLabelColor(todo: TodoItem, derived: TodoStatus, mutedColor: Color): Color = when {
     derived == TodoStatus.DONE -> mutedColor
     derived == TodoStatus.OVERDUE -> ClearrColors.Coral
     todo.dueDate == LocalDate.now() -> ClearrColors.Orange
     else -> mutedColor
 }
 
-internal fun dueLabel(dueDate: LocalDate?): String {
+fun dueLabel(dueDate: LocalDate?): String {
     val today = LocalDate.now()
     return when (dueDate) {
         null -> "No due date"
@@ -36,7 +35,7 @@ internal fun dueLabel(dueDate: LocalDate?): String {
     }
 }
 
-internal fun dueDateFromOption(option: String, customDate: LocalDate? = null): LocalDate? {
+fun dueDateFromOption(option: String, customDate: LocalDate? = null): LocalDate? {
     val today = LocalDate.now()
     return when (option) {
         "Today" -> today

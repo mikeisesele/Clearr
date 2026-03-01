@@ -5,15 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
@@ -21,9 +13,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.ui.text.font.FontWeight
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.ui.feature.todo.components.SwipeableTodoRow
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoActionsDropdown
@@ -38,19 +34,16 @@ import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 fun TodoDetailScreen(
-    trackerId: Long,
+    state: TodoUiState,
+    onAction: (TodoAction) -> Unit,
     onNavigateBack: (() -> Unit)? = null,
-    onAddTodo: () -> Unit,
-    viewModel: TodoViewModel = hiltViewModel()
+    onAddTodo: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = LocalClearrUiColors.current
     var detailTodo by remember { mutableStateOf<TodoItem?>(null) }
     var renameTarget by remember { mutableStateOf<TodoItem?>(null) }
     var renameValue by remember { mutableStateOf("") }
     var showActionsMenu by remember { mutableStateOf(false) }
-
-    if (state.trackerId != trackerId) return
 
     Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -64,8 +57,8 @@ fun TodoDetailScreen(
                     TodoActionsDropdown(
                         expanded = showActionsMenu,
                         onDismiss = { showActionsMenu = false },
-                        onMarkAllDone = { viewModel.onAction(TodoAction.MarkAllDone) },
-                        onClearCompleted = { viewModel.onAction(TodoAction.ClearCompleted) }
+                        onMarkAllDone = { onAction(TodoAction.MarkAllDone) },
+                        onClearCompleted = { onAction(TodoAction.ClearCompleted) }
                     )
                 }
             }
@@ -73,7 +66,7 @@ fun TodoDetailScreen(
                 selected = state.filter,
                 overdueCount = state.counts.overdue,
                 doneCount = state.counts.done,
-                onSelect = { viewModel.onAction(TodoAction.SetFilter(it)) },
+                onSelect = { onAction(TodoAction.SetFilter(it)) },
                 colors = colors
             )
 
@@ -89,8 +82,8 @@ fun TodoDetailScreen(
                             colors = colors,
                             hintDeleteAnimation = index == 0 && state.showSwipeHint,
                             onDone = {
-                                viewModel.onAction(TodoAction.MarkDone(it))
-                                viewModel.onAction(TodoAction.OnFirstSwipeAction)
+                                onAction(TodoAction.MarkDone(it))
+                                onAction(TodoAction.OnFirstSwipeAction)
                             },
                             onTap = { detailTodo = it },
                             onLongPress = {
@@ -104,7 +97,9 @@ fun TodoDetailScreen(
         }
 
         TodoFab(
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = ClearrDimens.dp20, bottom = ClearrDimens.dp20),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = ClearrDimens.dp20, bottom = ClearrDimens.dp20),
             onClick = onAddTodo
         )
     }
@@ -115,11 +110,11 @@ fun TodoDetailScreen(
             colors = colors,
             onDismiss = { detailTodo = null },
             onMarkDone = {
-                viewModel.onAction(TodoAction.MarkDone(it))
+                onAction(TodoAction.MarkDone(it))
                 detailTodo = null
             },
             onDelete = {
-                viewModel.onAction(TodoAction.Delete(it))
+                onAction(TodoAction.Delete(it))
                 detailTodo = null
             }
         )
@@ -143,7 +138,7 @@ fun TodoDetailScreen(
                 Button(
                     enabled = renameValue.isNotBlank(),
                     onClick = {
-                        viewModel.onAction(TodoAction.Rename(todo.id, renameValue))
+                        onAction(TodoAction.Rename(todo.id, renameValue))
                         renameTarget = null
                     }
                 ) {

@@ -1,44 +1,32 @@
 package com.mikeisesele.clearr.ui.navigation
 
-import com.mikeisesele.clearr.core.base.BaseViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.mikeisesele.clearr.di.AppStateHolder
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Root-level ViewModel that exposes app config/loading state for nav decisions.
  */
 @HiltViewModel
 class AppConfigViewModel @Inject constructor(
-    private val repository: ClearrRepository,
-    private val appState: AppStateHolder
-) : BaseViewModel<AppConfigUiState, AppConfigAction, AppConfigEvent>(
-    initialState = AppConfigUiState()
-) {
+    repository: ClearrRepository,
+    appState: AppStateHolder
+) : ViewModel() {
 
-    init {
-        onAction(AppConfigAction.Observe)
-    }
+    private val store = AppConfigStore(
+        repository = repository,
+        scope = viewModelScope,
+        onConfigChanged = appState::setAppConfig
+    )
 
-    override fun onAction(action: AppConfigAction) {
-        when (action) {
-            AppConfigAction.Observe -> observeConfig()
-        }
-    }
+    val uiState: StateFlow<AppConfigUiState> = store.uiState
+    val events = store.events
 
-    private fun observeConfig() {
-        launch {
-            repository.getAppConfigFlow().collectLatest { config ->
-                appState.setAppConfig(config)
-                updateState {
-                    it.copy(
-                        appConfig = config,
-                        isLoading = false
-                    )
-                }
-            }
-        }
+    fun onAction(action: AppConfigAction) {
+        store.onAction(action)
     }
 }

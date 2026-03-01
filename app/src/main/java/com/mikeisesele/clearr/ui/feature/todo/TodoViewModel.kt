@@ -6,7 +6,6 @@ import com.mikeisesele.clearr.core.base.BaseViewModel
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
-import com.mikeisesele.clearr.data.model.derivedStatus
 import com.mikeisesele.clearr.data.repository.TodoPreferencesRepository
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -74,13 +73,13 @@ class TodoViewModel @Inject constructor(
                         val sortedTodos = todos.sortedForUi()
                         val displayed = when (filter) {
                             TodoFilter.ALL -> sortedTodos
-                            TodoFilter.PENDING -> sortedTodos.filter { it.derivedStatus() != TodoStatus.DONE }
-                            TodoFilter.DONE -> sortedTodos.filter { it.derivedStatus() == TodoStatus.DONE }
+                            TodoFilter.PENDING -> sortedTodos.filter { it.uiDerivedStatus() != TodoStatus.DONE }
+                            TodoFilter.DONE -> sortedTodos.filter { it.uiDerivedStatus() == TodoStatus.DONE }
                         }
                         val counts = TodoCounts(
-                            pending = sortedTodos.count { it.derivedStatus() == TodoStatus.PENDING },
-                            overdue = sortedTodos.count { it.derivedStatus() == TodoStatus.OVERDUE },
-                            done = sortedTodos.count { it.derivedStatus() == TodoStatus.DONE }
+                            pending = sortedTodos.count { it.uiDerivedStatus() == TodoStatus.PENDING },
+                            overdue = sortedTodos.count { it.uiDerivedStatus() == TodoStatus.OVERDUE },
+                            done = sortedTodos.count { it.uiDerivedStatus() == TodoStatus.DONE }
                         )
                         Triple(filter, sortedTodos, displayed to counts)
                     }
@@ -149,7 +148,7 @@ class TodoViewModel @Inject constructor(
     private fun markAllDone() {
         launch {
             currentState.todos
-                .filter { todo -> todo.derivedStatus() != TodoStatus.DONE }
+                .filter { todo -> todo.uiDerivedStatus() != TodoStatus.DONE }
                 .forEach { todo ->
                     repository.markTodoDone(todo.id, System.currentTimeMillis())
                 }
@@ -165,7 +164,7 @@ class TodoViewModel @Inject constructor(
     private fun clearCompleted() {
         launch {
             currentState.todos
-                .filter { todo -> todo.derivedStatus() == TodoStatus.DONE }
+                .filter { todo -> todo.uiDerivedStatus() == TodoStatus.DONE }
                 .forEach { todo ->
                     repository.deleteTodo(todo.id)
                 }
@@ -189,16 +188,22 @@ class TodoViewModel @Inject constructor(
 }
 
 private fun List<TodoItem>.sortedForUi(now: LocalDate = LocalDate.now()): List<TodoItem> {
-    val overdue = filter { it.derivedStatus(now) == TodoStatus.OVERDUE }
+    val overdue = filter { it.uiDerivedStatus(now) == TodoStatus.OVERDUE }
         .sortedBy { it.dueDate ?: LocalDate.MAX }
 
-    val pending = filter { it.derivedStatus(now) == TodoStatus.PENDING }
+    val pending = filter { it.uiDerivedStatus(now) == TodoStatus.PENDING }
         .sortedWith(
             compareBy<TodoItem>({ it.priority.ordinal }, { it.dueDate ?: LocalDate.MAX })
         )
 
-    val done = filter { it.derivedStatus(now) == TodoStatus.DONE }
+    val done = filter { it.uiDerivedStatus(now) == TodoStatus.DONE }
         .sortedByDescending { it.completedAt ?: 0L }
 
     return overdue + pending + done
+}
+
+private fun TodoItem.uiDerivedStatus(today: LocalDate = LocalDate.now()): TodoStatus = when {
+    status == TodoStatus.DONE -> TodoStatus.DONE
+    dueDate?.let { it < today } == true -> TodoStatus.OVERDUE
+    else -> TodoStatus.PENDING
 }

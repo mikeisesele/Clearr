@@ -1,45 +1,29 @@
 package com.mikeisesele.clearr.ui.navigation
 
-import com.mikeisesele.clearr.core.base.BaseViewModel
-import com.mikeisesele.clearr.data.model.TrackerType
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
 import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
-import com.mikeisesele.clearr.ui.feature.dashboard.utils.primarySummaryOf
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.StateFlow
 
 @HiltViewModel
 class AppShellViewModel @Inject constructor(
-    private val trackerBootstrapper: TrackerBootstrapper,
-    private val observeTrackerSummaries: ObserveTrackerSummariesUseCase
-) : BaseViewModel<AppShellUiState, AppShellAction, AppShellEvent>(
-    initialState = AppShellUiState(isLoading = true)
-) {
+    trackerBootstrapper: TrackerBootstrapper,
+    observeTrackerSummaries: ObserveTrackerSummariesUseCase
+) : ViewModel() {
 
-    init {
-        onAction(AppShellAction.Observe)
-    }
+    private val store = AppShellStore(
+        trackerBootstrapper = trackerBootstrapper,
+        observeTrackerSummaries = observeTrackerSummaries,
+        scope = viewModelScope
+    )
 
-    override fun onAction(action: AppShellAction) {
-        when (action) {
-            AppShellAction.Observe -> observeTrackers()
-        }
-    }
+    val uiState: StateFlow<AppShellUiState> = store.uiState
+    val events = store.events
 
-    private fun observeTrackers() {
-        launch {
-            trackerBootstrapper.ensureStaticTrackers()
-            observeTrackerSummaries().collectLatest { summaries ->
-                updateState {
-                    it.copy(
-                        budgetTrackerId = summaries.primarySummaryOf(TrackerType.BUDGET)?.trackerId,
-                        todoTrackerId = summaries.primarySummaryOf(TrackerType.TODO)?.trackerId,
-                        goalsTrackerId = summaries.primarySummaryOf(TrackerType.GOALS)?.trackerId,
-                        isLoading = false
-                    )
-                }
-            }
-        }
+    fun onAction(action: AppShellAction) {
+        store.onAction(action)
     }
 }

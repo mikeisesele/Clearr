@@ -5,7 +5,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
@@ -45,46 +44,6 @@ private val LightColorScheme = lightColorScheme(
     error            = ClearrColors.BrandDanger,
     onError          = Color.White
 )
-
-/**
- * Theme-aware color bag used throughout the app via LocalClearrUiColors.current.
- * Maps Clearr brand tokens to semantic slots used by existing composables.
- */
-data class ClearrUiColors(
-    val bg: Color,
-    val surface: Color,
-    val card: Color,
-    val border: Color,
-    /** Primary interactive accent — Clearr Violet */
-    val accent: Color,
-    /** Positive / cleared — Clearr Emerald */
-    val green: Color,
-    /** Caution / pending — Clearr Amber */
-    val amber: Color,
-    /** Danger — Clearr Coral */
-    val red: Color,
-    val text: Color,
-    val muted: Color,
-    val dim: Color,
-    val isDark: Boolean
-)
-
-val LocalClearrUiColors = staticCompositionLocalOf {
-    ClearrUiColors(
-        bg      = ClearrColors.DarkBackground,
-        surface = ClearrColors.DarkSurface,
-        card    = ClearrColors.DarkCard,
-        border  = ClearrColors.DarkBorder,
-        accent  = ClearrColors.BrandPrimary,
-        green   = ClearrColors.BrandSecondary,
-        amber   = ClearrColors.BrandAccent,
-        red     = ClearrColors.BrandDanger,
-        text    = ClearrColors.DarkTextPrimary,
-        muted   = ClearrColors.DarkTextMuted,
-        dim     = ClearrColors.DarkInactive,
-        isDark  = true
-    )
-}
 
 /** Light-mode ClearrUiColors instance using Clearr tokens */
 private fun lightClearrUiColors() = ClearrUiColors(

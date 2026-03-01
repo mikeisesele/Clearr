@@ -80,7 +80,7 @@ fun ClearrTopBar(
                                         tint = colors.text
                                     )
                                 } else {
-                                    Text(leadingIcon, fontSize = ClearrTextSizes.sp15, color = colors.text)
+                                    Text(leadingIcon, fontSize = ClearrTextSizes.sp16, color = colors.text)
                                 }
                             }
                         }
