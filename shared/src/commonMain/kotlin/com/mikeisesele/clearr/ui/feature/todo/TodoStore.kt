@@ -6,8 +6,8 @@ import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.core.time.MaxLocalDate
 import com.mikeisesele.clearr.core.time.randomId
 import com.mikeisesele.clearr.core.time.todayLocalDate
-import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import com.mikeisesele.clearr.domain.repository.TodoPreferencesRepository
+import com.mikeisesele.clearr.domain.repository.TodoRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -24,7 +24,7 @@ import kotlinx.datetime.LocalDate
 @OptIn(ExperimentalCoroutinesApi::class)
 class TodoStore(
     private val trackerId: Long,
-    private val repository: ClearrRepository,
+    private val repository: TodoRepository,
     private val todoPreferencesRepository: TodoPreferencesRepository,
     private val todoAiService: TodoAiService,
     private val scope: CoroutineScope,

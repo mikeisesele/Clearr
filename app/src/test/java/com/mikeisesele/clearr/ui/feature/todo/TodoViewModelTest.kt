@@ -8,8 +8,8 @@ import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
-import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import com.mikeisesele.clearr.domain.repository.TodoPreferencesRepository
+import com.mikeisesele.clearr.domain.repository.TodoRepository
 import com.mikeisesele.clearr.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,7 +35,7 @@ class TodoViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = mockk<ClearrRepository>()
+    private val repository = mockk<TodoRepository>()
     private val preferencesRepository = mockk<TodoPreferencesRepository>()
     private val todoAiService = mockk<TodoAiService>()
     private val trackerId = 5L

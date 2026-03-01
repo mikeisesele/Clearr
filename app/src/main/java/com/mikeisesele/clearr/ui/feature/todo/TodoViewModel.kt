@@ -3,14 +3,14 @@ package com.mikeisesele.clearr.ui.feature.todo
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mikeisesele.clearr.domain.repository.ClearrRepository
+import com.mikeisesele.clearr.domain.repository.TodoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.StateFlow
 
 @HiltViewModel
 class TodoViewModel @Inject constructor(
-    repository: ClearrRepository,
+    repository: TodoRepository,
     todoPreferencesRepository: com.mikeisesele.clearr.domain.repository.TodoPreferencesRepository,
     todoAiService: TodoAiService,
     savedStateHandle: SavedStateHandle
