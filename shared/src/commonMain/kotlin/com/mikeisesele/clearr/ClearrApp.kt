@@ -24,20 +24,20 @@ import com.mikeisesele.clearr.data.model.HistoryEntry
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
-import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
-import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
 import com.mikeisesele.clearr.preview.SampleClearrRuntime
 import com.mikeisesele.clearr.runtime.ClearrRuntime
+import com.mikeisesele.clearr.runtime.createBudgetStore
+import com.mikeisesele.clearr.runtime.createDashboardStore
+import com.mikeisesele.clearr.runtime.createGoalsStore
+import com.mikeisesele.clearr.runtime.createTodoStore
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardAction
 import com.mikeisesele.clearr.ui.feature.budget.AddBudgetCategoryScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetAction
 import com.mikeisesele.clearr.ui.feature.budget.BudgetPlanDraft
 import com.mikeisesele.clearr.ui.feature.budget.BudgetScreen
-import com.mikeisesele.clearr.ui.feature.budget.BudgetStore
 import com.mikeisesele.clearr.ui.feature.budget.BudgetUiState
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardScreen
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardEvent
-import com.mikeisesele.clearr.ui.feature.dashboard.DashboardStore
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardClearanceScore
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerHealth
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerType
@@ -47,7 +47,6 @@ import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencySeverit
 import com.mikeisesele.clearr.ui.feature.goals.AddGoalScreen
 import com.mikeisesele.clearr.ui.feature.goals.GoalsAction
 import com.mikeisesele.clearr.ui.feature.goals.GoalsAiResult
-import com.mikeisesele.clearr.ui.feature.goals.GoalsStore
 import com.mikeisesele.clearr.ui.feature.goals.GoalsScreen
 import com.mikeisesele.clearr.ui.feature.goals.GoalsUiState
 import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
@@ -56,7 +55,6 @@ import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
 import com.mikeisesele.clearr.ui.feature.todo.AddTodoScreen
 import com.mikeisesele.clearr.ui.feature.todo.TodoAction
 import com.mikeisesele.clearr.ui.feature.todo.TodoDetailScreen
-import com.mikeisesele.clearr.ui.feature.todo.TodoStore
 import com.mikeisesele.clearr.ui.feature.todo.TodoUiState
 import com.mikeisesele.clearr.ui.navigation.AppDestination
 import com.mikeisesele.clearr.ui.navigation.AppShellDestination
@@ -101,13 +99,7 @@ private fun MainShellPreview(
     val shellNavigator = rememberAppShellNavigator(initialDestination)
     val shellState by shellNavigator.state.collectAsState()
     val destination = shellState.current
-    val dashboardStore = remember(scope) {
-        DashboardStore(
-            trackerBootstrapper = TrackerBootstrapper(runtime.repository),
-            observeTrackerSummaries = ObserveTrackerSummariesUseCase(runtime.repository),
-            scope = scope
-        )
-    }
+    val dashboardStore = remember(scope, runtime) { runtime.createDashboardStore(scope) }
     val dashboardState by dashboardStore.uiState.collectAsState()
     val activeBudgetTrackerId = when (destination) {
         is AppShellDestination.BudgetRoot -> destination.trackerId
@@ -125,42 +117,16 @@ private fun MainShellPreview(
         else -> null
     }
     val budgetStore = activeBudgetTrackerId?.let { trackerId ->
-        remember(trackerId, scope) {
-            BudgetStore(
-                trackerId = trackerId,
-                repository = runtime.repository,
-                budgetPreferencesRepository = runtime.budgetPreferencesRepository,
-                budgetAiService = runtime.budgetAiService,
-                scope = scope,
-                nowMillis = runtime.nowMillis
-            )
-        }
+        remember(trackerId, scope, runtime) { runtime.createBudgetStore(trackerId, scope) }
     }
     val budgetState by (budgetStore?.uiState?.collectAsState()
         ?: remember { androidx.compose.runtime.mutableStateOf<BudgetUiState?>(null) })
     val todoStore = activeTodoTrackerId?.let { trackerId ->
-        remember(trackerId, scope) {
-            TodoStore(
-                trackerId = trackerId,
-                repository = runtime.repository,
-                todoPreferencesRepository = runtime.todoPreferencesRepository,
-                todoAiService = runtime.todoAiService,
-                scope = scope,
-                nowMillis = runtime.nowMillis
-            )
-        }
+        remember(trackerId, scope, runtime) { runtime.createTodoStore(trackerId, scope) }
     }
     val todoState by (todoStore?.uiState?.collectAsState() ?: remember { androidx.compose.runtime.mutableStateOf<TodoUiState?>(null) })
     val goalsStore = activeGoalsTrackerId?.let { trackerId ->
-        remember(trackerId, scope) {
-            GoalsStore(
-                trackerId = trackerId,
-                repository = runtime.repository,
-                goalsAiService = runtime.goalsAiService,
-                scope = scope,
-                nowMillis = runtime.nowMillis
-            )
-        }
+        remember(trackerId, scope, runtime) { runtime.createGoalsStore(trackerId, scope) }
     }
     val goalsState by (goalsStore?.uiState?.collectAsState() ?: remember { androidx.compose.runtime.mutableStateOf<GoalsUiState?>(null) })
 
