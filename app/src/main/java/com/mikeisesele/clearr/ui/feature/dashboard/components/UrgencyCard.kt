@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.IntOffset
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerType
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencyItem
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencySeverity
+import com.mikeisesele.clearr.ui.feature.dashboard.utils.accentColor
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.previewDashboardUi
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme

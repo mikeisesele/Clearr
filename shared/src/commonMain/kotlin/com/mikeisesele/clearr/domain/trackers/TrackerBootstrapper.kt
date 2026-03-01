@@ -7,11 +7,8 @@ import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import kotlinx.coroutines.flow.first
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class TrackerBootstrapper @Inject constructor(
+class TrackerBootstrapper(
     private val repository: ClearrRepository
 ) {
     suspend fun ensureStaticTrackers() {

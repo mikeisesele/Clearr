@@ -211,10 +211,11 @@ internal fun SwipeableTodoRow(
         ) {
             Box(modifier = Modifier.padding(top = if (isDone) 0.dp else ClearrDimens.dp5).size(ClearrDimens.dp10).background(priorityDotColor(todo, derived), CircleShape))
             Column(modifier = Modifier.weight(1f), verticalArrangement = if (isDone) Arrangement.Center else Arrangement.Top) {
+                val note = todo.note
                 Text(todo.title, fontSize = ClearrTextSizes.sp15, fontWeight = FontWeight.Medium, color = if (isDone) colors.muted else colors.text, textDecoration = if (isDone) TextDecoration.LineThrough else TextDecoration.None, maxLines = if (isDone) 1 else 2, overflow = TextOverflow.Ellipsis)
-                if (!todo.note.isNullOrBlank()) {
+                if (!note.isNullOrBlank()) {
                     Spacer(Modifier.height(ClearrDimens.dp3))
-                    Text(todo.note, fontSize = ClearrTextSizes.sp12, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(note, fontSize = ClearrTextSizes.sp12, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.height(if (isDone) 0.dp else ClearrDimens.dp3))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp8)) {
@@ -262,10 +263,11 @@ internal fun TodoDetailSheet(
             }
 
             Text(todo.title, fontSize = ClearrTextSizes.sp18, fontWeight = FontWeight.Bold, color = if (isDone) colors.muted else colors.text, textDecoration = if (isDone) TextDecoration.LineThrough else TextDecoration.None)
-            if (!todo.note.isNullOrBlank()) {
+            val note = todo.note
+            if (!note.isNullOrBlank()) {
                 Spacer(Modifier.height(ClearrDimens.dp12))
                 Surface(color = colors.card, shape = RoundedCornerShape(ClearrDimens.dp10), modifier = Modifier.fillMaxWidth()) {
-                    Text(todo.note, modifier = Modifier.padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp12), fontSize = ClearrTextSizes.sp14, color = colors.muted)
+                    Text(note, modifier = Modifier.padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp12), fontSize = ClearrTextSizes.sp14, color = colors.muted)
                 }
             }
             Spacer(Modifier.height(ClearrDimens.dp16))

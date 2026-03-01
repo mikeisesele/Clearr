@@ -3,17 +3,15 @@ package com.mikeisesele.clearr.domain.trackers
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.GoalPeriodKey
+import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerSummary
 import com.mikeisesele.clearr.data.model.TrackerType
-import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.data.model.derivedStatus
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -22,8 +20,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@Singleton
-class ObserveTrackerSummariesUseCase @Inject constructor(
+class ObserveTrackerSummariesUseCase(
     private val repository: ClearrRepository
 ) {
     operator fun invoke(): Flow<List<TrackerSummary>> =

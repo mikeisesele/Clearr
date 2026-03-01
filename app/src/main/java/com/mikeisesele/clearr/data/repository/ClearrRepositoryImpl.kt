@@ -39,19 +39,19 @@ class ClearrRepositoryImpl @Inject constructor(
     override suspend fun getAppConfig(): AppConfig? = appConfigDao.getConfig()?.toDomain()
     override suspend fun upsertAppConfig(config: AppConfig) = appConfigDao.upsertConfig(config.toEntity())
 
-    override fun getAllTrackers(): Flow<List<Tracker>> = trackerDao.getAllTrackers()
-    override suspend fun getTrackerById(id: Long): Tracker? = trackerDao.getTrackerById(id)
-    override fun getTrackerByIdFlow(id: Long): Flow<Tracker?> = trackerDao.getTrackerByIdFlow(id)
-    override suspend fun insertTracker(tracker: Tracker): Long = trackerDao.insertTracker(tracker)
-    override suspend fun updateTracker(tracker: Tracker) = trackerDao.updateTracker(tracker)
+    override fun getAllTrackers(): Flow<List<Tracker>> = trackerDao.getAllTrackers().map { list -> list.map { it.toDomain() } }
+    override suspend fun getTrackerById(id: Long): Tracker? = trackerDao.getTrackerById(id)?.toDomain()
+    override fun getTrackerByIdFlow(id: Long): Flow<Tracker?> = trackerDao.getTrackerByIdFlow(id).map { it?.toDomain() }
+    override suspend fun insertTracker(tracker: Tracker): Long = trackerDao.insertTracker(tracker.toEntity())
+    override suspend fun updateTracker(tracker: Tracker) = trackerDao.updateTracker(tracker.toEntity())
     override suspend fun deleteTracker(id: Long) = trackerDao.deleteTracker(id)
     override suspend fun clearTrackerNewFlag(id: Long) = trackerDao.clearNewFlag(id)
 
     override fun getBudgetPeriods(trackerId: Long, frequency: BudgetFrequency): Flow<List<BudgetPeriod>> =
-        budgetDao.getPeriods(trackerId, frequency)
+        budgetDao.getPeriods(trackerId, frequency).map { list -> list.map { it.toDomain() } }
 
     override suspend fun ensureBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) {
-        val existing = budgetDao.getLatestPeriod(trackerId, frequency)
+        val existing = budgetDao.getLatestPeriod(trackerId, frequency)?.toDomain()
         val periods = when {
             existing == null -> when (frequency) {
                 BudgetFrequency.MONTHLY -> generateMonthlyPeriods(trackerId)
@@ -62,17 +62,17 @@ class ClearrRepositoryImpl @Inject constructor(
                 BudgetFrequency.WEEKLY -> generateMissingWeeklyPeriods(trackerId, existing)
             }
         }
-        if (periods.isNotEmpty()) budgetDao.insertPeriods(periods)
+        if (periods.isNotEmpty()) budgetDao.insertPeriods(periods.map { it.toEntity() })
     }
 
     override fun getBudgetCategories(trackerId: Long, frequency: BudgetFrequency): Flow<List<BudgetCategory>> =
-        budgetDao.getCategories(trackerId, frequency)
+        budgetDao.getCategories(trackerId, frequency).map { list -> list.map { it.toDomain() } }
 
     override suspend fun getBudgetMaxSortOrder(trackerId: Long, frequency: BudgetFrequency): Int =
         budgetDao.getMaxSortOrder(trackerId, frequency)
 
-    override suspend fun addBudgetCategory(category: BudgetCategory): Long = budgetDao.insertCategory(category)
-    override suspend fun updateBudgetCategory(category: BudgetCategory) = budgetDao.updateCategory(category)
+    override suspend fun addBudgetCategory(category: BudgetCategory): Long = budgetDao.insertCategory(category.toEntity())
+    override suspend fun updateBudgetCategory(category: BudgetCategory) = budgetDao.updateCategory(category.toEntity())
 
     override suspend fun deleteBudgetCategory(categoryId: Long) {
         budgetDao.deleteEntriesByCategory(categoryId)
@@ -91,20 +91,20 @@ class ClearrRepositoryImpl @Inject constructor(
     }
 
     override fun getBudgetCategoryPlansForTracker(trackerId: Long): Flow<List<BudgetCategoryPlan>> =
-        budgetDao.getCategoryPlansForTracker(trackerId)
+        budgetDao.getCategoryPlansForTracker(trackerId).map { list -> list.map { it.toDomain() } }
 
     override suspend fun getBudgetCategoryPlansForPeriod(periodId: Long): List<BudgetCategoryPlan> =
-        budgetDao.getCategoryPlansForPeriod(periodId)
+        budgetDao.getCategoryPlansForPeriod(periodId).map { it.toDomain() }
 
     override suspend fun saveBudgetCategoryPlans(periodId: Long, plans: List<BudgetCategoryPlan>) {
         budgetDao.deleteCategoryPlansForPeriod(periodId)
-        if (plans.isNotEmpty()) budgetDao.insertCategoryPlans(plans)
+        if (plans.isNotEmpty()) budgetDao.insertCategoryPlans(plans.map { it.toEntity() })
     }
 
     override fun getBudgetEntriesForTracker(trackerId: Long): Flow<List<BudgetEntry>> =
-        budgetDao.getEntriesForTracker(trackerId)
+        budgetDao.getEntriesForTracker(trackerId).map { list -> list.map { it.toDomain() } }
 
-    override suspend fun addBudgetEntry(entry: BudgetEntry): Long = budgetDao.insertEntry(entry)
+    override suspend fun addBudgetEntry(entry: BudgetEntry): Long = budgetDao.insertEntry(entry.toEntity())
 
     override fun getTodosForTracker(trackerId: Long): Flow<List<TodoItem>> =
         todoDao.getTodos(trackerId).map { list -> list.map { it.toDomain() } }

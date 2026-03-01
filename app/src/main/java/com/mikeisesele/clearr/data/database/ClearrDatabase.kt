@@ -8,23 +8,23 @@ import com.mikeisesele.clearr.data.dao.GoalsDao
 import com.mikeisesele.clearr.data.dao.TrackerDao
 import com.mikeisesele.clearr.data.dao.TodoDao
 import com.mikeisesele.clearr.data.model.AppConfigEntity
-import com.mikeisesele.clearr.data.model.BudgetCategory
-import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
-import com.mikeisesele.clearr.data.model.BudgetEntry
-import com.mikeisesele.clearr.data.model.BudgetPeriod
+import com.mikeisesele.clearr.data.model.BudgetCategoryEntity
+import com.mikeisesele.clearr.data.model.BudgetCategoryPlanEntity
+import com.mikeisesele.clearr.data.model.BudgetEntryEntity
+import com.mikeisesele.clearr.data.model.BudgetPeriodEntity
 import com.mikeisesele.clearr.data.model.GoalCompletionEntity
 import com.mikeisesele.clearr.data.model.GoalEntity
 import com.mikeisesele.clearr.data.model.TodoEntity
-import com.mikeisesele.clearr.data.model.Tracker
+import com.mikeisesele.clearr.data.model.TrackerEntity
 
 @Database(
     entities = [
         AppConfigEntity::class,
-        Tracker::class,
-        BudgetPeriod::class,
-        BudgetCategory::class,
-        BudgetCategoryPlan::class,
-        BudgetEntry::class,
+        TrackerEntity::class,
+        BudgetPeriodEntity::class,
+        BudgetCategoryEntity::class,
+        BudgetCategoryPlanEntity::class,
+        BudgetEntryEntity::class,
         TodoEntity::class,
         GoalEntity::class,
         GoalCompletionEntity::class,

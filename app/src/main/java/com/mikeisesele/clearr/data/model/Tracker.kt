@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "trackers")
-data class Tracker(
+data class TrackerEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
@@ -16,17 +16,24 @@ data class Tracker(
     val createdAt: Long = System.currentTimeMillis()
 )
 
-data class TrackerSummary(
-    val trackerId: Long,
-    val name: String,
-    val type: TrackerType,
-    val frequency: Frequency,
-    val currentPeriodLabel: String,
-    val totalMembers: Int,
-    val completedCount: Int,
-    val completionPercent: Int,
-    val amountCompletedKobo: Long = 0L,
-    val amountTargetKobo: Long = 0L,
-    val isNew: Boolean,
-    val createdAt: Long
+fun TrackerEntity.toDomain(): Tracker = Tracker(
+    id = id,
+    name = name,
+    type = type,
+    frequency = frequency,
+    layoutStyle = layoutStyle,
+    defaultAmount = defaultAmount,
+    isNew = isNew,
+    createdAt = createdAt
+)
+
+fun Tracker.toEntity(): TrackerEntity = TrackerEntity(
+    id = id,
+    name = name,
+    type = type,
+    frequency = frequency,
+    layoutStyle = layoutStyle,
+    defaultAmount = defaultAmount,
+    isNew = isNew,
+    createdAt = createdAt
 )

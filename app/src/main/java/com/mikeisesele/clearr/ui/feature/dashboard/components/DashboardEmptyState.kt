@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.tooling.preview.Preview
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerType
+import com.mikeisesele.clearr.ui.feature.dashboard.utils.accentColor
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.backgroundColor
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens

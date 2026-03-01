@@ -6,26 +6,26 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import com.mikeisesele.clearr.data.model.Tracker
+import com.mikeisesele.clearr.data.model.TrackerEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TrackerDao {
 
     @Query("SELECT * FROM trackers ORDER BY createdAt ASC")
-    fun getAllTrackers(): Flow<List<Tracker>>
+    fun getAllTrackers(): Flow<List<TrackerEntity>>
 
     @Query("SELECT * FROM trackers WHERE id = :id")
-    suspend fun getTrackerById(id: Long): Tracker?
+    suspend fun getTrackerById(id: Long): TrackerEntity?
 
     @Query("SELECT * FROM trackers WHERE id = :id")
-    fun getTrackerByIdFlow(id: Long): Flow<Tracker?>
+    fun getTrackerByIdFlow(id: Long): Flow<TrackerEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTracker(tracker: Tracker): Long
+    suspend fun insertTracker(tracker: TrackerEntity): Long
 
     @Update
-    suspend fun updateTracker(tracker: Tracker)
+    suspend fun updateTracker(tracker: TrackerEntity)
 
     @Query("DELETE FROM trackers WHERE id = :id")
     suspend fun deleteTrackerRow(id: Long)

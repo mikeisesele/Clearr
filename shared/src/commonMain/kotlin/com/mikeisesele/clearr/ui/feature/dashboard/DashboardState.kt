@@ -2,8 +2,8 @@ package com.mikeisesele.clearr.ui.feature.dashboard
 
 import com.mikeisesele.clearr.core.base.contract.BaseState
 import com.mikeisesele.clearr.core.base.contract.ViewEvent
-import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUiModel
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerType
+import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUiModel
 
 data class DashboardState(
     val model: DashboardUiModel,
