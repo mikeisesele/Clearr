@@ -19,6 +19,7 @@ targets:
         embed: true
     preBuildScripts:
       - name: Build Shared Framework
+        basedOnDependencyAnalysis: false
         script: |
           cd "$SRCROOT/.."
           ./gradlew :shared:embedAndSignAppleFrameworkForXcode
