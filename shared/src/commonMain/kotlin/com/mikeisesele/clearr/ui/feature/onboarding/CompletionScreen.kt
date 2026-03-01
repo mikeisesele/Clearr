@@ -31,12 +31,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.ClearrTheme
 
 @Composable
 fun CompletionScreen(onOpenApp: () -> Unit) {
@@ -80,10 +78,4 @@ fun CompletionScreen(onOpenApp: () -> Unit) {
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun CompletionScreenPreview() {
-    ClearrTheme { CompletionScreen(onOpenApp = {}) }
 }
