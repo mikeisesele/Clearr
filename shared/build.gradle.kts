@@ -35,6 +35,7 @@ kotlin {
         commonTest.dependencies {
         }
         androidMain.dependencies {
+            implementation(libs.androidx.activity.compose)
         }
         val iosX64Main by getting
         val iosArm64Main by getting

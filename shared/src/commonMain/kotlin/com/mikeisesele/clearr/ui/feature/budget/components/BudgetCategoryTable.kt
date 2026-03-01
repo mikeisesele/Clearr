@@ -40,20 +40,16 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.data.model.BudgetStatus
 import com.mikeisesele.clearr.data.model.CategorySummary
-import com.mikeisesele.clearr.ui.feature.budget.previews.previewBudgetSummaries
 import com.mikeisesele.clearr.ui.feature.budget.utils.formatKobo
 import com.mikeisesele.clearr.ui.feature.budget.utils.formatKoboFull
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
-import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.ClearrUiColors
-import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import com.mikeisesele.clearr.ui.theme.fromToken
 import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
@@ -290,21 +286,5 @@ internal fun BudgetCategoryRow(
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 412)
-@Composable
-private fun BudgetCategoryTablePreview() {
-    ClearrTheme {
-        BudgetCategoryTable(
-            summaries = previewBudgetSummaries,
-            overBudgetNames = emptyList(),
-            showSwipeHint = false,
-            onCategoryTap = {},
-            onCategoryDelete = {},
-            onSwipeHintDisplayed = {},
-            colors = LocalClearrUiColors.current
-        )
     }
 }

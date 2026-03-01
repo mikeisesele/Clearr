@@ -22,19 +22,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.BudgetSummary
-import com.mikeisesele.clearr.ui.feature.budget.previews.previewBudgetPeriods
-import com.mikeisesele.clearr.ui.feature.budget.previews.previewBudgetSummary
 import com.mikeisesele.clearr.ui.feature.budget.utils.formatKobo
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
-import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.ClearrUiColors
-import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import kotlin.math.absoluteValue
 
 @Composable
@@ -88,9 +83,7 @@ internal fun BudgetHeroSection(
         }
 
         Spacer(Modifier.height(ClearrDimens.dp20))
-
         BudgetHealthMeter(summary = summary, colors = colors)
-
         Spacer(Modifier.height(ClearrDimens.dp16))
 
         LazyRow(
@@ -165,19 +158,5 @@ internal fun BudgetHealthMeter(
                 Text("${formatKobo(summary.totalPlannedKobo)} planned", fontSize = ClearrTextSizes.sp11, color = colors.muted)
             }
         }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 412)
-@Composable
-private fun BudgetHeroSectionPreview() {
-    ClearrTheme {
-        BudgetHeroSection(
-            summary = previewBudgetSummary,
-            periods = previewBudgetPeriods,
-            selectedPeriodId = 4L,
-            onPeriodSelect = {},
-            colors = LocalClearrUiColors.current
-        )
     }
 }

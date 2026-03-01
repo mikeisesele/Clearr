@@ -1,6 +1,5 @@
 package com.mikeisesele.clearr.ui.feature.budget.components
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,17 +45,15 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.mikeisesele.clearr.data.model.CategorySummary
-import com.mikeisesele.clearr.ui.feature.budget.previews.previewBudgetSummaries
+import com.mikeisesele.clearr.ui.commons.components.PlatformBackHandler
 import com.mikeisesele.clearr.ui.feature.budget.utils.formatKobo
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
-import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import com.mikeisesele.clearr.ui.theme.fromToken
@@ -80,7 +77,7 @@ internal fun LogExpenseDialog(
 
     LaunchedEffect(Unit) { amountFocusRequester.requestFocus() }
 
-    BackHandler(onBack = onDismiss)
+    PlatformBackHandler(onBack = onDismiss)
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(
             modifier = Modifier.fillMaxSize().background(colors.text.copy(alpha = 0.35f)),
@@ -160,13 +157,7 @@ internal fun LogExpenseDialog(
                                                 text = if (isOverBudget) {
                                                     "Over budget in ${category.category.name}"
                                                 } else {
-                                                    "${
-                                                        formatKobo(
-                                                            projectedRemainingKobo.coerceAtLeast(
-                                                                0L
-                                                            )
-                                                        )
-                                                    } remaining in ${category.category.name}"
+                                                    "${formatKobo(projectedRemainingKobo.coerceAtLeast(0L))} remaining in ${category.category.name}"
                                                 },
                                                 fontSize = ClearrTextSizes.sp12,
                                                 color = if (isOverBudget) ClearrColors.BrandDanger else colors.green
@@ -232,18 +223,5 @@ internal fun LogExpenseDialog(
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 900)
-@Composable
-private fun LogExpenseDialogPreview() {
-    ClearrTheme {
-        LogExpenseDialog(
-            allCategories = previewBudgetSummaries,
-            preselectedCategory = previewBudgetSummaries.first(),
-            onDismiss = {},
-            onSave = { _, _, _ -> }
-        )
     }
 }
