@@ -40,7 +40,7 @@ import com.mikeisesele.clearr.ui.feature.goals.components.SwipeableGoalRow
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 fun GoalsDetailScreen(
@@ -50,7 +50,7 @@ fun GoalsDetailScreen(
     viewModel: GoalsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     var detailGoal by remember { mutableStateOf<GoalSummary?>(null) }
     var renameTarget by remember { mutableStateOf<GoalSummary?>(null) }
     var renameValue by remember { mutableStateOf("") }
@@ -91,7 +91,7 @@ fun GoalsDetailScreen(
         }
 
         Surface(
-            modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = ClearrDimens.dp20, bottom = ClearrDimens.dp24).size(ClearrDimens.dp52).clickable { onAddGoal() },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = ClearrDimens.dp20, bottom = ClearrDimens.dp20).size(ClearrDimens.dp52).clickable { onAddGoal() },
             shape = RoundedCornerShape(ClearrDimens.dp16),
             color = ClearrColors.Violet,
             shadowElevation = ClearrDimens.dp8

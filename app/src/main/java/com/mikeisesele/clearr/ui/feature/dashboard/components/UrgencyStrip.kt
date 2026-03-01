@@ -14,13 +14,13 @@ import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUiModel
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.previewDashboardUi
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 internal fun UrgencyHeader(
     modifier: Modifier = Modifier
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Text(
         text = "Needs attention",
         style = MaterialTheme.typography.labelSmall,

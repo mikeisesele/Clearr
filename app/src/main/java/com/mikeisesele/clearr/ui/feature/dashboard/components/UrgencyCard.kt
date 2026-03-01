@@ -48,11 +48,9 @@ import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerType
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencyItem
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencySeverity
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.previewDashboardUi
-import com.mikeisesele.clearr.ui.feature.dashboard.utils.surfaceTint
-import com.mikeisesele.clearr.ui.feature.dashboard.utils.toColor
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -63,7 +61,7 @@ internal fun UrgencyCard(
     onQuickAction: (DashboardTrackerType) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     val scope = rememberCoroutineScope()
     val offsetX = remember { Animatable(0f) }
     var cardWidth by remember { mutableFloatStateOf(0f) }
@@ -203,6 +201,19 @@ internal fun UrgencyCard(
         }
     }
 }
+
+private fun DashboardUrgencySeverity.toColor(
+    baseText: Color,
+    warning: Color,
+    critical: Color,
+    info: Color
+): Color = when (this) {
+    DashboardUrgencySeverity.CRITICAL -> critical
+    DashboardUrgencySeverity.WARNING -> warning
+    DashboardUrgencySeverity.INFO -> info
+}
+
+private fun DashboardTrackerType.surfaceTint(): Color = accentColor.copy(alpha = 0.12f)
 
 @Preview(showBackground = true)
 @Composable

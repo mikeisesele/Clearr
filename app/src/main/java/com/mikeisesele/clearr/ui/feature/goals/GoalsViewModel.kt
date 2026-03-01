@@ -11,7 +11,7 @@ import com.mikeisesele.clearr.data.model.GoalSummary
 import com.mikeisesele.clearr.data.model.HistoryEntry
 import com.mikeisesele.clearr.data.model.computeBestStreak
 import com.mikeisesele.clearr.data.model.computeCurrentStreak
-import com.mikeisesele.clearr.domain.repository.DuesRepository
+import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -20,7 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
-    private val repository: DuesRepository,
+    private val repository: ClearrRepository,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<GoalsUiState, GoalsAction, GoalsEvent>(
     initialState = GoalsUiState(trackerId = checkNotNull(savedStateHandle.get<Long>("trackerId")))

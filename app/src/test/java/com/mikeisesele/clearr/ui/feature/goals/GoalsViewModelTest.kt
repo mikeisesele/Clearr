@@ -9,7 +9,7 @@ import com.mikeisesele.clearr.data.model.GoalPeriodKey
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
-import com.mikeisesele.clearr.domain.repository.DuesRepository
+import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import com.mikeisesele.clearr.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -34,7 +34,7 @@ class GoalsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = mockk<DuesRepository>()
+    private val repository = mockk<ClearrRepository>()
     private val trackerId = 1L
 
     @Test

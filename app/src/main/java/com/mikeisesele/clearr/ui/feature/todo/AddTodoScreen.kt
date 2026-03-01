@@ -15,19 +15,13 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,13 +43,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.core.ai.ClearrEdgeAi
 import com.mikeisesele.clearr.core.ai.TodoAiResult
 import com.mikeisesele.clearr.data.model.TodoPriority
+import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.feature.todo.components.CustomDatePickerDialog
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoSheetInput
 import com.mikeisesele.clearr.ui.feature.todo.utils.dueDateFromOption
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -69,7 +64,7 @@ fun AddTodoScreen(
     viewModel: TodoViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     if (state.trackerId != trackerId) return
 
     var title by rememberSaveable { mutableStateOf("") }
@@ -110,17 +105,18 @@ fun AddTodoScreen(
         aiLoading = false
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(colors.bg).statusBarsPadding().padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp8).navigationBarsPadding()) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(ClearrDimens.dp34).clickable { onClose() }, contentAlignment = Alignment.Center) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = colors.text)
-            }
-            Text("New Todo", fontSize = ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = colors.text)
-            Spacer(modifier = Modifier.size(ClearrDimens.dp34))
-        }
+    Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+        ClearrTopBar(
+            title = "New Todo",
+            onLeadingClick = onClose,
+        )
 
-        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            Spacer(Modifier.height(ClearrDimens.dp12))
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp12)
+        ) {
             TodoSheetInput(
                 value = title,
                 onValueChange = { title = it },
@@ -189,7 +185,7 @@ fun AddTodoScreen(
             ) {
                 Text("Add Todo", color = ClearrColors.Surface, fontWeight = FontWeight.Bold)
             }
-            Spacer(Modifier.height(ClearrDimens.dp12))
+            Spacer(Modifier.height(ClearrDimens.dp24))
         }
     }
 

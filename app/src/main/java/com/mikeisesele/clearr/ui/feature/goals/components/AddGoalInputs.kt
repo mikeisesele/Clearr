@@ -21,11 +21,11 @@ import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 internal fun GoalSectionTitle(label: String) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Text(
         text = label,
         fontSize = ClearrTextSizes.sp12,
@@ -44,7 +44,7 @@ internal fun GoalSheetInput(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     modifier: Modifier = Modifier
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Surface(
         shape = RoundedCornerShape(ClearrDimens.dp12),
         color = colors.card,
@@ -75,7 +75,7 @@ internal fun GoalSheetInput(
 @Composable
 private fun AddGoalInputPreview() {
     ClearrTheme {
-        val colors = LocalDuesColors.current
+        val colors = LocalClearrUiColors.current
         Column(modifier = Modifier.fillMaxSize().background(colors.bg).padding(ClearrDimens.dp16)) {
             GoalSectionTitle("GOAL NAME")
             GoalSheetInput(value = "Exercise", onValueChange = {}, placeholder = "e.g. Exercise", singleLine = true, modifier = Modifier.fillMaxWidth())

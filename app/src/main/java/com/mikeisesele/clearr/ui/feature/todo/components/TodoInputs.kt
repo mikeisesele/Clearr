@@ -20,7 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 internal fun TodoSheetInput(
@@ -31,7 +31,7 @@ internal fun TodoSheetInput(
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(ClearrDimens.dp12),
@@ -62,7 +62,7 @@ internal fun TodoSheetInput(
 @Composable
 private fun TodoSheetInputPreview() {
     ClearrTheme {
-        val colors = LocalDuesColors.current
+        val colors = LocalClearrUiColors.current
         Column(modifier = Modifier.fillMaxSize().background(colors.bg).padding(ClearrDimens.dp16)) {
             TodoSheetInput(value = "Pay rent", onValueChange = {}, placeholder = "What needs to be done?", singleLine = true, modifier = Modifier.fillMaxWidth())
         }

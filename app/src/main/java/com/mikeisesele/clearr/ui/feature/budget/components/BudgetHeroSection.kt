@@ -33,8 +33,8 @@ import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.DuesColors
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.ClearrUiColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import kotlin.math.absoluteValue
 
 @Composable
@@ -43,7 +43,7 @@ internal fun BudgetHeroSection(
     periods: List<BudgetPeriod>,
     selectedPeriodId: Long?,
     onPeriodSelect: (Long) -> Unit,
-    colors: DuesColors
+    colors: ClearrUiColors
 ) {
     val over = summary.totalRemainingKobo < 0
     val balanceColor = if (over) colors.red else colors.green
@@ -119,7 +119,7 @@ internal fun BudgetHeroSection(
 @Composable
 internal fun BudgetHealthMeter(
     summary: BudgetSummary,
-    colors: DuesColors
+    colors: ClearrUiColors
 ) {
     val pct = if (summary.totalPlannedKobo > 0L) {
         (summary.totalSpentKobo.toFloat() / summary.totalPlannedKobo).coerceIn(0f, 1f)
@@ -177,7 +177,7 @@ private fun BudgetHeroSectionPreview() {
             periods = previewBudgetPeriods,
             selectedPeriodId = 4L,
             onPeriodSelect = {},
-            colors = LocalDuesColors.current
+            colors = LocalClearrUiColors.current
         )
     }
 }

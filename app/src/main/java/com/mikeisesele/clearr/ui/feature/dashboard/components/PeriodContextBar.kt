@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 internal fun PeriodContextBar(
@@ -20,7 +20,7 @@ internal fun PeriodContextBar(
     days: String,
     modifier: Modifier = Modifier
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Row(
         modifier = modifier
             .fillMaxWidth()

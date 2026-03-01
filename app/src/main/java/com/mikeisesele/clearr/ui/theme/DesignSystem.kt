@@ -105,6 +105,7 @@ object ClearrDimens {
     val dp200 = 200.dp
     val dp210 = 210.dp
     val dp280 = 280.dp
+    val dp320 = 320.dp
 }
 
 object ClearrTextSizes {

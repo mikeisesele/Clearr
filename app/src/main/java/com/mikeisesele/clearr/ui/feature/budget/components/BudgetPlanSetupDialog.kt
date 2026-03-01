@@ -52,7 +52,7 @@ import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import com.mikeisesele.clearr.ui.theme.fromToken
 
 @Composable
@@ -64,7 +64,7 @@ internal fun BudgetPlanSetupDialog(
     onAmountChange: (Long, Double) -> Unit,
     onConfirm: () -> Unit
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     val totalPlanned = drafts.sumOf { it.plannedAmountKobo }
 
     BackHandler(onBack = onDismiss)

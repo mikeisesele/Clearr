@@ -13,7 +13,7 @@ import com.mikeisesele.clearr.data.model.CategorySummary
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.data.repository.BudgetPreferencesRepository
-import com.mikeisesele.clearr.domain.repository.DuesRepository
+import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +27,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class BudgetViewModel @Inject constructor(
-    private val repository: DuesRepository,
+    private val repository: ClearrRepository,
     private val budgetPreferencesRepository: BudgetPreferencesRepository,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<BudgetUiState, BudgetAction, BudgetEvent>(

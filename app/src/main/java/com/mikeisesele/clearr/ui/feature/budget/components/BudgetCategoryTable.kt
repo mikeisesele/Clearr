@@ -52,8 +52,8 @@ import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.DuesColors
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.ClearrUiColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import com.mikeisesele.clearr.ui.theme.fromToken
 import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
@@ -66,7 +66,7 @@ internal fun BudgetCategoryTable(
     onCategoryTap: (CategorySummary) -> Unit,
     onCategoryDelete: (Long) -> Unit,
     onSwipeHintDisplayed: () -> Unit,
-    colors: DuesColors
+    colors: ClearrUiColors
 ) {
     var hintedCategoryId by rememberSaveable { mutableStateOf<Long?>(null) }
 
@@ -154,7 +154,7 @@ internal fun BudgetCategoryTable(
 @Composable
 internal fun SwipeableBudgetCategoryRow(
     summary: CategorySummary,
-    colors: DuesColors,
+    colors: ClearrUiColors,
     onDelete: () -> Unit,
     shouldHintSwipe: Boolean,
     onSwipeHintFinished: () -> Unit
@@ -210,7 +210,7 @@ internal fun SwipeableBudgetCategoryRow(
 @Composable
 internal fun BudgetCategoryRow(
     summary: CategorySummary,
-    colors: DuesColors
+    colors: ClearrUiColors
 ) {
     val pct = summary.percentUsed.coerceAtMost(1f)
     val animPct by animateFloatAsState(targetValue = pct, label = "row_pct")
@@ -304,7 +304,7 @@ private fun BudgetCategoryTablePreview() {
             onCategoryTap = {},
             onCategoryDelete = {},
             onSwipeHintDisplayed = {},
-            colors = LocalDuesColors.current
+            colors = LocalClearrUiColors.current
         )
     }
 }

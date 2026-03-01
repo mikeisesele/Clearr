@@ -30,54 +30,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerType
+import com.mikeisesele.clearr.ui.feature.dashboard.utils.backgroundColor
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 private data class EmptyStateCard(
     val trackerType: DashboardTrackerType,
     val description: String,
-    val accentColor: Color,
-    val backgroundColor: Color,
     val ctaLabel: String,
 )
 
 private val emptyStateCards = listOf(
-    EmptyStateCard(
-        trackerType = DashboardTrackerType.BUDGET,
-        description = "Plan your monthly spend by category. Know exactly where your money goes.",
-        accentColor = ClearrColors.Blue,
-        backgroundColor = ClearrColors.BlueBg,
-        ctaLabel = "Plan budget"
-    ),
-    EmptyStateCard(
-        trackerType = DashboardTrackerType.GOALS,
-        description = "Set recurring habits and targets. Track streaks and completion over time.",
-        accentColor = ClearrColors.Emerald,
-        backgroundColor = ClearrColors.EmeraldBg,
-        ctaLabel = "Build goals"
-    ),
-    EmptyStateCard(
-        trackerType = DashboardTrackerType.DUES,
-        description = "Track remittance collections and see who has cleared at a glance.",
-        accentColor = ClearrColors.Violet,
-        backgroundColor = ClearrColors.VioletBg,
-        ctaLabel = "Record payment"
-    ),
-    EmptyStateCard(
-        trackerType = DashboardTrackerType.TODOS,
-        description = "Capture personal tasks and deadlines. Clear obligations one by one.",
-        accentColor = ClearrColors.Amber,
-        backgroundColor = ClearrColors.AmberBg,
-        ctaLabel = "Start todos"
-    ),
+    EmptyStateCard(DashboardTrackerType.BUDGET, "Plan your monthly spend by category. Know exactly where your money goes.", "Plan budget"),
+    EmptyStateCard(DashboardTrackerType.GOALS, "Set recurring habits and targets. Track streaks and completion over time.", "Build goals"),
+    EmptyStateCard(DashboardTrackerType.TODOS, "Capture personal tasks and deadlines. Clear obligations one by one.", "Start todos")
 )
 
 @Composable
@@ -85,156 +56,103 @@ internal fun DashboardEmptyState(
     onNavigateToTab: (DashboardTrackerType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     val pagerState = rememberPagerState(pageCount = { emptyStateCards.size })
     val currentPage = pagerState.currentPage.coerceIn(0, emptyStateCards.lastIndex)
     val activeCard = emptyStateCards[currentPage]
-    val activeColor = activeCard.accentColor
     val containerTint by animateColorAsState(
-        targetValue = lerp(colors.bg, activeCard.backgroundColor, 0.24f),
-        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+        targetValue = lerp(colors.bg, activeCard.trackerType.backgroundColor(), 0.32f),
+        animationSpec = tween(350, easing = FastOutSlowInEasing),
         label = "empty_state_container_tint",
     )
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(containerTint)
-            .padding(horizontal = ClearrDimens.dp20),
+        modifier = modifier.fillMaxWidth().background(containerTint).padding(horizontal = ClearrDimens.dp20),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(Modifier.height(ClearrDimens.dp24))
-
         Text(
             text = "Nothing\nto clear\nyet.",
-            style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.displaySmall,
             color = colors.text,
-            textAlign = TextAlign.Start,
             modifier = Modifier.fillMaxWidth()
         )
-
         Spacer(Modifier.height(ClearrDimens.dp8))
-
         Text(
             text = "Start with:",
             style = MaterialTheme.typography.bodyMedium,
             color = colors.muted,
             modifier = Modifier.fillMaxWidth()
         )
-
         Spacer(Modifier.height(ClearrDimens.dp20))
 
         HorizontalPager(
             state = pagerState,
             contentPadding = PaddingValues(horizontal = ClearrDimens.dp0),
             pageSpacing = ClearrDimens.dp12,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = ClearrDimens.dp280),
+            modifier = Modifier.fillMaxWidth().wrapContentHeight(),
         ) { page ->
-            EmptyTrackerCard(
-                card = emptyStateCards[page],
-                onNavigateToTab = onNavigateToTab,
-            )
+            EmptyTrackerCard(card = emptyStateCards[page], onNavigateToTab = onNavigateToTab)
         }
 
         Spacer(Modifier.height(ClearrDimens.dp20))
-
-        PagerDots(
-            count = emptyStateCards.size,
-            current = currentPage,
-            activeColor = activeColor,
-        )
-
+        PagerDots(count = emptyStateCards.size, current = currentPage, activeColor = activeCard.trackerType.accentColor)
         Spacer(Modifier.height(ClearrDimens.dp32))
     }
 }
 
 @Composable
-private fun EmptyTrackerCard(
-    card: EmptyStateCard,
-    onNavigateToTab: (DashboardTrackerType) -> Unit,
-) {
+private fun EmptyTrackerCard(card: EmptyStateCard, onNavigateToTab: (DashboardTrackerType) -> Unit) {
+    val colors = LocalClearrUiColors.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = ClearrDimens.dp320)
             .clip(RoundedCornerShape(ClearrDimens.dp20))
-            .background(card.backgroundColor)
+            .background(card.trackerType.backgroundColor())
             .padding(ClearrDimens.dp20),
         verticalArrangement = Arrangement.spacedBy(ClearrDimens.dp12),
     ) {
-        Text(
-            text = card.trackerType.icon,
-            style = MaterialTheme.typography.displaySmall,
-        )
-
-        Spacer(Modifier.height(ClearrDimens.dp12))
-
+        Text(text = card.trackerType.icon, style = MaterialTheme.typography.displaySmall)
         Text(
             text = card.trackerType.label,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = card.accentColor,
+            style = MaterialTheme.typography.titleLarge,
+            color = card.trackerType.accentColor,
         )
-
-        Spacer(Modifier.height(ClearrDimens.dp8))
-
         Text(
             text = card.description,
             style = MaterialTheme.typography.bodyMedium,
-            color = ClearrColors.TextPrimary.copy(alpha = 0.75f),
+            color = colors.text.copy(alpha = 0.75f),
         )
-
-        Spacer(Modifier.height(ClearrDimens.dp12))
-
+        Spacer(Modifier.weight(1f, fill = true))
         Button(
             onClick = { onNavigateToTab(card.trackerType) },
             shape = RoundedCornerShape(ClearrDimens.dp14),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = card.accentColor,
-                contentColor = ClearrColors.Surface
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(ClearrDimens.dp52),
+            colors = ButtonDefaults.buttonColors(containerColor = card.trackerType.accentColor, contentColor = colors.surface),
+            modifier = Modifier.fillMaxWidth().height(ClearrDimens.dp52),
         ) {
-            Text(
-                text = card.ctaLabel,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-            )
+            Text(text = card.ctaLabel, style = MaterialTheme.typography.labelLarge)
         }
     }
 }
 
 @Composable
-private fun PagerDots(
-    count: Int,
-    current: Int,
-    activeColor: Color,
-) {
+private fun PagerDots(count: Int, current: Int, activeColor: androidx.compose.ui.graphics.Color) {
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        androidx.compose.foundation.layout.Row(
-            horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp6),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp6), verticalAlignment = Alignment.CenterVertically) {
             repeat(count) { index ->
                 val isActive = index == current
                 val color by animateColorAsState(
                     targetValue = if (isActive) activeColor else ClearrColors.Inactive,
-                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+                    animationSpec = tween(300, easing = FastOutSlowInEasing),
                     label = "dot_color_$index",
                 )
                 val width by animateDpAsState(
                     targetValue = if (isActive) ClearrDimens.dp20 else ClearrDimens.dp6,
-                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+                    animationSpec = tween(300, easing = FastOutSlowInEasing),
                     label = "dot_width_$index",
                 )
-                Box(
-                    modifier = Modifier
-                        .width(width)
-                        .height(ClearrDimens.dp6)
-                        .clip(CircleShape)
-                        .background(color),
-                )
+                Box(modifier = Modifier.width(width).height(ClearrDimens.dp6).clip(CircleShape).background(color))
             }
         }
     }
@@ -244,11 +162,6 @@ private fun PagerDots(
 @Composable
 private fun DashboardEmptyStatePreview() {
     ClearrTheme {
-        DashboardEmptyState(
-            onNavigateToTab = {},
-            modifier = Modifier
-                .background(ClearrColors.Background)
-                .fillMaxWidth()
-        )
+        DashboardEmptyState(onNavigateToTab = {}, modifier = Modifier.fillMaxWidth())
     }
 }

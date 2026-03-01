@@ -2,17 +2,17 @@ package com.mikeisesele.clearr.ui.commons.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -23,11 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 fun ClearrTopBar(
@@ -43,7 +42,7 @@ fun ClearrTopBar(
     leadingContainerColor: Color = actionContainerColor,
     modifier: Modifier = Modifier
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Surface(
         color = colors.surface,
         shadowElevation = ClearrDimens.dp2,
@@ -54,99 +53,116 @@ fun ClearrTopBar(
                 .fillMaxWidth()
                 .background(colors.surface)
         ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp8),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (showLeading) {
-                Surface(
-                    modifier = Modifier.size(ClearrDimens.dp34),
-                    shape = RoundedCornerShape(ClearrDimens.dp10),
-                    color = leadingContainerColor
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp6)
+            ) {
+                Box(
+                    modifier = Modifier.align(Alignment.CenterStart),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = if (onLeadingClick != null) Modifier.clickable { onLeadingClick() } else Modifier
-                    ) {
-                        if (leadingIcon == "←") {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = colors.text
-                            )
-                        } else {
-                            Text(leadingIcon, fontSize = ClearrTextSizes.sp15, color = colors.text)
+                    if (showLeading) {
+                        Surface(
+                            modifier = Modifier.size(ClearrDimens.dp34),
+                            shape = RoundedCornerShape(ClearrDimens.dp10),
+                            color = leadingContainerColor
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = if (onLeadingClick != null) Modifier.clickable { onLeadingClick() } else Modifier
+                            ) {
+                                if (leadingIcon == "←") {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back",
+                                        tint = colors.text
+                                    )
+                                } else {
+                                    Text(leadingIcon, fontSize = ClearrTextSizes.sp15, color = colors.text)
+                                }
+                            }
                         }
+                    } else {
+                        Box(modifier = Modifier.size(ClearrDimens.dp34))
                     }
                 }
-            } else {
-                Box(modifier = Modifier.size(ClearrDimens.dp34))
-            }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = title,
-                    fontSize = ClearrTextSizes.sp17,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.text
-                )
-                if (!subtitle.isNullOrBlank()) {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        text = subtitle,
-                        fontSize = ClearrTextSizes.sp12,
-                        color = colors.muted
+                        text = title,
+                        fontSize = ClearrTextSizes.sp17,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.text
                     )
+                    if (!subtitle.isNullOrBlank()) {
+                        Text(
+                            text = subtitle,
+                            fontSize = ClearrTextSizes.sp12,
+                            color = colors.muted
+                        )
+                    }
                 }
-            }
 
-            if (!actionText.isNullOrBlank() && onActionClick != null) {
                 Box(
                     modifier = Modifier
-                        .clickable { onActionClick() }
-                        .padding(horizontal = ClearrDimens.dp4, vertical = ClearrDimens.dp6),
+                        .align(Alignment.CenterEnd)
+                        .width(ClearrDimens.dp80),
                     contentAlignment = Alignment.CenterEnd
                 ) {
-                    Text(
-                        text = actionText,
-                        fontSize = ClearrTextSizes.sp12,
-                        color = colors.accent,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            } else if (!actionIcon.isNullOrBlank() && onActionClick != null) {
-                Surface(
-                    modifier = Modifier
-                        .size(ClearrDimens.dp34)
-                        .clickable { onActionClick() },
-                    shape = RoundedCornerShape(ClearrDimens.dp10),
-                    color = actionContainerColor
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        if (actionIcon == "⚙" || actionIcon == "⚙️") {
-                            Icon(
-                                imageVector = Icons.Filled.Settings,
-                                contentDescription = "Settings",
-                                tint = colors.text
-                            )
-                        } else {
+                    if (!actionText.isNullOrBlank() && onActionClick != null) {
+                        Box(
+                            modifier = Modifier
+                                .clickable { onActionClick() }
+                                .padding(horizontal = ClearrDimens.dp4, vertical = ClearrDimens.dp6),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
                             Text(
-                                actionIcon,
-                                fontSize = ClearrTextSizes.sp18,
-                                color = colors.text,
-                                fontWeight = FontWeight.Bold
+                                text = actionText,
+                                fontSize = ClearrTextSizes.sp12,
+                                color = colors.accent,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
+                    } else if (!actionIcon.isNullOrBlank() && onActionClick != null) {
+                        Surface(
+                            modifier = Modifier
+                                .size(ClearrDimens.dp34)
+                                .clickable { onActionClick() },
+                            shape = RoundedCornerShape(ClearrDimens.dp10),
+                            color = actionContainerColor
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                when (actionIcon) {
+                                    "⚙", "⚙️" -> Icon(
+                                        imageVector = Icons.Filled.Settings,
+                                        contentDescription = "Settings",
+                                        tint = colors.text
+                                    )
+                                    "⋮", "⋯" -> Icon(
+                                        imageVector = Icons.Filled.MoreVert,
+                                        contentDescription = "More actions",
+                                        tint = colors.text
+                                    )
+                                    else -> Text(
+                                        actionIcon,
+                                        fontSize = ClearrTextSizes.sp18,
+                                        color = colors.text,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Box(modifier = Modifier.size(ClearrDimens.dp34))
                     }
                 }
-            } else {
-                Box(modifier = Modifier.size(ClearrDimens.dp34))
             }
-        }
-        HorizontalDivider(color = colors.border)
+            HorizontalDivider(color = colors.border)
         }
     }
 }

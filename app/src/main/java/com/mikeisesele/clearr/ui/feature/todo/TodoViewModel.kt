@@ -8,7 +8,7 @@ import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.data.model.derivedStatus
 import com.mikeisesele.clearr.data.repository.TodoPreferencesRepository
-import com.mikeisesele.clearr.domain.repository.DuesRepository
+import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +22,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class TodoViewModel @Inject constructor(
-    private val repository: DuesRepository,
+    private val repository: ClearrRepository,
     private val todoPreferencesRepository: TodoPreferencesRepository,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<TodoUiState, TodoAction, TodoEvent>(

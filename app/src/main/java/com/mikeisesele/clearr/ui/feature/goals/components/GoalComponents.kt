@@ -64,8 +64,8 @@ import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.DuesColors
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.ClearrUiColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
@@ -83,7 +83,7 @@ internal fun GoalsNavBar(title: String, onBack: (() -> Unit)? = null) {
 }
 
 @Composable
-internal fun AllClearedBanner(colors: DuesColors) {
+internal fun AllClearedBanner(colors: ClearrUiColors) {
     Row(
         modifier = Modifier.fillMaxWidth().background(ClearrColors.EmeraldBg).padding(horizontal = ClearrDimens.dp20, vertical = ClearrDimens.dp12),
         horizontalArrangement = Arrangement.Center,
@@ -96,7 +96,7 @@ internal fun AllClearedBanner(colors: DuesColors) {
 }
 
 @Composable
-internal fun GoalsSwipeHintStrip(colors: DuesColors) {
+internal fun GoalsSwipeHintStrip(colors: ClearrUiColors) {
     Box(modifier = Modifier.fillMaxWidth().height(ClearrDimens.dp28).background(colors.bg), contentAlignment = Alignment.Center) {
         Text("Swipe left to delete", fontSize = ClearrTextSizes.sp11, color = colors.muted)
     }
@@ -106,7 +106,7 @@ internal fun GoalsSwipeHintStrip(colors: DuesColors) {
 internal fun SwipeableGoalRow(
     summary: GoalSummary,
     isLast: Boolean,
-    colors: DuesColors,
+    colors: ClearrUiColors,
     hintDeleteAnimation: Boolean,
     onHintAnimationPlayed: () -> Unit,
     onDelete: (String) -> Unit,
@@ -206,7 +206,7 @@ internal fun SwipeableGoalRow(
 
 @Composable
 internal fun HistoryDots(history: List<HistoryEntry>, color: Color) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Row(horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp3), verticalAlignment = Alignment.CenterVertically) {
         history.forEach { entry ->
             val dotColor by animateColorAsState(targetValue = if (entry.isDone) color else colors.border, label = "goal_history_dot")
@@ -219,7 +219,7 @@ internal fun HistoryDots(history: List<HistoryEntry>, color: Color) {
 @Composable
 internal fun GoalDetailSheet(
     summary: GoalSummary,
-    colors: DuesColors,
+    colors: ClearrUiColors,
     onDismiss: () -> Unit,
     onMarkDone: (String) -> Unit
 ) {
@@ -306,7 +306,7 @@ internal fun GoalDetailSheet(
 
 @Composable
 internal fun GoalStatTile(label: String, value: String, fg: Color, bg: Color, modifier: Modifier = Modifier) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Surface(modifier = modifier, shape = RoundedCornerShape(ClearrDimens.dp12), color = bg) {
         Column(modifier = Modifier.padding(horizontal = ClearrDimens.dp8, vertical = ClearrDimens.dp12), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(value, fontSize = ClearrTextSizes.sp18, fontWeight = FontWeight.ExtraBold, color = fg)
@@ -318,7 +318,7 @@ internal fun GoalStatTile(label: String, value: String, fg: Color, bg: Color, mo
 
 @Composable
 internal fun GoalsEmptyState(modifier: Modifier = Modifier) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Column(modifier = modifier.fillMaxWidth().background(colors.bg), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         Text("🎯", fontSize = ClearrTextSizes.sp40)
         Spacer(Modifier.height(ClearrDimens.dp12))
@@ -341,7 +341,7 @@ private fun GoalRowPreview() {
         SwipeableGoalRow(
             summary = previewGoalSummary,
             isLast = true,
-            colors = LocalDuesColors.current,
+            colors = LocalClearrUiColors.current,
             hintDeleteAnimation = false,
             onHintAnimationPlayed = {},
             onDelete = {},

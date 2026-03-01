@@ -34,7 +34,7 @@ import com.mikeisesele.clearr.ui.feature.todo.components.TodoFilterTabs
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoNavBar
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoSwipeHintStrip
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 fun TodoDetailScreen(
@@ -44,7 +44,7 @@ fun TodoDetailScreen(
     viewModel: TodoViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     var detailTodo by remember { mutableStateOf<TodoItem?>(null) }
     var renameTarget by remember { mutableStateOf<TodoItem?>(null) }
     var renameValue by remember { mutableStateOf("") }
@@ -57,7 +57,7 @@ fun TodoDetailScreen(
             Box {
                 TodoNavBar(
                     onBack = onNavigateBack,
-                    actionText = "Actions",
+                    actionIcon = "⋮",
                     onActionClick = { showActionsMenu = true }
                 )
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
@@ -104,7 +104,7 @@ fun TodoDetailScreen(
         }
 
         TodoFab(
-            modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = ClearrDimens.dp20, bottom = ClearrDimens.dp24),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = ClearrDimens.dp20, bottom = ClearrDimens.dp20),
             onClick = onAddTodo
         )
     }

@@ -62,8 +62,8 @@ import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.DuesColors
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.ClearrUiColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import com.mikeisesele.clearr.ui.feature.todo.utils.dueLabel
 import com.mikeisesele.clearr.ui.feature.todo.utils.dueLabelColor
 import com.mikeisesele.clearr.ui.feature.todo.utils.priorityDotColor
@@ -75,6 +75,7 @@ import kotlin.math.roundToInt
 internal fun TodoNavBar(
     onBack: (() -> Unit)? = null,
     actionText: String? = null,
+    actionIcon: String? = null,
     onActionClick: (() -> Unit)? = null
 ) {
     ClearrTopBar(
@@ -83,6 +84,7 @@ internal fun TodoNavBar(
         leadingIcon = "←",
         onLeadingClick = onBack,
         actionText = actionText,
+        actionIcon = actionIcon,
         onActionClick = onActionClick,
         leadingContainerColor = Color.Transparent
     )
@@ -94,7 +96,7 @@ internal fun TodoFilterTabs(
     overdueCount: Int,
     doneCount: Int,
     onSelect: (TodoFilter) -> Unit,
-    colors: DuesColors
+    colors: ClearrUiColors
 ) {
     val tabs = listOf(
         TodoFilter.ALL to "All",
@@ -120,7 +122,7 @@ internal fun TodoFilterTabs(
 }
 
 @Composable
-internal fun TodoSwipeHintStrip(colors: DuesColors) {
+internal fun TodoSwipeHintStrip(colors: ClearrUiColors) {
     Box(modifier = Modifier.fillMaxWidth().height(ClearrDimens.dp28).background(colors.bg), contentAlignment = Alignment.Center) {
         Text("Swipe left or right to mark done", fontSize = ClearrTextSizes.sp11, color = colors.muted)
     }
@@ -130,7 +132,7 @@ internal fun TodoSwipeHintStrip(colors: DuesColors) {
 internal fun SwipeableTodoRow(
     todo: TodoItem,
     isLast: Boolean,
-    colors: DuesColors,
+    colors: ClearrUiColors,
     hintDeleteAnimation: Boolean,
     onDone: (String) -> Unit,
     onTap: (TodoItem) -> Unit,
@@ -243,7 +245,7 @@ internal fun StatusPill(label: String, bg: Color, fg: Color) {
 @Composable
 internal fun TodoDetailSheet(
     todo: TodoItem,
-    colors: DuesColors,
+    colors: ClearrUiColors,
     onDismiss: () -> Unit,
     onMarkDone: (String) -> Unit,
     onDelete: (String) -> Unit
@@ -294,7 +296,7 @@ internal fun TodoDetailSheet(
 
 @Composable
 internal fun TodoEmptyState(filter: TodoFilter) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Text("✓", fontSize = ClearrTextSizes.sp40)
         Spacer(Modifier.height(ClearrDimens.dp12))
@@ -320,7 +322,7 @@ private fun TodoRowPreview() {
         SwipeableTodoRow(
             todo = previewTodoItem,
             isLast = true,
-            colors = LocalDuesColors.current,
+            colors = LocalClearrUiColors.current,
             hintDeleteAnimation = false,
             onDone = {},
             onTap = {},

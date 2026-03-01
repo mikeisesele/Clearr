@@ -17,10 +17,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikeisesele.clearr.ui.feature.dashboard.components.AllClearCard
-import com.mikeisesele.clearr.ui.feature.dashboard.components.ClearanceScoreSection
 import com.mikeisesele.clearr.ui.feature.dashboard.components.DashboardEmptyState
 import com.mikeisesele.clearr.ui.feature.dashboard.components.PeriodContextBar
 import com.mikeisesele.clearr.ui.feature.dashboard.components.QuickActionRow
+import com.mikeisesele.clearr.ui.feature.dashboard.components.TrackerHealthTiles
 import com.mikeisesele.clearr.ui.feature.dashboard.components.UrgencyHeader
 import com.mikeisesele.clearr.ui.feature.dashboard.components.UrgencyStrip
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerType
@@ -28,14 +28,13 @@ import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUiModel
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.previewDashboardUi
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 fun DashboardScreen(
     onOpenBudget: () -> Unit,
     onOpenTodos: () -> Unit,
     onOpenGoals: () -> Unit,
-    onOpenRemittance: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -46,7 +45,6 @@ fun DashboardScreen(
                 is DashboardEvent.OpenTracker -> when (event.trackerType) {
                     DashboardTrackerType.BUDGET -> onOpenBudget()
                     DashboardTrackerType.GOALS -> onOpenGoals()
-                    DashboardTrackerType.DUES -> onOpenRemittance()
                     DashboardTrackerType.TODOS -> onOpenTodos()
                 }
             }
@@ -69,52 +67,30 @@ internal fun DashboardContent(
     onQuickAction: (DashboardTrackerType) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = LocalDuesColors.current
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(colors.bg)
-    ) {
-        PeriodContextBar(
-            period = state.periodLabel,
-            days = state.daysLabel
-        )
+    val colors = LocalClearrUiColors.current
+    Column(modifier = modifier.fillMaxSize().background(colors.bg)) {
+        PeriodContextBar(period = state.periodLabel, days = state.daysLabel)
 
         if (!isLoading && state.visibleTiles.isEmpty()) {
             DashboardEmptyState(
                 onNavigateToTab = onQuickAction,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
+                modifier = Modifier.weight(1f).fillMaxWidth()
             )
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(
-                    start = ClearrDimens.dp20,
-                    end = ClearrDimens.dp20,
-                    top = ClearrDimens.dp8,
-                    bottom = ClearrDimens.dp12
-                ),
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentPadding = PaddingValues(start = ClearrDimens.dp20, end = ClearrDimens.dp20, top = ClearrDimens.dp8, bottom = ClearrDimens.dp12),
                 verticalArrangement = Arrangement.spacedBy(ClearrDimens.dp20)
             ) {
                 if (!isLoading && state.visibleTiles.isNotEmpty()) {
                     item {
-                        ClearanceScoreSection(
-                            score = state.score,
-                            visibleTiles = state.visibleTiles
-                        )
+                        TrackerHealthTiles(score = state.score, visibleTiles = state.visibleTiles)
                     }
                 }
-
                 if (!isLoading) {
                     when {
                         state.urgencyItems.isNotEmpty() -> {
-                            item {
-                                UrgencyHeader(modifier = Modifier.fillMaxWidth())
-                            }
+                            item { UrgencyHeader(modifier = Modifier.fillMaxWidth()) }
                             item {
                                 UrgencyStrip(
                                     state = state,
@@ -124,12 +100,8 @@ internal fun DashboardContent(
                                 )
                             }
                         }
-
                         state.score.hasAnyClearedTile() -> item {
-                            AllClearCard(
-                                hasTrackers = true,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            AllClearCard(hasTrackers = true, modifier = Modifier.fillMaxWidth())
                         }
                     }
                 }
@@ -140,7 +112,7 @@ internal fun DashboardContent(
             QuickActionRow(
                 onLogSpend = { onQuickAction(DashboardTrackerType.BUDGET) },
                 onMarkGoal = { onQuickAction(DashboardTrackerType.GOALS) },
-                onRecordDue = { onQuickAction(DashboardTrackerType.DUES) },
+                onReviewTodos = { onQuickAction(DashboardTrackerType.TODOS) },
                 modifier = Modifier.navigationBarsPadding()
             )
         }
@@ -148,7 +120,7 @@ internal fun DashboardContent(
 }
 
 private fun com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardClearanceScore.hasAnyClearedTile(): Boolean =
-    listOf(budget, goals, dues, todos).any { it.percent >= 90 }
+    listOf(budget, goals, todos).any { it.percent >= 90 }
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 917)
 @Composable

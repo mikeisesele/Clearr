@@ -21,63 +21,47 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.tooling.preview.Preview
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import kotlinx.coroutines.launch
 
 @Composable
 internal fun QuickActionRow(
     onLogSpend: () -> Unit,
     onMarkGoal: () -> Unit,
-    onRecordDue: () -> Unit,
+    onReviewTodos: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = ClearrDimens.dp20, vertical = ClearrDimens.dp12),
+        modifier = modifier.fillMaxWidth().padding(horizontal = ClearrDimens.dp20, vertical = ClearrDimens.dp12),
         horizontalArrangement = Arrangement.spacedBy(ClearrDimens.dp8)
     ) {
         QuickActionButton(label = "Log spend", onClick = onLogSpend, modifier = Modifier.weight(1f))
         QuickActionButton(label = "Mark done", onClick = onMarkGoal, modifier = Modifier.weight(1f))
-        QuickActionButton(label = "Record", onClick = onRecordDue, modifier = Modifier.weight(1f))
+        QuickActionButton(label = "Review", onClick = onReviewTodos, modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun QuickActionButton(
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val colors = LocalDuesColors.current
+private fun QuickActionButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalClearrUiColors.current
     val scope = rememberCoroutineScope()
     val scale = remember { Animatable(1f) }
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier
-            .scale(scale.value)
-            .background(colors.card, RoundedCornerShape(ClearrDimens.dp16))
-            .clickable {
-                scope.launch {
-                    scale.animateTo(0.94f, animationSpec = spring(stiffness = 600f))
-                    scale.animateTo(1f, animationSpec = spring(stiffness = 420f))
-                }
-                onClick()
+        modifier = modifier.scale(scale.value).background(colors.card, RoundedCornerShape(ClearrDimens.dp16)).clickable {
+            scope.launch {
+                scale.animateTo(0.94f, animationSpec = spring(stiffness = 600f))
+                scale.animateTo(1f, animationSpec = spring(stiffness = 420f))
             }
-            .padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp12)
+            onClick()
+        }.padding(horizontal = ClearrDimens.dp14, vertical = ClearrDimens.dp12)
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = colors.accent
-        )
+        Text(text = label, style = MaterialTheme.typography.labelLarge, color = colors.accent)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun QuickActionRowPreview() {
-    ClearrTheme {
-        QuickActionRow(onLogSpend = {}, onMarkGoal = {}, onRecordDue = {})
-    }
+    ClearrTheme { QuickActionRow(onLogSpend = {}, onMarkGoal = {}, onReviewTodos = {}) }
 }

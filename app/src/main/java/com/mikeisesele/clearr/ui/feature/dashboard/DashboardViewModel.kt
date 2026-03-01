@@ -1,14 +1,15 @@
 package com.mikeisesele.clearr.ui.feature.dashboard
 
 import com.mikeisesele.clearr.core.base.BaseViewModel
+import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
 import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.primarySummaryOf
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.previewEmptyDashboardUi
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.toDashboardUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
+import kotlinx.coroutines.flow.collectLatest
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
@@ -24,14 +25,9 @@ class DashboardViewModel @Inject constructor(
             observeTrackerSummaries().collectLatest { summaries ->
                 updateState { state ->
                     val model = listOfNotNull(
-                        summaries.primarySummaryOf(com.mikeisesele.clearr.data.model.TrackerType.BUDGET),
-                        summaries.primarySummaryOf(com.mikeisesele.clearr.data.model.TrackerType.GOALS),
-                        summaries.primarySummaryOf(com.mikeisesele.clearr.data.model.TrackerType.TODO)
-                    ).plus(
-                        summaries.filter {
-                            it.type == com.mikeisesele.clearr.data.model.TrackerType.DUES ||
-                                it.type == com.mikeisesele.clearr.data.model.TrackerType.EXPENSES
-                        }
+                        summaries.primarySummaryOf(TrackerType.BUDGET),
+                        summaries.primarySummaryOf(TrackerType.GOALS),
+                        summaries.primarySummaryOf(TrackerType.TODO)
                     ).toDashboardUiModel()
                     state.copy(
                         model = model.copy(urgencyItems = model.urgencyItems.filterNot { it.id in state.dismissedUrgencyIds }),
@@ -48,9 +44,7 @@ class DashboardViewModel @Inject constructor(
                 val dismissed = state.dismissedUrgencyIds + action.id
                 state.copy(
                     dismissedUrgencyIds = dismissed,
-                    model = state.model.copy(
-                        urgencyItems = state.model.urgencyItems.filterNot { it.id == action.id }
-                    )
+                    model = state.model.copy(urgencyItems = state.model.urgencyItems.filterNot { it.id == action.id })
                 )
             }
             is DashboardAction.QuickAction -> sendEvent(DashboardEvent.OpenTracker(action.trackerType))

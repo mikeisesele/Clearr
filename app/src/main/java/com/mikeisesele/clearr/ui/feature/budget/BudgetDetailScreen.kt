@@ -31,7 +31,7 @@ import com.mikeisesele.clearr.ui.feature.budget.components.LogExpenseDialog
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 fun BudgetDetailScreen(
@@ -41,7 +41,7 @@ fun BudgetDetailScreen(
     viewModel: BudgetViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     var loggingCategory by remember { mutableStateOf<CategorySummary?>(null) }
     var showLogDialog by remember { mutableStateOf(false) }
 
@@ -54,7 +54,7 @@ fun BudgetDetailScreen(
                 showLeading = onNavigateBack != null,
                 leadingIcon = "←",
                 onLeadingClick = onNavigateBack,
-                actionText = "Edit month",
+                actionText = "Edit",
                 onActionClick = { viewModel.onAction(BudgetAction.OpenBudgetSetup) },
                 leadingContainerColor = ClearrColors.Transparent
             )
@@ -91,8 +91,7 @@ fun BudgetDetailScreen(
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .navigationBarsPadding()
-                .padding(end = ClearrDimens.dp20, bottom = ClearrDimens.dp24)
+                .padding(end = ClearrDimens.dp20, bottom = ClearrDimens.dp20)
                 .size(ClearrDimens.dp52),
             color = colors.accent,
             shape = RoundedCornerShape(ClearrDimens.dp16),

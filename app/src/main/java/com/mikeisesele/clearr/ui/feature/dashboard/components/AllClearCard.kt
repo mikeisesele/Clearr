@@ -13,14 +13,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
 internal fun AllClearCard(
     hasTrackers: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     Surface(
         color = if (hasTrackers) colors.green.copy(alpha = 0.12f) else colors.card,
         shape = androidx.compose.foundation.shape.RoundedCornerShape(ClearrDimens.dp20),

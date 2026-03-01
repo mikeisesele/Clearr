@@ -28,7 +28,7 @@ import androidx.compose.ui.graphics.Color
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -40,7 +40,7 @@ internal fun CustomDatePickerDialog(
     onDismiss: () -> Unit,
     onDateSelected: (LocalDate) -> Unit
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     val minSelectableDate = LocalDate.now().plusDays(1)
     val initial = if (initialDate.isBefore(minSelectableDate)) minSelectableDate else initialDate
     var displayedMonth by remember { mutableStateOf(YearMonth.from(initial)) }

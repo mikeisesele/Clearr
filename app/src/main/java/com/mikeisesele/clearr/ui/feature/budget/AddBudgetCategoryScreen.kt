@@ -12,14 +12,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -44,6 +41,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.feature.budget.utils.CategoryPreset
 import com.mikeisesele.clearr.ui.feature.budget.utils.categoryPresets
 import com.mikeisesele.clearr.ui.feature.budget.utils.formatKobo
@@ -51,7 +49,7 @@ import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.LocalDuesColors
+import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import com.mikeisesele.clearr.ui.theme.fromToken
 
 @Composable
@@ -61,7 +59,7 @@ fun AddBudgetCategoryScreen(
     viewModel: BudgetViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     if (state.trackerId != trackerId) return
 
     var selectedPreset by remember { mutableStateOf<CategoryPreset?>(null) }
@@ -70,25 +68,21 @@ fun AddBudgetCategoryScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
-            .statusBarsPadding()
-            .padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp8)
-            .navigationBarsPadding()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(modifier = Modifier.size(ClearrDimens.dp34).clickable(onClick = onClose), contentAlignment = Alignment.Center) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = colors.text)
-            }
-            Text("Select Category", fontSize = ClearrTextSizes.sp16, fontWeight = FontWeight.SemiBold, color = colors.text)
-            Spacer(modifier = Modifier.size(ClearrDimens.dp34))
-        }
+        ClearrTopBar(
+            title = "Select Category",
+            onLeadingClick = onClose
+        )
 
         Spacer(Modifier.height(ClearrDimens.dp12))
 
-        Surface(color = colors.surface, shape = RoundedCornerShape(ClearrDimens.dp14), modifier = Modifier.fillMaxWidth()) {
+        Surface(
+            color = colors.surface,
+            shape = RoundedCornerShape(ClearrDimens.dp14),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = ClearrDimens.dp16)
+        ) {
             Column {
                 categoryPresets.forEachIndexed { index, preset ->
                     val token = ClearrColors.fromToken(preset.colorToken)
@@ -130,7 +124,7 @@ internal fun AddCategoryDetailDialog(
     onDismiss: () -> Unit,
     onAdd: (name: String, plannedAmountNaira: Double) -> Unit
 ) {
-    val colors = LocalDuesColors.current
+    val colors = LocalClearrUiColors.current
     val token = ClearrColors.fromToken(preset.colorToken)
     var name by rememberSaveable(preset.name) { mutableStateOf(if (preset.name == "Custom") "" else preset.name) }
     var plannedAmount by rememberSaveable(preset.name) { mutableStateOf("") }
