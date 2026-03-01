@@ -64,6 +64,8 @@ import com.mikeisesele.clearr.ui.feature.todo.TodoStore
 import com.mikeisesele.clearr.ui.feature.todo.TodoUiState
 import com.mikeisesele.clearr.ui.navigation.AppDestination
 import com.mikeisesele.clearr.ui.navigation.AppShellDestination
+import com.mikeisesele.clearr.ui.navigation.addFlowDestinationOrNull
+import com.mikeisesele.clearr.ui.navigation.backDestinationOrNull
 import com.mikeisesele.clearr.ui.navigation.rememberAppShellNavigator
 import com.mikeisesele.clearr.ui.navigation.rememberAppNavigator
 import com.mikeisesele.clearr.ui.theme.ClearrSharedTheme
@@ -199,8 +201,12 @@ private fun MainShellPreview(
                     state = state,
                     colors = colors,
                     onAction = store::onAction,
-                    onNavigateBack = { shellNavigator.openTopLevel(AppShellDestination.Dashboard) },
-                    onAddCategory = { shellNavigator.push(AppShellDestination.BudgetAddCategory(destination.trackerId)) }
+                    onNavigateBack = {
+                        destination.backDestinationOrNull()?.let(shellNavigator::openTopLevel)
+                    },
+                    onAddCategory = {
+                        destination.addFlowDestinationOrNull()?.let(shellNavigator::push)
+                    }
                 )
             }
         }
@@ -213,8 +219,12 @@ private fun MainShellPreview(
                     state = state,
                     colors = colors,
                     onAction = store::onAction,
-                    onNavigateBack = { shellNavigator.openTopLevel(AppShellDestination.Dashboard) },
-                    onAddGoal = { shellNavigator.push(AppShellDestination.GoalAdd(destination.trackerId)) }
+                    onNavigateBack = {
+                        destination.backDestinationOrNull()?.let(shellNavigator::openTopLevel)
+                    },
+                    onAddGoal = {
+                        destination.addFlowDestinationOrNull()?.let(shellNavigator::push)
+                    }
                 )
             }
         }
@@ -226,8 +236,12 @@ private fun MainShellPreview(
                 TodoDetailScreen(
                     state = state,
                     onAction = store::onAction,
-                    onNavigateBack = { shellNavigator.openTopLevel(AppShellDestination.Dashboard) },
-                    onAddTodo = { shellNavigator.push(AppShellDestination.TodoAdd(destination.trackerId)) }
+                    onNavigateBack = {
+                        destination.backDestinationOrNull()?.let(shellNavigator::openTopLevel)
+                    },
+                    onAddTodo = {
+                        destination.addFlowDestinationOrNull()?.let(shellNavigator::push)
+                    }
                 )
             }
         }

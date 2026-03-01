@@ -7,20 +7,6 @@ fun String?.isBottomNavRoute(): Boolean = toAppShellDestinationKind()?.bottomNav
 
 fun String?.toBottomNavItem(): AppBottomNavItem? = toAppShellDestinationKind()?.bottomNavItem
 
-fun String?.isAddFlowRoute(): Boolean = when (toAppShellDestinationKind()) {
-    AppShellDestinationKind.TODO_ADD,
-    AppShellDestinationKind.GOAL_ADD,
-    AppShellDestinationKind.BUDGET_ADD_CATEGORY -> true
-    else -> false
-}
-
-fun String?.isTopLevelNonDashboardRoute(): Boolean {
-    val kind = toAppShellDestinationKind()
-    return kind == AppShellDestinationKind.BUDGET_ROOT ||
-        kind == AppShellDestinationKind.TODO_ROOT ||
-        kind == AppShellDestinationKind.GOALS_ROOT
-}
-
 fun AppShellDestination.toBottomNavItem(): AppBottomNavItem? = topLevelDestination().kind.bottomNavItem
 
 fun AppShellUiState.destinationFor(item: AppBottomNavItem): AppShellDestination? = when (item) {

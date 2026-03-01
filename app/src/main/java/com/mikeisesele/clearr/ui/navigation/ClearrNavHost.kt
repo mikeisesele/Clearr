@@ -106,13 +106,13 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentDestination = currentBackStack.toAppShellDestination()
     val currentRoute = currentBackStack?.destination?.route
+    val backDestination = currentDestination?.backDestinationOrNull()
 
-    BackHandler(enabled = currentRoute.isTopLevelNonDashboardRoute()) {
-        shellNavigator.openTopLevel(AppShellDestination.Dashboard)
-    }
-
-    BackHandler(enabled = currentRoute.isAddFlowRoute()) {
-        shellNavigator.pop()
+    BackHandler(enabled = backDestination != null) {
+        when {
+            currentDestination?.isAddFlowDestination() == true -> shellNavigator.pop()
+            backDestination != null -> shellNavigator.openTopLevel(backDestination)
+        }
     }
 
     LaunchedEffect(shellNavState.current, currentDestination) {
@@ -165,7 +165,11 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
                     BudgetDetailScreen(
                         trackerId = trackerId,
-                        onAddCategory = { shellNavigator.push(AppShellDestination.BudgetAddCategory(trackerId)) }
+                        onAddCategory = {
+                            AppShellDestination.BudgetRoot(trackerId)
+                                .addFlowDestinationOrNull()
+                                ?.let(shellNavigator::push)
+                        }
                     )
                 }
                 composable(
@@ -175,7 +179,11 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
                     TodoRoute(
                         trackerId = trackerId,
-                        onAddTodo = { shellNavigator.push(AppShellDestination.TodoAdd(trackerId)) }
+                        onAddTodo = {
+                            AppShellDestination.TodoRoot(trackerId)
+                                .addFlowDestinationOrNull()
+                                ?.let(shellNavigator::push)
+                        }
                     )
                 }
                 composable(
@@ -185,7 +193,11 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
                     GoalsDetailScreen(
                         trackerId = trackerId,
-                        onAddGoal = { shellNavigator.push(AppShellDestination.GoalAdd(trackerId)) }
+                        onAddGoal = {
+                            AppShellDestination.GoalsRoot(trackerId)
+                                .addFlowDestinationOrNull()
+                                ?.let(shellNavigator::push)
+                        }
                     )
                 }
                 composable(

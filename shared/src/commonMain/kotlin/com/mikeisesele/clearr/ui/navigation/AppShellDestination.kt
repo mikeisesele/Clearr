@@ -101,3 +101,30 @@ fun AppShellDestination.topLevelDestination(): AppShellDestination = when (this)
 }
 
 fun AppShellDestination.isTopLevelDestination(): Boolean = this == topLevelDestination()
+
+fun AppShellDestination.isAddFlowDestination(): Boolean = when (this) {
+    is AppShellDestination.TodoAdd,
+    is AppShellDestination.GoalAdd,
+    is AppShellDestination.BudgetAddCategory -> true
+    else -> false
+}
+
+fun AppShellDestination.backDestinationOrNull(): AppShellDestination? = when (this) {
+    AppShellDestination.Dashboard -> null
+    is AppShellDestination.BudgetRoot,
+    is AppShellDestination.TodoRoot,
+    is AppShellDestination.GoalsRoot -> AppShellDestination.Dashboard
+    is AppShellDestination.TodoAdd,
+    is AppShellDestination.GoalAdd,
+    is AppShellDestination.BudgetAddCategory -> topLevelDestination()
+}
+
+fun AppShellDestination.addFlowDestinationOrNull(): AppShellDestination? = when (this) {
+    is AppShellDestination.BudgetRoot -> AppShellDestination.BudgetAddCategory(trackerId)
+    is AppShellDestination.TodoRoot -> AppShellDestination.TodoAdd(trackerId)
+    is AppShellDestination.GoalsRoot -> AppShellDestination.GoalAdd(trackerId)
+    AppShellDestination.Dashboard,
+    is AppShellDestination.TodoAdd,
+    is AppShellDestination.GoalAdd,
+    is AppShellDestination.BudgetAddCategory -> null
+}
