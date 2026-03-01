@@ -2,9 +2,7 @@ package com.mikeisesele.clearr
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardScreen
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardClearanceScore
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerHealth
@@ -15,21 +13,24 @@ import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencySeverit
 import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
+import com.mikeisesele.clearr.ui.navigation.AppDestination
+import com.mikeisesele.clearr.ui.navigation.rememberAppNavigator
 import com.mikeisesele.clearr.ui.theme.ClearrSharedTheme
 
 @Composable
 fun ClearrApp() {
     ClearrSharedTheme {
-        var stage by remember { mutableStateOf(ClearrStage.SPLASH) }
+        val navigator = rememberAppNavigator()
+        val navigationState by navigator.state.collectAsState()
 
-        when (stage) {
-            ClearrStage.SPLASH -> SplashScreen(onGetStarted = { stage = ClearrStage.ONBOARDING })
-            ClearrStage.ONBOARDING -> OnboardingScreen(
-                onComplete = { stage = ClearrStage.COMPLETION },
-                onSkip = { stage = ClearrStage.COMPLETION }
+        when (navigationState.current) {
+            AppDestination.Splash -> SplashScreen(onGetStarted = navigator::openOnboarding)
+            AppDestination.Onboarding -> OnboardingScreen(
+                onComplete = navigator::completeOnboarding,
+                onSkip = navigator::completeOnboarding
             )
-            ClearrStage.COMPLETION -> CompletionScreen(onOpenApp = { stage = ClearrStage.DASHBOARD })
-            ClearrStage.DASHBOARD -> DashboardScreen(
+            AppDestination.Completion -> CompletionScreen(onOpenApp = navigator::openDashboard)
+            AppDestination.Dashboard -> DashboardScreen(
                 state = iosPreviewDashboardModel(),
                 isLoading = false,
                 onDismissUrgency = {},
@@ -37,13 +38,6 @@ fun ClearrApp() {
             )
         }
     }
-}
-
-private enum class ClearrStage {
-    SPLASH,
-    ONBOARDING,
-    COMPLETION,
-    DASHBOARD
 }
 
 private fun iosPreviewDashboardModel(): DashboardUiModel = DashboardUiModel(

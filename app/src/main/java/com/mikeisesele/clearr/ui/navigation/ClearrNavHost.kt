@@ -60,32 +60,32 @@ fun ClearrNavHost(onThemeChange: (ThemeMode) -> Unit = {}) {
 private fun OnboardingNavHost(onboardingVm: OnboardingViewModel) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "splash") {
-        composable("splash") {
-            SplashScreen(onGetStarted = { navController.navigate("onboarding/0") })
+    NavHost(navController = navController, startDestination = OnboardingFlowRoute.Splash.route) {
+        composable(OnboardingFlowRoute.Splash.route) {
+            SplashScreen(onGetStarted = { navController.navigate(OnboardingFlowRoute.Slide.createRoute(0)) })
         }
         composable(
-            route = "onboarding/{slideIndex}",
-            arguments = listOf(navArgument("slideIndex") { type = NavType.IntType })
+            route = OnboardingFlowRoute.Slide.route,
+            arguments = listOf(navArgument(OnboardingFlowRoute.Slide.argument) { type = NavType.IntType })
         ) { backStack ->
-            val initialSlide = backStack.arguments?.getInt("slideIndex") ?: 0
+            val initialSlide = backStack.arguments?.getInt(OnboardingFlowRoute.Slide.argument) ?: 0
             OnboardingScreen(
                 initialSlide = initialSlide,
                 onComplete = {
                     onboardingVm.onAction(OnboardingAction.CompleteOnboarding)
-                    navController.navigate("onboarding_complete") {
-                        popUpTo("splash") { inclusive = true }
+                    navController.navigate(OnboardingFlowRoute.Completion.route) {
+                        popUpTo(OnboardingFlowRoute.Splash.route) { inclusive = true }
                     }
                 },
                 onSkip = {
                     onboardingVm.onAction(OnboardingAction.CompleteOnboarding)
-                    navController.navigate("onboarding_complete") {
-                        popUpTo("splash") { inclusive = true }
+                    navController.navigate(OnboardingFlowRoute.Completion.route) {
+                        popUpTo(OnboardingFlowRoute.Splash.route) { inclusive = true }
                     }
                 }
             )
         }
-        composable("onboarding_complete") {
+        composable(OnboardingFlowRoute.Completion.route) {
             CompletionScreen(onOpenApp = {})
         }
     }
