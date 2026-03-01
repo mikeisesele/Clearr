@@ -28,6 +28,7 @@ import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
 import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
 import com.mikeisesele.clearr.preview.InMemoryClearrRepository
 import com.mikeisesele.clearr.preview.InMemoryTodoPreferencesRepository
+import com.mikeisesele.clearr.preview.PreviewGoalsAiService
 import com.mikeisesele.clearr.preview.PreviewTodoAiService
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardAction
 import com.mikeisesele.clearr.ui.feature.budget.AddBudgetCategoryScreen
@@ -47,6 +48,7 @@ import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencySeverit
 import com.mikeisesele.clearr.ui.feature.goals.AddGoalScreen
 import com.mikeisesele.clearr.ui.feature.goals.GoalsAction
 import com.mikeisesele.clearr.ui.feature.goals.GoalsAiResult
+import com.mikeisesele.clearr.ui.feature.goals.GoalsStore
 import com.mikeisesele.clearr.ui.feature.goals.GoalsScreen
 import com.mikeisesele.clearr.ui.feature.goals.GoalsUiState
 import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
@@ -94,6 +96,7 @@ private fun MainShellPreview(
     val repository = remember { InMemoryClearrRepository.sample() }
     val todoPreferencesRepository = remember { InMemoryTodoPreferencesRepository() }
     val todoAiService = remember { PreviewTodoAiService() }
+    val goalsAiService = remember { PreviewGoalsAiService() }
     val dashboardStore = remember(scope) {
         DashboardStore(
             trackerBootstrapper = TrackerBootstrapper(repository),
@@ -105,6 +108,11 @@ private fun MainShellPreview(
     val activeTodoTrackerId = when (destination) {
         is AppShellDestination.TodoRoot -> destination.trackerId
         is AppShellDestination.TodoAdd -> destination.trackerId
+        else -> null
+    }
+    val activeGoalsTrackerId = when (destination) {
+        is AppShellDestination.GoalsRoot -> destination.trackerId
+        is AppShellDestination.GoalAdd -> destination.trackerId
         else -> null
     }
     val todoStore = activeTodoTrackerId?.let { trackerId ->
@@ -120,6 +128,18 @@ private fun MainShellPreview(
         }
     }
     val todoState by (todoStore?.uiState?.collectAsState() ?: remember { androidx.compose.runtime.mutableStateOf<TodoUiState?>(null) })
+    val goalsStore = activeGoalsTrackerId?.let { trackerId ->
+        remember(trackerId, scope) {
+            GoalsStore(
+                trackerId = trackerId,
+                repository = repository,
+                goalsAiService = goalsAiService,
+                scope = scope,
+                nowMillis = ::nowEpochMillis
+            )
+        }
+    }
+    val goalsState by (goalsStore?.uiState?.collectAsState() ?: remember { androidx.compose.runtime.mutableStateOf<GoalsUiState?>(null) })
 
     LaunchedEffect(dashboardStore) {
         dashboardStore.events.collect { event ->
@@ -153,13 +173,19 @@ private fun MainShellPreview(
             onAddCategory = { onNavigate(AppShellDestination.BudgetAddCategory(destination.trackerId)) }
         )
 
-        is AppShellDestination.GoalsRoot -> GoalsScreen(
-            state = previewGoalsState(destination.trackerId),
-            colors = colors,
-            onAction = {},
-            onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
-            onAddGoal = { onNavigate(AppShellDestination.GoalAdd(destination.trackerId)) }
-        )
+        is AppShellDestination.GoalsRoot -> {
+            val state = goalsState
+            val store = goalsStore
+            if (state != null && store != null) {
+                GoalsScreen(
+                    state = state,
+                    colors = colors,
+                    onAction = store::onAction,
+                    onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
+                    onAddGoal = { onNavigate(AppShellDestination.GoalAdd(destination.trackerId)) }
+                )
+            }
+        }
 
         is AppShellDestination.TodoRoot -> {
             val state = todoState
@@ -181,15 +207,22 @@ private fun MainShellPreview(
             }
         )
 
-        is AppShellDestination.GoalAdd -> AddGoalScreen(
-            state = previewGoalsState(destination.trackerId),
-            colors = colors,
-            onClose = { onNavigate(AppShellDestination.GoalsRoot(destination.trackerId)) },
-            onAddGoal = { _, _, _, _, _ -> },
-            inferGoalDraft = { title, target, frequency, emoji, colorToken ->
-                previewGoalsAiResult(title, target, frequency, emoji, colorToken)
+        is AppShellDestination.GoalAdd -> {
+            val state = goalsState
+            if (state != null) {
+                AddGoalScreen(
+                    state = state,
+                    colors = colors,
+                    onClose = { onNavigate(AppShellDestination.GoalsRoot(destination.trackerId)) },
+                    onAddGoal = { title, emoji, colorToken, target, frequency ->
+                        goalsStore?.onAction(GoalsAction.AddGoal(title, emoji, colorToken, target, frequency))
+                    },
+                    inferGoalDraft = { title, target, frequency, emoji, colorToken ->
+                        goalsAiService.inferGoal(title, target, frequency, emoji, colorToken)
+                    }
+                )
             }
-        )
+        }
 
         is AppShellDestination.BudgetAddCategory -> AddBudgetCategoryScreen(
             state = previewBudgetState(destination.trackerId),
