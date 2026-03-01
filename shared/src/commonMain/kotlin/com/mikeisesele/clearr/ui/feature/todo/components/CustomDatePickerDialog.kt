@@ -1,6 +1,5 @@
 package com.mikeisesele.clearr.ui.feature.todo.components
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
@@ -54,10 +56,9 @@ internal fun CustomDatePickerDialog(
         while (size % 7 != 0) add(null)
     }.chunked(7)
 
-    BackHandler(onBack = onDismiss)
-    androidx.compose.ui.window.Dialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Box(
             modifier = Modifier
@@ -66,12 +67,32 @@ internal fun CustomDatePickerDialog(
                 .padding(horizontal = ClearrDimens.dp16),
             contentAlignment = Alignment.Center
         ) {
-            Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(ClearrDimens.dp20), color = colors.surface) {
-                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp12)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        androidx.compose.material3.TextButton(onClick = { displayedMonth = displayedMonth.minusMonths(1) }) { Text("‹", color = ClearrColors.Blue) }
-                        Text(displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())), fontSize = ClearrTextSizes.sp16, color = colors.text)
-                        androidx.compose.material3.TextButton(onClick = { displayedMonth = displayedMonth.plusMonths(1) }) { Text("›", color = ClearrColors.Blue) }
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(ClearrDimens.dp20),
+                color = colors.surface
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp12)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(onClick = { displayedMonth = displayedMonth.minusMonths(1) }) {
+                            Text("‹", color = ClearrColors.Blue)
+                        }
+                        Text(
+                            displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
+                            fontSize = ClearrTextSizes.sp16,
+                            color = colors.text
+                        )
+                        TextButton(onClick = { displayedMonth = displayedMonth.plusMonths(1) }) {
+                            Text("›", color = ClearrColors.Blue)
+                        }
                     }
                     Spacer(Modifier.padding(vertical = ClearrDimens.dp4))
                     Row(modifier = Modifier.fillMaxWidth()) {
@@ -85,12 +106,20 @@ internal fun CustomDatePickerDialog(
                     cells.forEach { week ->
                         Row(modifier = Modifier.fillMaxWidth()) {
                             week.forEach { date ->
-                                Box(modifier = Modifier.weight(1f).aspectRatio(1f).padding(ClearrDimens.dp2), contentAlignment = Alignment.Center) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1f)
+                                        .padding(ClearrDimens.dp2),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     if (date != null) {
                                         val selectable = !date.isBefore(minSelectableDate)
                                         val isSelected = date == selectedDate
                                         Surface(
-                                            modifier = Modifier.fillMaxSize().clickable(enabled = selectable) { selectedDate = date },
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clickable(enabled = selectable) { selectedDate = date },
                                             shape = RoundedCornerShape(ClearrDimens.dp10),
                                             color = when {
                                                 isSelected -> ClearrColors.Blue

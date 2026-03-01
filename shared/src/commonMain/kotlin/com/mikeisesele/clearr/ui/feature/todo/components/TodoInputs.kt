@@ -1,10 +1,7 @@
 package com.mikeisesele.clearr.ui.feature.todo.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,10 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
@@ -54,17 +49,6 @@ internal fun TodoSheetInput(
                     inner()
                 }
             )
-        }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 412)
-@Composable
-private fun TodoSheetInputPreview() {
-    ClearrTheme {
-        val colors = LocalClearrUiColors.current
-        Column(modifier = Modifier.fillMaxSize().background(colors.bg).padding(ClearrDimens.dp16)) {
-            TodoSheetInput(value = "Pay rent", onValueChange = {}, placeholder = "What needs to be done?", singleLine = true, modifier = Modifier.fillMaxWidth())
         }
     }
 }

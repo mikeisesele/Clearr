@@ -30,7 +30,7 @@ import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingAction
 import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingViewModel
 import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
-import com.mikeisesele.clearr.ui.feature.todo.AddTodoScreen
+import com.mikeisesele.clearr.ui.feature.todo.AddTodoRoute
 import com.mikeisesele.clearr.ui.feature.todo.TodoRoute
 import com.mikeisesele.clearr.ui.navigation.components.AppBottomNav
 import com.mikeisesele.clearr.ui.navigation.components.AppBottomNavItem
@@ -175,7 +175,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
                 ) { backStackEntry ->
                     val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
-                    AddTodoScreen(trackerId = trackerId, onClose = { navController.popBackStack() })
+                    AddTodoRoute(trackerId = trackerId, onClose = { navController.popBackStack() })
                 }
                 composable(
                     route = NavRoutes.GoalAdd.route,
