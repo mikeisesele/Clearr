@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.core.time.localDateAtEndOfDayEpochMillis
 import com.mikeisesele.clearr.core.time.localDateAtStartOfDayEpochMillis
 import com.mikeisesele.clearr.core.time.nowEpochMillis
@@ -29,6 +30,7 @@ import com.mikeisesele.clearr.data.model.HistoryEntry
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
+import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.runtime.ClearrRuntime
 import com.mikeisesele.clearr.runtime.createPlatformRuntime
 import com.mikeisesele.clearr.runtime.createBudgetStore
@@ -55,7 +57,9 @@ import com.mikeisesele.clearr.ui.feature.goals.GoalsAiResult
 import com.mikeisesele.clearr.ui.feature.goals.GoalsScreen
 import com.mikeisesele.clearr.ui.feature.goals.GoalsUiState
 import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
+import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingAction
 import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingScreen
+import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingStore
 import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
 import com.mikeisesele.clearr.ui.feature.todo.AddTodoScreen
 import com.mikeisesele.clearr.ui.feature.todo.TodoAction
@@ -63,6 +67,7 @@ import com.mikeisesele.clearr.ui.feature.todo.TodoDetailScreen
 import com.mikeisesele.clearr.ui.feature.todo.TodoUiState
 import com.mikeisesele.clearr.ui.navigation.AppDestination
 import com.mikeisesele.clearr.ui.navigation.AppShellDestination
+import com.mikeisesele.clearr.ui.navigation.AppConfigStore
 import com.mikeisesele.clearr.ui.navigation.addFlowDestinationOrNull
 import com.mikeisesele.clearr.ui.navigation.backDestinationOrNull
 import com.mikeisesele.clearr.ui.navigation.components.AppBottomNav
@@ -73,21 +78,51 @@ import com.mikeisesele.clearr.ui.navigation.rememberAppNavigator
 import com.mikeisesele.clearr.ui.navigation.topLevelDestination
 import com.mikeisesele.clearr.ui.theme.ClearrSharedTheme
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
+import kotlinx.coroutines.launch
 
 @Composable
 fun ClearrApp(
     runtime: ClearrRuntime? = null
 ) {
     val appRuntime = remember(runtime) { runtime ?: createPlatformRuntime() }
+    val scope = rememberCoroutineScope()
     ClearrSharedTheme {
         val navigator = rememberAppNavigator()
         val navigationState by navigator.state.collectAsState()
+        val onboardingStore = remember(scope, appRuntime) {
+            OnboardingStore(
+                onboardingRepository = appRuntime.onboardingStatusRepository,
+                scope = scope
+            )
+        }
+        val onboardingState by onboardingStore.uiState.collectAsState()
+        val appConfigStore = remember(scope, appRuntime) {
+            AppConfigStore(
+                repository = appRuntime.repository,
+                scope = scope
+            )
+        }
+        val appConfigState by appConfigStore.uiState.collectAsState()
 
         when (navigationState.current) {
-            AppDestination.Splash -> SplashScreen(onGetStarted = navigator::openOnboarding)
+            AppDestination.Splash -> SplashScreen(
+                onGetStarted = {
+                    if (onboardingState.isComplete == true && appConfigState.appConfig?.setupComplete == true) {
+                        navigator.openDashboard()
+                    } else {
+                        navigator.openOnboarding()
+                    }
+                }
+            )
             AppDestination.Onboarding -> OnboardingScreen(
-                onComplete = navigator::completeOnboarding,
-                onSkip = navigator::completeOnboarding
+                onComplete = {
+                    completeSharedSetup(scope, onboardingStore, appRuntime, appConfigState.appConfig)
+                    navigator.completeOnboarding()
+                },
+                onSkip = {
+                    completeSharedSetup(scope, onboardingStore, appRuntime, appConfigState.appConfig)
+                    navigator.completeOnboarding()
+                }
             )
             AppDestination.Completion -> CompletionScreen(onOpenApp = navigator::openDashboard)
             is AppDestination.MainShell -> MainShellPreview(
@@ -108,8 +143,12 @@ private fun MainShellPreview(
     val shellNavigator = rememberAppShellNavigator(initialDestination)
     val shellState by shellNavigator.state.collectAsState()
     val destination = shellState.current
+    val trackers by runtime.repository.getAllTrackers().collectAsState(initial = emptyList())
     val dashboardStore = remember(scope, runtime) { runtime.createDashboardStore(scope) }
     val dashboardState by dashboardStore.uiState.collectAsState()
+    val budgetTrackerId = trackers.firstOrNull { it.type == TrackerType.BUDGET }?.id
+    val todoTrackerId = trackers.firstOrNull { it.type == TrackerType.TODO }?.id
+    val goalsTrackerId = trackers.firstOrNull { it.type == TrackerType.GOALS }?.id
     val activeBudgetTrackerId = when (destination) {
         is AppShellDestination.BudgetRoot -> destination.trackerId
         is AppShellDestination.BudgetAddCategory -> destination.trackerId
@@ -143,13 +182,11 @@ private fun MainShellPreview(
         dashboardStore.events.collect { event ->
             when (event) {
                 is DashboardEvent.OpenTracker -> {
-                    shellNavigator.openTopLevel(
-                        when (event.trackerType) {
-                            DashboardTrackerType.BUDGET -> AppShellDestination.BudgetRoot(PREVIEW_BUDGET_TRACKER_ID)
-                            DashboardTrackerType.GOALS -> AppShellDestination.GoalsRoot(PREVIEW_GOALS_TRACKER_ID)
-                            DashboardTrackerType.TODOS -> AppShellDestination.TodoRoot(PREVIEW_TODO_TRACKER_ID)
-                        }
-                    )
+                    event.trackerType.toTopLevelDestination(
+                        budgetTrackerId = budgetTrackerId,
+                        todoTrackerId = todoTrackerId,
+                        goalsTrackerId = goalsTrackerId
+                    )?.let(shellNavigator::openTopLevel)
                 }
             }
         }
@@ -162,7 +199,11 @@ private fun MainShellPreview(
                 AppBottomNav(
                     selectedItem = destination.bottomNavItemOrNull(),
                     onSelect = { item ->
-                        shellNavigator.openTopLevel(item.toTopLevelDestination())
+                        item.toTopLevelDestination(
+                            budgetTrackerId = budgetTrackerId,
+                            todoTrackerId = todoTrackerId,
+                            goalsTrackerId = goalsTrackerId
+                        )?.let(shellNavigator::openTopLevel)
                     }
                 )
             }
@@ -276,9 +317,18 @@ private fun MainShellPreview(
     }
 }
 
-private const val PREVIEW_BUDGET_TRACKER_ID = 1001L
-private const val PREVIEW_GOALS_TRACKER_ID = 1002L
-private const val PREVIEW_TODO_TRACKER_ID = 1003L
+private fun completeSharedSetup(
+    scope: kotlinx.coroutines.CoroutineScope,
+    onboardingStore: OnboardingStore,
+    runtime: ClearrRuntime,
+    currentConfig: AppConfig?
+) {
+    onboardingStore.onAction(OnboardingAction.CompleteOnboarding)
+    val nextConfig = (currentConfig ?: AppConfig(setupComplete = false)).copy(setupComplete = true)
+    scope.launch {
+        runtime.repository.upsertAppConfig(nextConfig)
+    }
+}
 
 private fun AppShellDestination.bottomNavItemOrNull(): AppBottomNavItem? = when (topLevelDestination()) {
     AppShellDestination.Dashboard -> AppBottomNavItem.HOME
@@ -288,11 +338,25 @@ private fun AppShellDestination.bottomNavItemOrNull(): AppBottomNavItem? = when 
     else -> null
 }
 
-private fun AppBottomNavItem.toTopLevelDestination(): AppShellDestination = when (this) {
+private fun AppBottomNavItem.toTopLevelDestination(
+    budgetTrackerId: Long?,
+    todoTrackerId: Long?,
+    goalsTrackerId: Long?
+): AppShellDestination? = when (this) {
     AppBottomNavItem.HOME -> AppShellDestination.Dashboard
-    AppBottomNavItem.BUDGET -> AppShellDestination.BudgetRoot(PREVIEW_BUDGET_TRACKER_ID)
-    AppBottomNavItem.TODOS -> AppShellDestination.TodoRoot(PREVIEW_TODO_TRACKER_ID)
-    AppBottomNavItem.GOALS -> AppShellDestination.GoalsRoot(PREVIEW_GOALS_TRACKER_ID)
+    AppBottomNavItem.BUDGET -> budgetTrackerId?.let(AppShellDestination::BudgetRoot)
+    AppBottomNavItem.TODOS -> todoTrackerId?.let(AppShellDestination::TodoRoot)
+    AppBottomNavItem.GOALS -> goalsTrackerId?.let(AppShellDestination::GoalsRoot)
+}
+
+private fun DashboardTrackerType.toTopLevelDestination(
+    budgetTrackerId: Long?,
+    todoTrackerId: Long?,
+    goalsTrackerId: Long?
+): AppShellDestination? = when (this) {
+    DashboardTrackerType.BUDGET -> budgetTrackerId?.let(AppShellDestination::BudgetRoot)
+    DashboardTrackerType.GOALS -> goalsTrackerId?.let(AppShellDestination::GoalsRoot)
+    DashboardTrackerType.TODOS -> todoTrackerId?.let(AppShellDestination::TodoRoot)
 }
 
 private fun previewBudgetState(trackerId: Long): BudgetUiState {

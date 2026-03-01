@@ -237,6 +237,8 @@ class InMemoryClearrRepository private constructor(
         todosFlow.value = todosFlow.value.filterNot { it.id == id }
     }
 
+    fun snapshotAppConfig(): AppConfig? = appConfigFlow.value
+
     companion object {
         fun empty(setupComplete: Boolean = false): InMemoryClearrRepository = InMemoryClearrRepository(
             trackers = emptyList(),
