@@ -26,12 +26,8 @@ import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
 import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
-import com.mikeisesele.clearr.preview.InMemoryBudgetPreferencesRepository
-import com.mikeisesele.clearr.preview.InMemoryClearrRepository
-import com.mikeisesele.clearr.preview.InMemoryTodoPreferencesRepository
-import com.mikeisesele.clearr.preview.PreviewBudgetAiService
-import com.mikeisesele.clearr.preview.PreviewGoalsAiService
-import com.mikeisesele.clearr.preview.PreviewTodoAiService
+import com.mikeisesele.clearr.preview.SampleClearrRuntime
+import com.mikeisesele.clearr.runtime.ClearrRuntime
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardAction
 import com.mikeisesele.clearr.ui.feature.budget.AddBudgetCategoryScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetAction
@@ -72,7 +68,10 @@ import com.mikeisesele.clearr.ui.theme.ClearrSharedTheme
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
-fun ClearrApp() {
+fun ClearrApp(
+    runtime: ClearrRuntime? = null
+) {
+    val appRuntime = remember(runtime) { runtime ?: SampleClearrRuntime() }
     ClearrSharedTheme {
         val navigator = rememberAppNavigator()
         val navigationState by navigator.state.collectAsState()
@@ -85,7 +84,8 @@ fun ClearrApp() {
             )
             AppDestination.Completion -> CompletionScreen(onOpenApp = navigator::openDashboard)
             is AppDestination.MainShell -> MainShellPreview(
-                initialDestination = (navigationState.current as AppDestination.MainShell).destination
+                initialDestination = (navigationState.current as AppDestination.MainShell).destination,
+                runtime = appRuntime
             )
         }
     }
@@ -93,23 +93,18 @@ fun ClearrApp() {
 
 @Composable
 private fun MainShellPreview(
-    initialDestination: AppShellDestination
+    initialDestination: AppShellDestination,
+    runtime: ClearrRuntime
 ) {
     val colors = LocalClearrUiColors.current
     val scope = rememberCoroutineScope()
     val shellNavigator = rememberAppShellNavigator(initialDestination)
     val shellState by shellNavigator.state.collectAsState()
     val destination = shellState.current
-    val repository = remember { InMemoryClearrRepository.sample() }
-    val budgetPreferencesRepository = remember { InMemoryBudgetPreferencesRepository() }
-    val todoPreferencesRepository = remember { InMemoryTodoPreferencesRepository() }
-    val budgetAiService = remember { PreviewBudgetAiService() }
-    val todoAiService = remember { PreviewTodoAiService() }
-    val goalsAiService = remember { PreviewGoalsAiService() }
     val dashboardStore = remember(scope) {
         DashboardStore(
-            trackerBootstrapper = TrackerBootstrapper(repository),
-            observeTrackerSummaries = ObserveTrackerSummariesUseCase(repository),
+            trackerBootstrapper = TrackerBootstrapper(runtime.repository),
+            observeTrackerSummaries = ObserveTrackerSummariesUseCase(runtime.repository),
             scope = scope
         )
     }
@@ -133,11 +128,11 @@ private fun MainShellPreview(
         remember(trackerId, scope) {
             BudgetStore(
                 trackerId = trackerId,
-                repository = repository,
-                budgetPreferencesRepository = budgetPreferencesRepository,
-                budgetAiService = budgetAiService,
+                repository = runtime.repository,
+                budgetPreferencesRepository = runtime.budgetPreferencesRepository,
+                budgetAiService = runtime.budgetAiService,
                 scope = scope,
-                nowMillis = ::nowEpochMillis
+                nowMillis = runtime.nowMillis
             )
         }
     }
@@ -147,11 +142,11 @@ private fun MainShellPreview(
         remember(trackerId, scope) {
             TodoStore(
                 trackerId = trackerId,
-                repository = repository,
-                todoPreferencesRepository = todoPreferencesRepository,
-                todoAiService = todoAiService,
+                repository = runtime.repository,
+                todoPreferencesRepository = runtime.todoPreferencesRepository,
+                todoAiService = runtime.todoAiService,
                 scope = scope,
-                nowMillis = ::nowEpochMillis
+                nowMillis = runtime.nowMillis
             )
         }
     }
@@ -160,10 +155,10 @@ private fun MainShellPreview(
         remember(trackerId, scope) {
             GoalsStore(
                 trackerId = trackerId,
-                repository = repository,
-                goalsAiService = goalsAiService,
+                repository = runtime.repository,
+                goalsAiService = runtime.goalsAiService,
                 scope = scope,
-                nowMillis = ::nowEpochMillis
+                nowMillis = runtime.nowMillis
             )
         }
     }
@@ -264,7 +259,7 @@ private fun MainShellPreview(
                         goalsStore?.onAction(GoalsAction.AddGoal(title, emoji, colorToken, target, frequency))
                     },
                     inferGoalDraft = { title, target, frequency, emoji, colorToken ->
-                        goalsAiService.inferGoal(title, target, frequency, emoji, colorToken)
+                        runtime.goalsAiService.inferGoal(title, target, frequency, emoji, colorToken)
                     }
                 )
             }
