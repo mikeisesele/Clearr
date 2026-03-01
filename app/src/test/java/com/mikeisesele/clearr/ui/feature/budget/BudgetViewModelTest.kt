@@ -10,7 +10,7 @@ import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
-import com.mikeisesele.clearr.data.repository.BudgetPreferencesRepository
+import com.mikeisesele.clearr.domain.repository.BudgetPreferencesRepository
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import com.mikeisesele.clearr.testutil.MainDispatcherRule
 import io.mockk.coEvery

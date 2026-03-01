@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.mikeisesele.clearr.domain.repository.BudgetPreferencesRepository as BudgetPreferencesContract
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,11 +20,11 @@ private val Context.budgetDataStore: DataStore<Preferences>
 @Singleton
 class BudgetPreferencesRepository @Inject constructor(
     @ApplicationContext private val context: Context
-) {
+) : BudgetPreferencesContract {
     private val swipeHintSeen = booleanPreferencesKey("budget_swipe_hint_seen")
     private val swipeHintLastShownAt = longPreferencesKey("budget_swipe_hint_last_shown_at")
 
-    suspend fun shouldShowSwipeHint(now: Long = System.currentTimeMillis()): Boolean {
+    override suspend fun shouldShowSwipeHint(now: Long): Boolean {
         val prefs = context.budgetDataStore.data.first()
         val hasSeen = prefs[swipeHintSeen] ?: false
         if (!hasSeen) return true
@@ -35,7 +36,7 @@ class BudgetPreferencesRepository @Inject constructor(
         return Random.nextFloat() < 0.18f
     }
 
-    suspend fun markSwipeHintShown(now: Long = System.currentTimeMillis()) {
+    override suspend fun markSwipeHintShown(now: Long) {
         context.budgetDataStore.edit { prefs ->
             prefs[swipeHintSeen] = true
             prefs[swipeHintLastShownAt] = now

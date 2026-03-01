@@ -1,9 +1,11 @@
 package com.mikeisesele.clearr.di
 
+import com.mikeisesele.clearr.data.repository.BudgetPreferencesRepository
 import com.mikeisesele.clearr.data.repository.ClearrRepositoryImpl
 import com.mikeisesele.clearr.data.repository.TodoPreferencesRepository
 import com.mikeisesele.clearr.domain.budget.BudgetPeriodPlanner
 import com.mikeisesele.clearr.domain.repository.AppConfigRepository
+import com.mikeisesele.clearr.domain.repository.BudgetPreferencesRepository as BudgetPreferencesContract
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import com.mikeisesele.clearr.domain.repository.TodoPreferencesRepository as TodoPreferencesContract
 import com.mikeisesele.clearr.ui.feature.todo.AndroidTodoAiService
@@ -30,6 +32,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindTodoPreferencesRepository(impl: TodoPreferencesRepository): TodoPreferencesContract
+
+    @Binds
+    @Singleton
+    abstract fun bindBudgetPreferencesRepository(impl: BudgetPreferencesRepository): BudgetPreferencesContract
 
     @Binds
     @Singleton

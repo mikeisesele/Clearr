@@ -12,7 +12,7 @@ import com.mikeisesele.clearr.data.model.BudgetSummary
 import com.mikeisesele.clearr.data.model.CategorySummary
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.TrackerType
-import com.mikeisesele.clearr.data.repository.BudgetPreferencesRepository
+import com.mikeisesele.clearr.domain.repository.BudgetPreferencesRepository
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -211,14 +211,14 @@ class BudgetViewModel @Inject constructor(
 
     private fun evaluateSwipeHint() {
         launch {
-            val showHint = budgetPreferencesRepository.shouldShowSwipeHint()
+            val showHint = budgetPreferencesRepository.shouldShowSwipeHint(System.currentTimeMillis())
             updateState { it.copy(showSwipeHint = showHint) }
         }
     }
 
     private fun markSwipeHintDisplayed() {
         launch {
-            budgetPreferencesRepository.markSwipeHintShown()
+            budgetPreferencesRepository.markSwipeHintShown(System.currentTimeMillis())
             updateState { it.copy(showSwipeHint = false) }
         }
     }
