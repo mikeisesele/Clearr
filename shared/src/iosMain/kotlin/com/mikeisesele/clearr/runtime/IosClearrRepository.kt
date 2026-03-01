@@ -21,7 +21,6 @@ import com.mikeisesele.clearr.preview.InMemoryClearrRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
-import platform.Foundation.NSUserDefaults
 
 private const val IOS_APP_CONFIG_PRESENT_KEY = "clearr.appconfig.present"
 private const val IOS_APP_CONFIG_GROUP_NAME_KEY = "clearr.appconfig.groupName"
@@ -49,27 +48,27 @@ private const val FIELD_SEPARATOR = "\u001F"
 private const val NULL_TOKEN = "\u0000"
 
 class IosClearrRepository(
-    private val defaults: NSUserDefaults = NSUserDefaults.standardUserDefaults,
+    private val store: KeyValueStoreDriver = NSUserDefaultsKeyValueStoreDriver(),
     private val delegate: InMemoryClearrRepository = InMemoryClearrRepository.create(
-        trackers = loadTrackers(defaults),
-        budgetPeriods = loadBudgetPeriods(defaults),
-        budgetCategories = loadBudgetCategories(defaults),
-        budgetPlans = loadBudgetCategoryPlans(defaults),
-        budgetEntries = loadBudgetEntries(defaults),
-        goals = loadGoals(defaults),
-        goalCompletions = loadGoalCompletions(defaults),
-        todos = loadTodos(defaults),
-        appConfig = loadAppConfig(defaults)
+        trackers = loadTrackers(store),
+        budgetPeriods = loadBudgetPeriods(store),
+        budgetCategories = loadBudgetCategories(store),
+        budgetPlans = loadBudgetCategoryPlans(store),
+        budgetEntries = loadBudgetEntries(store),
+        goals = loadGoals(store),
+        goalCompletions = loadGoalCompletions(store),
+        todos = loadTodos(store),
+        appConfig = loadAppConfig(store)
     )
 ) : ClearrRepository by delegate {
-    private val appConfigFlow = MutableStateFlow(loadAppConfig(defaults))
+    private val appConfigFlow = MutableStateFlow(loadAppConfig(store))
 
     override fun getAppConfigFlow(): Flow<AppConfig?> = appConfigFlow
 
     override suspend fun getAppConfig(): AppConfig? = appConfigFlow.value
 
     override suspend fun upsertAppConfig(config: AppConfig) {
-        saveAppConfig(defaults, config)
+        saveAppConfig(store, config)
         delegate.upsertAppConfig(config)
         appConfigFlow.value = config
     }
@@ -182,96 +181,81 @@ class IosClearrRepository(
     }
 
     private fun persistTrackers() {
-        defaults.setObject(encodeTrackers(delegate.snapshotTrackers()), forKey = IOS_TRACKERS_KEY)
+        store.setString(IOS_TRACKERS_KEY, encodeTrackers(delegate.snapshotTrackers()))
     }
 
     private fun persistGoals() {
-        defaults.setObject(encodeGoals(delegate.snapshotGoals()), forKey = IOS_GOALS_KEY)
+        store.setString(IOS_GOALS_KEY, encodeGoals(delegate.snapshotGoals()))
     }
 
     private fun persistGoalCompletions() {
-        defaults.setObject(
-            encodeGoalCompletions(delegate.snapshotGoalCompletions()),
-            forKey = IOS_GOAL_COMPLETIONS_KEY
-        )
+        store.setString(IOS_GOAL_COMPLETIONS_KEY, encodeGoalCompletions(delegate.snapshotGoalCompletions()))
     }
 
     private fun persistTodos() {
-        defaults.setObject(encodeTodos(delegate.snapshotTodos()), forKey = IOS_TODOS_KEY)
+        store.setString(IOS_TODOS_KEY, encodeTodos(delegate.snapshotTodos()))
     }
 
     private fun persistBudgetPeriods() {
-        defaults.setObject(
-            encodeBudgetPeriods(delegate.snapshotBudgetPeriods()),
-            forKey = IOS_BUDGET_PERIODS_KEY
-        )
+        store.setString(IOS_BUDGET_PERIODS_KEY, encodeBudgetPeriods(delegate.snapshotBudgetPeriods()))
     }
 
     private fun persistBudgetCategories() {
-        defaults.setObject(
-            encodeBudgetCategories(delegate.snapshotBudgetCategories()),
-            forKey = IOS_BUDGET_CATEGORIES_KEY
-        )
+        store.setString(IOS_BUDGET_CATEGORIES_KEY, encodeBudgetCategories(delegate.snapshotBudgetCategories()))
     }
 
     private fun persistBudgetCategoryPlans() {
-        defaults.setObject(
-            encodeBudgetCategoryPlans(delegate.snapshotBudgetCategoryPlans()),
-            forKey = IOS_BUDGET_PLANS_KEY
-        )
+        store.setString(IOS_BUDGET_PLANS_KEY, encodeBudgetCategoryPlans(delegate.snapshotBudgetCategoryPlans()))
     }
 
     private fun persistBudgetEntries() {
-        defaults.setObject(
-            encodeBudgetEntries(delegate.snapshotBudgetEntries()),
-            forKey = IOS_BUDGET_ENTRIES_KEY
-        )
+        store.setString(IOS_BUDGET_ENTRIES_KEY, encodeBudgetEntries(delegate.snapshotBudgetEntries()))
     }
 }
 
-private fun loadAppConfig(defaults: NSUserDefaults): AppConfig? {
-    if (!defaults.boolForKey(IOS_APP_CONFIG_PRESENT_KEY)) return null
+private fun loadAppConfig(store: KeyValueStoreDriver): AppConfig? {
+    if (!store.getBoolean(IOS_APP_CONFIG_PRESENT_KEY)) return null
 
     return AppConfig(
-        groupName = defaults.stringForKey(IOS_APP_CONFIG_GROUP_NAME_KEY) ?: "Clearr",
-        adminName = defaults.stringForKey(IOS_APP_CONFIG_ADMIN_NAME_KEY) ?: "",
-        adminPhone = defaults.stringForKey(IOS_APP_CONFIG_ADMIN_PHONE_KEY) ?: "",
-        trackerType = defaults.stringForKey(IOS_APP_CONFIG_TRACKER_TYPE_KEY)
+        groupName = store.getString(IOS_APP_CONFIG_GROUP_NAME_KEY) ?: "Clearr",
+        adminName = store.getString(IOS_APP_CONFIG_ADMIN_NAME_KEY) ?: "",
+        adminPhone = store.getString(IOS_APP_CONFIG_ADMIN_PHONE_KEY) ?: "",
+        trackerType = store.getString(IOS_APP_CONFIG_TRACKER_TYPE_KEY)
             ?.let { runCatching { TrackerType.valueOf(it) }.getOrNull() }
             ?: TrackerType.BUDGET,
-        frequency = defaults.stringForKey(IOS_APP_CONFIG_FREQUENCY_KEY)
+        frequency = store.getString(IOS_APP_CONFIG_FREQUENCY_KEY)
             ?.let { runCatching { Frequency.valueOf(it) }.getOrNull() }
             ?: Frequency.MONTHLY,
-        defaultAmount = defaults.doubleForKey(IOS_APP_CONFIG_DEFAULT_AMOUNT_KEY),
-        customPeriodLabels = defaults.stringForKey(IOS_APP_CONFIG_CUSTOM_PERIOD_LABELS_KEY) ?: "[]",
-        variableAmounts = defaults.stringForKey(IOS_APP_CONFIG_VARIABLE_AMOUNTS_KEY) ?: "[]",
-        layoutStyle = defaults.stringForKey(IOS_APP_CONFIG_LAYOUT_STYLE_KEY)
+        defaultAmount = store.getDouble(IOS_APP_CONFIG_DEFAULT_AMOUNT_KEY),
+        customPeriodLabels = store.getString(IOS_APP_CONFIG_CUSTOM_PERIOD_LABELS_KEY) ?: "[]",
+        variableAmounts = store.getString(IOS_APP_CONFIG_VARIABLE_AMOUNTS_KEY) ?: "[]",
+        layoutStyle = store.getString(IOS_APP_CONFIG_LAYOUT_STYLE_KEY)
             ?.let { runCatching { LayoutStyle.valueOf(it) }.getOrNull() }
             ?: LayoutStyle.GRID,
-        remindersEnabled = defaults.boolForKey(IOS_APP_CONFIG_REMINDERS_ENABLED_KEY),
-        reminderDayOfPeriod = defaults.integerForKey(IOS_APP_CONFIG_REMINDER_DAY_KEY).toInt().takeIf { it > 0 } ?: 5,
-        setupComplete = defaults.boolForKey(IOS_APP_CONFIG_SETUP_COMPLETE_KEY)
+        remindersEnabled = store.getBoolean(IOS_APP_CONFIG_REMINDERS_ENABLED_KEY),
+        reminderDayOfPeriod = store.getLong(IOS_APP_CONFIG_REMINDER_DAY_KEY)?.toInt()?.takeIf { it > 0 } ?: 5,
+        setupComplete = store.getBoolean(IOS_APP_CONFIG_SETUP_COMPLETE_KEY)
     )
 }
 
-private fun saveAppConfig(defaults: NSUserDefaults, config: AppConfig) {
-    defaults.setBool(true, forKey = IOS_APP_CONFIG_PRESENT_KEY)
-    defaults.setObject(config.groupName, forKey = IOS_APP_CONFIG_GROUP_NAME_KEY)
-    defaults.setObject(config.adminName, forKey = IOS_APP_CONFIG_ADMIN_NAME_KEY)
-    defaults.setObject(config.adminPhone, forKey = IOS_APP_CONFIG_ADMIN_PHONE_KEY)
-    defaults.setObject(config.trackerType.name, forKey = IOS_APP_CONFIG_TRACKER_TYPE_KEY)
-    defaults.setObject(config.frequency.name, forKey = IOS_APP_CONFIG_FREQUENCY_KEY)
-    defaults.setDouble(config.defaultAmount, forKey = IOS_APP_CONFIG_DEFAULT_AMOUNT_KEY)
-    defaults.setObject(config.customPeriodLabels, forKey = IOS_APP_CONFIG_CUSTOM_PERIOD_LABELS_KEY)
-    defaults.setObject(config.variableAmounts, forKey = IOS_APP_CONFIG_VARIABLE_AMOUNTS_KEY)
-    defaults.setObject(config.layoutStyle.name, forKey = IOS_APP_CONFIG_LAYOUT_STYLE_KEY)
-    defaults.setBool(config.remindersEnabled, forKey = IOS_APP_CONFIG_REMINDERS_ENABLED_KEY)
-    defaults.setInteger(config.reminderDayOfPeriod.toLong(), forKey = IOS_APP_CONFIG_REMINDER_DAY_KEY)
-    defaults.setBool(config.setupComplete, forKey = IOS_APP_CONFIG_SETUP_COMPLETE_KEY)
+private fun saveAppConfig(store: KeyValueStoreDriver, config: AppConfig) {
+    store.setBoolean(IOS_APP_CONFIG_PRESENT_KEY, true)
+    store.setString(IOS_APP_CONFIG_GROUP_NAME_KEY, config.groupName)
+    store.setString(IOS_APP_CONFIG_ADMIN_NAME_KEY, config.adminName)
+    store.setString(IOS_APP_CONFIG_ADMIN_PHONE_KEY, config.adminPhone)
+    store.setString(IOS_APP_CONFIG_TRACKER_TYPE_KEY, config.trackerType.name)
+    store.setString(IOS_APP_CONFIG_FREQUENCY_KEY, config.frequency.name)
+    store.setDouble(IOS_APP_CONFIG_DEFAULT_AMOUNT_KEY, config.defaultAmount)
+    store.setString(IOS_APP_CONFIG_CUSTOM_PERIOD_LABELS_KEY, config.customPeriodLabels)
+    store.setString(IOS_APP_CONFIG_VARIABLE_AMOUNTS_KEY, config.variableAmounts)
+    store.setString(IOS_APP_CONFIG_LAYOUT_STYLE_KEY, config.layoutStyle.name)
+    store.setBoolean(IOS_APP_CONFIG_REMINDERS_ENABLED_KEY, config.remindersEnabled)
+    store.setLong(IOS_APP_CONFIG_REMINDER_DAY_KEY, config.reminderDayOfPeriod.toLong())
+    store.setBoolean(IOS_APP_CONFIG_SETUP_COMPLETE_KEY, config.setupComplete)
 }
 
-private fun loadTrackers(defaults: NSUserDefaults): List<Tracker> =
-    defaults.stringForKey(IOS_TRACKERS_KEY)
+private fun loadTrackers(store: KeyValueStoreDriver): List<Tracker> =
+    store.getString(IOS_TRACKERS_KEY)
         ?.takeIf { it.isNotEmpty() }
         ?.split(RECORD_SEPARATOR)
         ?.filter { it.isNotEmpty() }
@@ -290,8 +274,8 @@ private fun loadTrackers(defaults: NSUserDefaults): List<Tracker> =
         }
         ?: emptyList()
 
-private fun loadBudgetPeriods(defaults: NSUserDefaults): List<BudgetPeriod> =
-    defaults.stringForKey(IOS_BUDGET_PERIODS_KEY)
+private fun loadBudgetPeriods(store: KeyValueStoreDriver): List<BudgetPeriod> =
+    store.getString(IOS_BUDGET_PERIODS_KEY)
         ?.takeIf { it.isNotEmpty() }
         ?.split(RECORD_SEPARATOR)
         ?.filter { it.isNotEmpty() }
@@ -308,8 +292,8 @@ private fun loadBudgetPeriods(defaults: NSUserDefaults): List<BudgetPeriod> =
         }
         ?: emptyList()
 
-private fun loadBudgetCategories(defaults: NSUserDefaults): List<BudgetCategory> =
-    defaults.stringForKey(IOS_BUDGET_CATEGORIES_KEY)
+private fun loadBudgetCategories(store: KeyValueStoreDriver): List<BudgetCategory> =
+    store.getString(IOS_BUDGET_CATEGORIES_KEY)
         ?.takeIf { it.isNotEmpty() }
         ?.split(RECORD_SEPARATOR)
         ?.filter { it.isNotEmpty() }
@@ -329,8 +313,8 @@ private fun loadBudgetCategories(defaults: NSUserDefaults): List<BudgetCategory>
         }
         ?: emptyList()
 
-private fun loadBudgetCategoryPlans(defaults: NSUserDefaults): List<BudgetCategoryPlan> =
-    defaults.stringForKey(IOS_BUDGET_PLANS_KEY)
+private fun loadBudgetCategoryPlans(store: KeyValueStoreDriver): List<BudgetCategoryPlan> =
+    store.getString(IOS_BUDGET_PLANS_KEY)
         ?.takeIf { it.isNotEmpty() }
         ?.split(RECORD_SEPARATOR)
         ?.filter { it.isNotEmpty() }
@@ -347,8 +331,8 @@ private fun loadBudgetCategoryPlans(defaults: NSUserDefaults): List<BudgetCatego
         }
         ?: emptyList()
 
-private fun loadBudgetEntries(defaults: NSUserDefaults): List<BudgetEntry> =
-    defaults.stringForKey(IOS_BUDGET_ENTRIES_KEY)
+private fun loadBudgetEntries(store: KeyValueStoreDriver): List<BudgetEntry> =
+    store.getString(IOS_BUDGET_ENTRIES_KEY)
         ?.takeIf { it.isNotEmpty() }
         ?.split(RECORD_SEPARATOR)
         ?.filter { it.isNotEmpty() }
@@ -366,8 +350,8 @@ private fun loadBudgetEntries(defaults: NSUserDefaults): List<BudgetEntry> =
         }
         ?: emptyList()
 
-private fun loadGoals(defaults: NSUserDefaults): List<Goal> =
-    defaults.stringForKey(IOS_GOALS_KEY)
+private fun loadGoals(store: KeyValueStoreDriver): List<Goal> =
+    store.getString(IOS_GOALS_KEY)
         ?.takeIf { it.isNotEmpty() }
         ?.split(RECORD_SEPARATOR)
         ?.filter { it.isNotEmpty() }
@@ -386,8 +370,8 @@ private fun loadGoals(defaults: NSUserDefaults): List<Goal> =
         }
         ?: emptyList()
 
-private fun loadGoalCompletions(defaults: NSUserDefaults): List<GoalCompletion> =
-    defaults.stringForKey(IOS_GOAL_COMPLETIONS_KEY)
+private fun loadGoalCompletions(store: KeyValueStoreDriver): List<GoalCompletion> =
+    store.getString(IOS_GOAL_COMPLETIONS_KEY)
         ?.takeIf { it.isNotEmpty() }
         ?.split(RECORD_SEPARATOR)
         ?.filter { it.isNotEmpty() }
@@ -402,8 +386,8 @@ private fun loadGoalCompletions(defaults: NSUserDefaults): List<GoalCompletion> 
         }
         ?: emptyList()
 
-private fun loadTodos(defaults: NSUserDefaults): List<TodoItem> =
-    defaults.stringForKey(IOS_TODOS_KEY)
+private fun loadTodos(store: KeyValueStoreDriver): List<TodoItem> =
+    store.getString(IOS_TODOS_KEY)
         ?.takeIf { it.isNotEmpty() }
         ?.split(RECORD_SEPARATOR)
         ?.filter { it.isNotEmpty() }
