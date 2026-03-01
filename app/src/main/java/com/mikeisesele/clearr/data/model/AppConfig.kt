@@ -1,7 +1,10 @@
+@file:JvmName("AppConfigEntityMappers")
+
 package com.mikeisesele.clearr.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlin.jvm.JvmName
 
 @Entity(tableName = "app_config")
 data class AppConfigEntity(

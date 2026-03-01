@@ -1,9 +1,12 @@
+@file:JvmName("TodoEntityMappers")
+
 package com.mikeisesele.clearr.data.model
 
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.datetime.LocalDate
+import kotlin.jvm.JvmName
 
 @Entity(
     tableName = "todos",

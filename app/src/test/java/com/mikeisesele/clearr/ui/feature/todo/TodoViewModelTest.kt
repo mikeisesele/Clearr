@@ -8,8 +8,8 @@ import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
-import com.mikeisesele.clearr.data.repository.TodoPreferencesRepository
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
+import com.mikeisesele.clearr.domain.repository.TodoPreferencesRepository
 import com.mikeisesele.clearr.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -22,12 +22,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TodoViewModelTest {
@@ -37,11 +37,12 @@ class TodoViewModelTest {
 
     private val repository = mockk<ClearrRepository>()
     private val preferencesRepository = mockk<TodoPreferencesRepository>()
+    private val todoAiService = mockk<TodoAiService>()
     private val trackerId = 5L
 
     @Test
     fun `loads todos with sorted display and counts`() = runTest {
-        val today = LocalDate.now()
+        val today = LocalDate(2026, 3, 1)
         val todosFlow = MutableStateFlow(
             listOf(
                 TodoItem(
@@ -49,7 +50,7 @@ class TodoViewModelTest {
                     trackerId = trackerId,
                     title = "Done task",
                     priority = TodoPriority.LOW,
-                    dueDate = today.minusDays(2),
+                    dueDate = LocalDate(2026, 2, 27),
                     status = TodoStatus.DONE,
                     createdAt = 1L,
                     completedAt = 50L
@@ -59,7 +60,7 @@ class TodoViewModelTest {
                     trackerId = trackerId,
                     title = "Overdue task",
                     priority = TodoPriority.MEDIUM,
-                    dueDate = today.minusDays(1),
+                    dueDate = LocalDate(2026, 2, 28),
                     status = TodoStatus.PENDING,
                     createdAt = 1L
                 ),
@@ -68,7 +69,7 @@ class TodoViewModelTest {
                     trackerId = trackerId,
                     title = "Pending task",
                     priority = TodoPriority.HIGH,
-                    dueDate = today.plusDays(1),
+                    dueDate = LocalDate(2026, 3, 2),
                     status = TodoStatus.PENDING,
                     createdAt = 1L
                 )
@@ -76,11 +77,7 @@ class TodoViewModelTest {
         )
         stubBaseFlows(todosFlow = todosFlow, hintSeen = false)
 
-        val viewModel = TodoViewModel(
-            repository = repository,
-            todoPreferencesRepository = preferencesRepository,
-            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
-        )
+        val viewModel = buildViewModel()
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -90,6 +87,7 @@ class TodoViewModelTest {
         assertEquals(1, state.counts.pending)
         assertTrue(state.showSwipeHint)
         assertEquals(listOf("overdue", "pending", "done"), state.displayedTodos.map { it.id })
+        assertEquals(today, LocalDate(2026, 3, 1))
     }
 
     @Test
@@ -117,11 +115,7 @@ class TodoViewModelTest {
         )
         stubBaseFlows(todosFlow = todosFlow, hintSeen = true)
 
-        val viewModel = TodoViewModel(
-            repository = repository,
-            todoPreferencesRepository = preferencesRepository,
-            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
-        )
+        val viewModel = buildViewModel()
         advanceUntilIdle()
 
         viewModel.onAction(TodoAction.SetFilter(TodoFilter.DONE))
@@ -137,11 +131,7 @@ class TodoViewModelTest {
         stubBaseFlows(todosFlow = MutableStateFlow(emptyList()), hintSeen = false)
         coEvery { repository.insertTodo(any()) } just runs
 
-        val viewModel = TodoViewModel(
-            repository = repository,
-            todoPreferencesRepository = preferencesRepository,
-            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
-        )
+        val viewModel = buildViewModel()
         advanceUntilIdle()
 
         viewModel.onAction(
@@ -149,7 +139,7 @@ class TodoViewModelTest {
                 title = "  Buy milk  ",
                 note = "   ",
                 priority = TodoPriority.HIGH,
-                dueDate = LocalDate.now()
+                dueDate = LocalDate(2026, 3, 1)
             )
         )
         advanceUntilIdle()
@@ -161,7 +151,8 @@ class TodoViewModelTest {
                         it.title == "Buy milk" &&
                         it.note == null &&
                         it.priority == TodoPriority.HIGH &&
-                        it.status == TodoStatus.PENDING
+                        it.status == TodoStatus.PENDING &&
+                        it.dueDate == LocalDate(2026, 3, 1)
                 }
             )
         }
@@ -172,11 +163,7 @@ class TodoViewModelTest {
         stubBaseFlows(todosFlow = MutableStateFlow(emptyList()), hintSeen = false)
         coEvery { repository.insertTodo(any()) } just runs
 
-        val viewModel = TodoViewModel(
-            repository = repository,
-            todoPreferencesRepository = preferencesRepository,
-            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
-        )
+        val viewModel = buildViewModel()
         advanceUntilIdle()
 
         viewModel.onAction(
@@ -220,11 +207,7 @@ class TodoViewModelTest {
         stubBaseFlows(todosFlow = todosFlow, hintSeen = false)
         coEvery { repository.markTodoDone(any(), any()) } just runs
 
-        val viewModel = TodoViewModel(
-            repository = repository,
-            todoPreferencesRepository = preferencesRepository,
-            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
-        )
+        val viewModel = buildViewModel()
         advanceUntilIdle()
 
         viewModel.onAction(TodoAction.MarkAllDone)
@@ -260,11 +243,7 @@ class TodoViewModelTest {
         stubBaseFlows(todosFlow = todosFlow, hintSeen = false)
         coEvery { repository.deleteTodo(any()) } just runs
 
-        val viewModel = TodoViewModel(
-            repository = repository,
-            todoPreferencesRepository = preferencesRepository,
-            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
-        )
+        val viewModel = buildViewModel()
         advanceUntilIdle()
 
         viewModel.onAction(TodoAction.ClearCompleted)
@@ -281,11 +260,7 @@ class TodoViewModelTest {
         coEvery { repository.deleteTodo("x") } just runs
         coEvery { preferencesRepository.markSwipeHintSeen() } just runs
 
-        val viewModel = TodoViewModel(
-            repository = repository,
-            todoPreferencesRepository = preferencesRepository,
-            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
-        )
+        val viewModel = buildViewModel()
         advanceUntilIdle()
 
         viewModel.onAction(TodoAction.MarkDone("x"))
@@ -312,11 +287,7 @@ class TodoViewModelTest {
         coEvery { repository.getTodoById("t1") } returns existing
         coEvery { repository.updateTodo(any()) } just runs
 
-        val viewModel = TodoViewModel(
-            repository = repository,
-            todoPreferencesRepository = preferencesRepository,
-            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
-        )
+        val viewModel = buildViewModel()
         advanceUntilIdle()
 
         viewModel.onAction(TodoAction.Rename("t1", "  New title  "))
@@ -341,11 +312,7 @@ class TodoViewModelTest {
         coEvery { repository.getTodoById("t1") } returns existing
         coEvery { repository.updateTodo(any()) } just runs
 
-        val viewModel = TodoViewModel(
-            repository = repository,
-            todoPreferencesRepository = preferencesRepository,
-            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
-        )
+        val viewModel = buildViewModel()
         advanceUntilIdle()
 
         viewModel.onAction(TodoAction.Rename("t1", "new title from user"))
@@ -362,11 +329,7 @@ class TodoViewModelTest {
         coEvery { repository.getTodoById("missing") } returns null
         coEvery { repository.updateTodo(any()) } just runs
 
-        val viewModel = TodoViewModel(
-            repository = repository,
-            todoPreferencesRepository = preferencesRepository,
-            savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
-        )
+        val viewModel = buildViewModel()
         advanceUntilIdle()
 
         viewModel.onAction(TodoAction.Rename("missing", "Valid"))
@@ -375,6 +338,13 @@ class TodoViewModelTest {
 
         coVerify(exactly = 0) { repository.updateTodo(any()) }
     }
+
+    private fun buildViewModel(): TodoViewModel = TodoViewModel(
+        repository = repository,
+        todoPreferencesRepository = preferencesRepository,
+        todoAiService = todoAiService,
+        savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
+    )
 
     private fun stubBaseFlows(
         todosFlow: MutableStateFlow<List<TodoItem>>,
@@ -394,5 +364,28 @@ class TodoViewModelTest {
         )
         every { repository.getTodosForTracker(trackerId) } returns todosFlow
         every { preferencesRepository.swipeHintSeen } returns flowOf(hintSeen)
+        coEvery { todoAiService.todoInsight(any()) } returns null
+        coEvery {
+            todoAiService.inferTodo(
+                title = any(),
+                note = any(),
+                selectedPriority = any(),
+                selectedDueDate = any()
+            )
+        } answers {
+            val title = firstArg<String>().trim().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+            val note = secondArg<String?>()?.trim()?.takeIf { it.isNotBlank() }
+            val priority = thirdArg<TodoPriority>()
+            val dueDate = arg<LocalDate?>(3)
+            TodoAiResult(
+                normalizedTitle = title,
+                normalizedNote = note,
+                suggestedPriority = priority,
+                suggestedDueDate = dueDate
+            )
+        }
+        every { todoAiService.normalizeTitle(any()) } answers {
+            firstArg<String>().trim().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        }
     }
 }
