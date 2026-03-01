@@ -1,0 +1,13 @@
+package com.mikeisesele.clearr.runtime
+
+import com.mikeisesele.clearr.domain.repository.BudgetPreferencesRepository
+
+class AndroidBudgetPreferencesRepository(
+    private var lastShownAt: Long? = null
+) : BudgetPreferencesRepository {
+    override suspend fun shouldShowSwipeHint(now: Long): Boolean = lastShownAt == null
+
+    override suspend fun markSwipeHintShown(now: Long) {
+        lastShownAt = now
+    }
+}
