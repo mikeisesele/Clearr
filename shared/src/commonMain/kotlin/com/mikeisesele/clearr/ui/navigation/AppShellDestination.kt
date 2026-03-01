@@ -42,9 +42,9 @@ enum class AppShellDestinationKind(
     BUDGET_ROOT(NavRoutes.BudgetRoot.baseRoute, AppBottomNavItem.BUDGET),
     TODO_ROOT(NavRoutes.TodoRoot.baseRoute, AppBottomNavItem.TODOS),
     GOALS_ROOT(NavRoutes.GoalsRoot.baseRoute, AppBottomNavItem.GOALS),
-    TODO_ADD("todo_add"),
-    GOAL_ADD("goal_add"),
-    BUDGET_ADD_CATEGORY("budget_add_category");
+    TODO_ADD(NavRoutes.TodoAdd.baseRoute),
+    GOAL_ADD(NavRoutes.GoalAdd.baseRoute),
+    BUDGET_ADD_CATEGORY(NavRoutes.BudgetAddCategory.baseRoute);
 }
 
 fun String?.toAppShellDestinationKind(): AppShellDestinationKind? = when {
@@ -53,8 +53,8 @@ fun String?.toAppShellDestinationKind(): AppShellDestinationKind? = when {
     this.startsWith(NavRoutes.BudgetRoot.baseRoute) -> AppShellDestinationKind.BUDGET_ROOT
     this.startsWith(NavRoutes.TodoRoot.baseRoute) -> AppShellDestinationKind.TODO_ROOT
     this.startsWith(NavRoutes.GoalsRoot.baseRoute) -> AppShellDestinationKind.GOALS_ROOT
-    this.startsWith("todo_add") -> AppShellDestinationKind.TODO_ADD
-    this.startsWith("goal_add") -> AppShellDestinationKind.GOAL_ADD
-    this.startsWith("budget_add_category") -> AppShellDestinationKind.BUDGET_ADD_CATEGORY
+    this.startsWith(NavRoutes.TodoAdd.baseRoute) -> AppShellDestinationKind.TODO_ADD
+    this.startsWith(NavRoutes.GoalAdd.baseRoute) -> AppShellDestinationKind.GOAL_ADD
+    this.startsWith(NavRoutes.BudgetAddCategory.baseRoute) -> AppShellDestinationKind.BUDGET_ADD_CATEGORY
     else -> null
 }

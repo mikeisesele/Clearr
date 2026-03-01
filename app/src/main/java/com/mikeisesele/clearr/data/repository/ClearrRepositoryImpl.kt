@@ -17,10 +17,8 @@ import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.toDomain
 import com.mikeisesele.clearr.data.model.toEntity
+import com.mikeisesele.clearr.domain.budget.BudgetPeriodPlanner
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -33,6 +31,7 @@ class ClearrRepositoryImpl @Inject constructor(
     private val budgetDao: BudgetDao,
     private val todoDao: TodoDao,
     private val goalsDao: GoalsDao,
+    private val budgetPeriodPlanner: BudgetPeriodPlanner = BudgetPeriodPlanner(),
 ) : ClearrRepository {
 
     override fun getAppConfigFlow(): Flow<AppConfig?> = appConfigDao.getConfigFlow().map { it?.toDomain() }
@@ -53,14 +52,8 @@ class ClearrRepositoryImpl @Inject constructor(
     override suspend fun ensureBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) {
         val existing = budgetDao.getLatestPeriod(trackerId, frequency)?.toDomain()
         val periods = when {
-            existing == null -> when (frequency) {
-                BudgetFrequency.MONTHLY -> generateMonthlyPeriods(trackerId)
-                BudgetFrequency.WEEKLY -> generateWeeklyPeriods(trackerId)
-            }
-            else -> when (frequency) {
-                BudgetFrequency.MONTHLY -> generateMissingMonthlyPeriods(trackerId, existing)
-                BudgetFrequency.WEEKLY -> generateMissingWeeklyPeriods(trackerId, existing)
-            }
+            existing == null -> budgetPeriodPlanner.initialPeriods(trackerId, frequency)
+            else -> budgetPeriodPlanner.missingPeriods(trackerId, frequency, existing)
         }
         if (periods.isNotEmpty()) budgetDao.insertPeriods(periods.map { it.toEntity() })
     }
@@ -124,125 +117,4 @@ class ClearrRepositoryImpl @Inject constructor(
     override suspend fun insertGoal(goal: Goal) = goalsDao.insertGoal(goal.toEntity())
     override suspend fun addGoalCompletion(completion: GoalCompletion) = goalsDao.insertCompletion(completion.toEntity())
     override suspend fun deleteGoal(goalId: String) = goalsDao.deleteGoal(goalId)
-
-    private fun generateMonthlyPeriods(trackerId: Long): List<BudgetPeriod> {
-        val cal = Calendar.getInstance().apply { add(Calendar.MONTH, -4) }
-        return (0 until 5).map {
-            val periodCal = cal.clone() as Calendar
-            periodCal.add(Calendar.MONTH, it)
-            buildMonthlyPeriod(trackerId, periodCal)
-        }
-    }
-
-    private fun generateWeeklyPeriods(trackerId: Long): List<BudgetPeriod> {
-        val base = Calendar.getInstance().apply {
-            firstDayOfWeek = Calendar.MONDAY
-            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-            add(Calendar.WEEK_OF_YEAR, -4)
-        }
-        return (0 until 5).map {
-            val periodCal = base.clone() as Calendar
-            periodCal.add(Calendar.WEEK_OF_YEAR, it)
-            buildWeeklyPeriod(trackerId, periodCal)
-        }
-    }
-
-    private fun generateMissingMonthlyPeriods(trackerId: Long, latest: BudgetPeriod): List<BudgetPeriod> {
-        val latestCal = Calendar.getInstance().apply { timeInMillis = latest.startDate }
-        val currentCal = Calendar.getInstance().apply {
-            set(Calendar.DAY_OF_MONTH, 1)
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        if (!latestCal.before(currentCal)) return emptyList()
-
-        val periods = mutableListOf<BudgetPeriod>()
-        val nextCal = (latestCal.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
-        while (!nextCal.after(currentCal)) {
-            periods += buildMonthlyPeriod(trackerId, nextCal)
-            nextCal.add(Calendar.MONTH, 1)
-        }
-        return periods
-    }
-
-    private fun generateMissingWeeklyPeriods(trackerId: Long, latest: BudgetPeriod): List<BudgetPeriod> {
-        val latestCal = Calendar.getInstance().apply {
-            firstDayOfWeek = Calendar.MONDAY
-            timeInMillis = latest.startDate
-            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val currentCal = Calendar.getInstance().apply {
-            firstDayOfWeek = Calendar.MONDAY
-            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        if (!latestCal.before(currentCal)) return emptyList()
-
-        val periods = mutableListOf<BudgetPeriod>()
-        val nextCal = (latestCal.clone() as Calendar).apply { add(Calendar.WEEK_OF_YEAR, 1) }
-        while (!nextCal.after(currentCal)) {
-            periods += buildWeeklyPeriod(trackerId, nextCal)
-            nextCal.add(Calendar.WEEK_OF_YEAR, 1)
-        }
-        return periods
-    }
-
-    private fun buildMonthlyPeriod(trackerId: Long, periodCal: Calendar): BudgetPeriod {
-        val label = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(periodCal.time)
-        val start = (periodCal.clone() as Calendar).apply {
-            set(Calendar.DAY_OF_MONTH, 1)
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-        val end = (periodCal.clone() as Calendar).apply {
-            set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH))
-            set(Calendar.HOUR_OF_DAY, 23)
-            set(Calendar.MINUTE, 59)
-            set(Calendar.SECOND, 59)
-            set(Calendar.MILLISECOND, 999)
-        }.timeInMillis
-        return BudgetPeriod(
-            trackerId = trackerId,
-            frequency = BudgetFrequency.MONTHLY,
-            label = label,
-            startDate = start,
-            endDate = end
-        )
-    }
-
-    private fun buildWeeklyPeriod(trackerId: Long, periodCal: Calendar): BudgetPeriod {
-        val week = periodCal.get(Calendar.WEEK_OF_YEAR)
-        val label = "Week $week"
-        val start = (periodCal.clone() as Calendar).apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-        val end = (periodCal.clone() as Calendar).apply {
-            add(Calendar.DAY_OF_YEAR, 6)
-            set(Calendar.HOUR_OF_DAY, 23)
-            set(Calendar.MINUTE, 59)
-            set(Calendar.SECOND, 59)
-            set(Calendar.MILLISECOND, 999)
-        }.timeInMillis
-        return BudgetPeriod(
-            trackerId = trackerId,
-            frequency = BudgetFrequency.WEEKLY,
-            label = label,
-            startDate = start,
-            endDate = end
-        )
-    }
 }

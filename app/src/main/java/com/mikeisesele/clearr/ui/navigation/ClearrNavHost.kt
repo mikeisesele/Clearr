@@ -138,44 +138,44 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                 }
                 composable(
                     route = NavRoutes.BudgetRoot.route,
-                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                    arguments = listOf(navArgument(NavRoutes.TRACKER_ID_ARG) { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    val trackerId = backStackEntry.arguments?.getLong(NavRoutes.TRACKER_ID_ARG) ?: return@composable
                     BudgetDetailScreen(trackerId = trackerId, onAddCategory = { navController.navigate(AppShellDestination.BudgetAddCategory(trackerId).route) })
                 }
                 composable(
                     route = NavRoutes.TodoRoot.route,
-                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                    arguments = listOf(navArgument(NavRoutes.TRACKER_ID_ARG) { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    val trackerId = backStackEntry.arguments?.getLong(NavRoutes.TRACKER_ID_ARG) ?: return@composable
                     TodoRoute(trackerId = trackerId, onAddTodo = { navController.navigate(AppShellDestination.TodoAdd(trackerId).route) })
                 }
                 composable(
                     route = NavRoutes.GoalsRoot.route,
-                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                    arguments = listOf(navArgument(NavRoutes.TRACKER_ID_ARG) { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    val trackerId = backStackEntry.arguments?.getLong(NavRoutes.TRACKER_ID_ARG) ?: return@composable
                     GoalsDetailScreen(trackerId = trackerId, onAddGoal = { navController.navigate(AppShellDestination.GoalAdd(trackerId).route) })
                 }
                 composable(
                     route = NavRoutes.TodoAdd.route,
-                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                    arguments = listOf(navArgument(NavRoutes.TRACKER_ID_ARG) { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    val trackerId = backStackEntry.arguments?.getLong(NavRoutes.TRACKER_ID_ARG) ?: return@composable
                     AddTodoRoute(trackerId = trackerId, onClose = { navController.popBackStack() })
                 }
                 composable(
                     route = NavRoutes.GoalAdd.route,
-                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                    arguments = listOf(navArgument(NavRoutes.TRACKER_ID_ARG) { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    val trackerId = backStackEntry.arguments?.getLong(NavRoutes.TRACKER_ID_ARG) ?: return@composable
                     AddGoalScreen(trackerId = trackerId, onClose = { navController.popBackStack() })
                 }
                 composable(
                     route = NavRoutes.BudgetAddCategory.route,
-                    arguments = listOf(navArgument("trackerId") { type = NavType.LongType })
+                    arguments = listOf(navArgument(NavRoutes.TRACKER_ID_ARG) { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val trackerId = backStackEntry.arguments?.getLong("trackerId") ?: return@composable
+                    val trackerId = backStackEntry.arguments?.getLong(NavRoutes.TRACKER_ID_ARG) ?: return@composable
                     AddBudgetCategoryScreen(trackerId = trackerId, onClose = { navController.popBackStack() })
                 }
             }

@@ -6,10 +6,12 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
 private val systemTimeZone: TimeZone
@@ -21,6 +23,16 @@ fun todayLocalDate(): LocalDate = Clock.System.now().toLocalDateTime(systemTimeZ
 
 fun epochMillisToLocalDate(epochMillis: Long): LocalDate =
     Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(systemTimeZone).date
+
+fun localDateAtStartOfDayEpochMillis(date: LocalDate): Long =
+    LocalDateTime(date.year, date.monthNumber, date.dayOfMonth, 0, 0, 0, 0)
+        .toInstant(systemTimeZone)
+        .toEpochMilliseconds()
+
+fun localDateAtEndOfDayEpochMillis(date: LocalDate): Long =
+    LocalDateTime(date.year, date.monthNumber, date.dayOfMonth, 23, 59, 59, 999_000_000)
+        .toInstant(systemTimeZone)
+        .toEpochMilliseconds()
 
 fun randomId(): String = "${nowEpochMillis()}-${Random.nextLong().toString(16)}"
 
