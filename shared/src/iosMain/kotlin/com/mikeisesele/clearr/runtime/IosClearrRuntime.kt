@@ -11,20 +11,18 @@ import platform.posix.timeval
 @OptIn(ExperimentalForeignApi::class)
 class IosClearrRuntime(
     defaults: NSUserDefaults = NSUserDefaults.standardUserDefaults,
-    private val delegate: ClearrRuntime = InMemoryClearrRuntime(
-        repository = IosClearrRepository(defaults),
-        onboardingStatusRepository = IosOnboardingStatusRepository(defaults),
-        budgetPreferencesRepository = IosBudgetPreferencesRepository(defaults),
-        todoPreferencesRepository = IosTodoPreferencesRepository(defaults),
-        budgetAiService = IosBudgetAiService(),
-        todoAiService = IosTodoAiService(),
-        goalsAiService = IosGoalsAiService(),
-        nowMillis = {
-            memScoped {
-                val tv = alloc<timeval>()
-                gettimeofday(tv.ptr, null)
-                (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L)
-            }
+    override val repository: IosClearrRepository = IosClearrRepository(defaults),
+    override val onboardingStatusRepository: IosOnboardingStatusRepository = IosOnboardingStatusRepository(defaults),
+    override val budgetPreferencesRepository: IosBudgetPreferencesRepository = IosBudgetPreferencesRepository(defaults),
+    override val todoPreferencesRepository: IosTodoPreferencesRepository = IosTodoPreferencesRepository(defaults),
+    override val budgetAiService: IosBudgetAiService = IosBudgetAiService(),
+    override val todoAiService: IosTodoAiService = IosTodoAiService(),
+    override val goalsAiService: IosGoalsAiService = IosGoalsAiService(),
+    override val nowMillis: () -> Long = {
+        memScoped {
+            val tv = alloc<timeval>()
+            gettimeofday(tv.ptr, null)
+            (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L)
         }
-    )
-) : ClearrRuntime by delegate
+    }
+) : ClearrRuntime

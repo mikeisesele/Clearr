@@ -5,14 +5,12 @@ import com.mikeisesele.clearr.preview.InMemoryClearrRepository
 import com.mikeisesele.clearr.preview.InMemoryOnboardingStatusRepository
 
 class AndroidClearrRuntime(
-    private val delegate: ClearrRuntime = InMemoryClearrRuntime(
-        repository = InMemoryClearrRepository.sample(),
-        onboardingStatusRepository = InMemoryOnboardingStatusRepository(),
-        budgetPreferencesRepository = AndroidBudgetPreferencesRepository(),
-        todoPreferencesRepository = AndroidTodoPreferencesRepository(),
-        budgetAiService = AndroidBudgetAiService(),
-        todoAiService = AndroidTodoAiService(),
-        goalsAiService = AndroidGoalsAiService(),
-        nowMillis = ::nowEpochMillis
-    )
-) : ClearrRuntime by delegate
+    override val repository: InMemoryClearrRepository = InMemoryClearrRepository.sample(),
+    override val onboardingStatusRepository: InMemoryOnboardingStatusRepository = InMemoryOnboardingStatusRepository(),
+    override val budgetPreferencesRepository: AndroidBudgetPreferencesRepository = AndroidBudgetPreferencesRepository(),
+    override val todoPreferencesRepository: AndroidTodoPreferencesRepository = AndroidTodoPreferencesRepository(),
+    override val budgetAiService: AndroidBudgetAiService = AndroidBudgetAiService(),
+    override val todoAiService: AndroidTodoAiService = AndroidTodoAiService(),
+    override val goalsAiService: AndroidGoalsAiService = AndroidGoalsAiService(),
+    override val nowMillis: () -> Long = ::nowEpochMillis
+) : ClearrRuntime
