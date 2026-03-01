@@ -4,9 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,20 +51,15 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.mikeisesele.clearr.data.model.GoalFrequency
 import com.mikeisesele.clearr.data.model.GoalSummary
 import com.mikeisesele.clearr.data.model.HistoryEntry
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
-import com.mikeisesele.clearr.ui.feature.goals.previews.previewGoalSummary
 import com.mikeisesele.clearr.ui.feature.goals.utils.goalPalette
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
-import com.mikeisesele.clearr.ui.theme.ClearrTheme
 import com.mikeisesele.clearr.ui.theme.ClearrUiColors
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 import kotlinx.coroutines.delay
@@ -102,6 +98,7 @@ internal fun GoalsSwipeHintStrip(colors: ClearrUiColors) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SwipeableGoalRow(
     summary: GoalSummary,
@@ -228,7 +225,7 @@ internal fun GoalDetailSheet(
     val completionPct = (summary.completionRate * 100f).roundToInt().coerceIn(0, 100)
     val historyTitle = if (summary.goal.frequency == GoalFrequency.DAILY) "LAST 7 DAYS" else "LAST 7 WEEKS"
 
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
         Box(
             modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)).padding(horizontal = ClearrDimens.dp16, vertical = ClearrDimens.dp24),
             contentAlignment = Alignment.Center
@@ -330,23 +327,6 @@ internal fun GoalsEmptyState(modifier: Modifier = Modifier) {
             fontSize = ClearrTextSizes.sp13,
             color = colors.muted,
             textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 412)
-@Composable
-private fun GoalRowPreview() {
-    ClearrTheme {
-        SwipeableGoalRow(
-            summary = previewGoalSummary,
-            isLast = true,
-            colors = LocalClearrUiColors.current,
-            hintDeleteAnimation = false,
-            onHintAnimationPlayed = {},
-            onDelete = {},
-            onTap = {},
-            onLongPress = {}
         )
     }
 }
