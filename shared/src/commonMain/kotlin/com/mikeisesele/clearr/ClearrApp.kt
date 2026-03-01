@@ -1,23 +1,31 @@
 package com.mikeisesele.clearr
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.runtime.getValue
+import com.mikeisesele.clearr.core.time.localDateAtEndOfDayEpochMillis
+import com.mikeisesele.clearr.core.time.localDateAtStartOfDayEpochMillis
+import com.mikeisesele.clearr.core.time.nowEpochMillis
+import com.mikeisesele.clearr.core.time.plusDays
+import com.mikeisesele.clearr.core.time.todayLocalDate
+import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.data.model.BudgetFrequency
+import com.mikeisesele.clearr.data.model.BudgetPeriod
+import com.mikeisesele.clearr.data.model.BudgetStatus
+import com.mikeisesele.clearr.data.model.BudgetSummary
+import com.mikeisesele.clearr.data.model.CategorySummary
+import com.mikeisesele.clearr.data.model.Goal
+import com.mikeisesele.clearr.data.model.GoalFrequency
+import com.mikeisesele.clearr.data.model.GoalSummary
+import com.mikeisesele.clearr.data.model.HistoryEntry
+import com.mikeisesele.clearr.data.model.TodoItem
+import com.mikeisesele.clearr.data.model.TodoPriority
+import com.mikeisesele.clearr.data.model.TodoStatus
+import com.mikeisesele.clearr.ui.feature.budget.AddBudgetCategoryScreen
+import com.mikeisesele.clearr.ui.feature.budget.BudgetAction
+import com.mikeisesele.clearr.ui.feature.budget.BudgetPlanDraft
+import com.mikeisesele.clearr.ui.feature.budget.BudgetScreen
+import com.mikeisesele.clearr.ui.feature.budget.BudgetUiState
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardScreen
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardClearanceScore
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerHealth
@@ -25,17 +33,24 @@ import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerType
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUiModel
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencyItem
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencySeverity
+import com.mikeisesele.clearr.ui.feature.goals.AddGoalScreen
+import com.mikeisesele.clearr.ui.feature.goals.GoalsAction
+import com.mikeisesele.clearr.ui.feature.goals.GoalsAiResult
+import com.mikeisesele.clearr.ui.feature.goals.GoalsScreen
+import com.mikeisesele.clearr.ui.feature.goals.GoalsUiState
 import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
+import com.mikeisesele.clearr.ui.feature.todo.AddTodoScreen
+import com.mikeisesele.clearr.ui.feature.todo.TodoAction
+import com.mikeisesele.clearr.ui.feature.todo.TodoCounts
+import com.mikeisesele.clearr.ui.feature.todo.TodoDetailScreen
+import com.mikeisesele.clearr.ui.feature.todo.TodoFilter
+import com.mikeisesele.clearr.ui.feature.todo.TodoUiState
 import com.mikeisesele.clearr.ui.navigation.AppDestination
 import com.mikeisesele.clearr.ui.navigation.AppShellDestination
 import com.mikeisesele.clearr.ui.navigation.rememberAppNavigator
-import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.theme.ClearrSharedTheme
-import com.mikeisesele.clearr.ui.theme.ClearrColors
-import com.mikeisesele.clearr.ui.theme.ClearrDimens
-import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
@@ -64,6 +79,8 @@ private fun MainShellPreview(
     destination: AppShellDestination,
     onNavigate: (AppShellDestination) -> Unit
 ) {
+    val colors = LocalClearrUiColors.current
+
     when (destination) {
         AppShellDestination.Dashboard -> DashboardScreen(
             state = iosPreviewDashboardModel(),
@@ -80,138 +97,233 @@ private fun MainShellPreview(
             }
         )
 
-        is AppShellDestination.BudgetRoot -> ShellPlaceholderScreen(
-            title = "Budget",
-            message = "Shared shell navigation is now driving this flow. Next step is replacing placeholders with live shared feature stores on iOS.",
-            primaryAction = "Add Category",
-            onPrimaryAction = {
-                onNavigate(AppShellDestination.BudgetAddCategory(destination.trackerId))
-            },
-            onBack = { onNavigate(AppShellDestination.Dashboard) }
+        is AppShellDestination.BudgetRoot -> BudgetScreen(
+            state = previewBudgetState(destination.trackerId),
+            colors = colors,
+            onAction = {},
+            onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
+            onAddCategory = { onNavigate(AppShellDestination.BudgetAddCategory(destination.trackerId)) }
         )
 
-        is AppShellDestination.GoalsRoot -> ShellPlaceholderScreen(
-            title = "Goals",
-            message = "This screen is now reachable through the shared navigator. The Android nav graph is still acting as the platform adapter.",
-            primaryAction = "Add Goal",
-            onPrimaryAction = {
-                onNavigate(AppShellDestination.GoalAdd(destination.trackerId))
-            },
-            onBack = { onNavigate(AppShellDestination.Dashboard) }
+        is AppShellDestination.GoalsRoot -> GoalsScreen(
+            state = previewGoalsState(destination.trackerId),
+            colors = colors,
+            onAction = {},
+            onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
+            onAddGoal = { onNavigate(AppShellDestination.GoalAdd(destination.trackerId)) }
         )
 
-        is AppShellDestination.TodoRoot -> ShellPlaceholderScreen(
-            title = "Todos",
-            message = "The shared app shell can now move into tracker flows without depending on Android route strings.",
-            primaryAction = "Add Todo",
-            onPrimaryAction = {
-                onNavigate(AppShellDestination.TodoAdd(destination.trackerId))
-            },
-            onBack = { onNavigate(AppShellDestination.Dashboard) }
+        is AppShellDestination.TodoRoot -> TodoDetailScreen(
+            state = previewTodoState(destination.trackerId),
+            onAction = {},
+            onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
+            onAddTodo = { onNavigate(AppShellDestination.TodoAdd(destination.trackerId)) }
         )
 
-        is AppShellDestination.TodoAdd -> ShellPlaceholderScreen(
-            title = "Add Todo",
-            message = "Add-todo flow is now part of the shared shell backstack model.",
-            primaryAction = "Back To Todos",
-            onPrimaryAction = { onNavigate(AppShellDestination.TodoRoot(destination.trackerId)) },
-            onBack = { onNavigate(AppShellDestination.TodoRoot(destination.trackerId)) }
+        is AppShellDestination.TodoAdd -> AddTodoScreen(
+            onClose = { onNavigate(AppShellDestination.TodoRoot(destination.trackerId)) },
+            onAddTodo = { _, _, _, _ -> }
         )
 
-        is AppShellDestination.GoalAdd -> ShellPlaceholderScreen(
-            title = "Add Goal",
-            message = "Add-goal flow is now part of the shared shell backstack model.",
-            primaryAction = "Back To Goals",
-            onPrimaryAction = { onNavigate(AppShellDestination.GoalsRoot(destination.trackerId)) },
-            onBack = { onNavigate(AppShellDestination.GoalsRoot(destination.trackerId)) }
-        )
-
-        is AppShellDestination.BudgetAddCategory -> ShellPlaceholderScreen(
-            title = "Add Budget Category",
-            message = "Add-category flow is now part of the shared shell backstack model.",
-            primaryAction = "Back To Budget",
-            onPrimaryAction = { onNavigate(AppShellDestination.BudgetRoot(destination.trackerId)) },
-            onBack = { onNavigate(AppShellDestination.BudgetRoot(destination.trackerId)) }
-        )
-    }
-}
-
-@Composable
-private fun ShellPlaceholderScreen(
-    title: String,
-    message: String,
-    primaryAction: String,
-    onPrimaryAction: () -> Unit,
-    onBack: () -> Unit
-) {
-    val colors = LocalClearrUiColors.current
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.bg)
-    ) {
-        ClearrTopBar(
-            title = title,
-            showLeading = true,
-            leadingIcon = "←",
-            onLeadingClick = onBack
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(ClearrDimens.dp20),
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(ClearrDimens.dp20),
-                color = colors.surface,
-                tonalElevation = ClearrDimens.dp4
-            ) {
-                Column(
-                    modifier = Modifier.padding(ClearrDimens.dp20),
-                    verticalArrangement = Arrangement.spacedBy(ClearrDimens.dp16)
-                ) {
-                    Text(
-                        text = title,
-                        color = colors.text,
-                        fontSize = ClearrTextSizes.sp20,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = message,
-                        color = colors.muted,
-                        fontSize = ClearrTextSizes.sp14
-                    )
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onPrimaryAction),
-                        shape = RoundedCornerShape(ClearrDimens.dp14),
-                        color = ClearrColors.Violet
-                    ) {
-                        Box(
-                            modifier = Modifier.padding(vertical = ClearrDimens.dp16),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = primaryAction,
-                                color = ClearrColors.Surface,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
+        is AppShellDestination.GoalAdd -> AddGoalScreen(
+            state = previewGoalsState(destination.trackerId),
+            colors = colors,
+            onClose = { onNavigate(AppShellDestination.GoalsRoot(destination.trackerId)) },
+            onAddGoal = { _, _, _, _, _ -> },
+            inferGoalDraft = { title, target, frequency, emoji, colorToken ->
+                previewGoalsAiResult(title, target, frequency, emoji, colorToken)
             }
-        }
+        )
+
+        is AppShellDestination.BudgetAddCategory -> AddBudgetCategoryScreen(
+            state = previewBudgetState(destination.trackerId),
+            colors = colors,
+            onClose = { onNavigate(AppShellDestination.BudgetRoot(destination.trackerId)) },
+            onAddCategory = { _, _, _, _ -> }
+        )
     }
 }
 
 private const val PREVIEW_BUDGET_TRACKER_ID = 1001L
 private const val PREVIEW_GOALS_TRACKER_ID = 1002L
 private const val PREVIEW_TODO_TRACKER_ID = 1003L
+
+private fun previewBudgetState(trackerId: Long): BudgetUiState {
+    val today = todayLocalDate()
+    val period = BudgetPeriod(
+        id = 501,
+        trackerId = trackerId,
+        frequency = BudgetFrequency.MONTHLY,
+        label = "Mar 2026",
+        startDate = localDateAtStartOfDayEpochMillis(today),
+        endDate = localDateAtEndOfDayEpochMillis(today.plusDays(30))
+    )
+    val housing = BudgetCategory(
+        id = 1,
+        trackerId = trackerId,
+        frequency = BudgetFrequency.MONTHLY,
+        name = "Housing",
+        icon = "🏠",
+        colorToken = "Violet",
+        plannedAmountKobo = 4500000,
+        sortOrder = 0
+    )
+    val food = BudgetCategory(
+        id = 2,
+        trackerId = trackerId,
+        frequency = BudgetFrequency.MONTHLY,
+        name = "Food",
+        icon = "🍔",
+        colorToken = "Orange",
+        plannedAmountKobo = 1800000,
+        sortOrder = 1
+    )
+    val transport = BudgetCategory(
+        id = 3,
+        trackerId = trackerId,
+        frequency = BudgetFrequency.MONTHLY,
+        name = "Transport",
+        icon = "🚗",
+        colorToken = "Blue",
+        plannedAmountKobo = 900000,
+        sortOrder = 2
+    )
+    val categories = listOf(
+        CategorySummary(housing, 4500000, 3800000, 700000, 84f, BudgetStatus.NEAR_LIMIT),
+        CategorySummary(food, 1800000, 1125000, 675000, 63f, BudgetStatus.ON_TRACK),
+        CategorySummary(transport, 900000, 960000, -60000, 107f, BudgetStatus.OVER_BUDGET)
+    )
+    return BudgetUiState(
+        trackerId = trackerId,
+        trackerName = "Monthly Budget",
+        frequency = BudgetFrequency.MONTHLY,
+        periods = listOf(period),
+        selectedPeriodId = period.id,
+        categorySummaries = categories,
+        budgetSummary = BudgetSummary(
+            totalPlannedKobo = categories.sumOf { it.plannedAmountKobo },
+            totalSpentKobo = categories.sumOf { it.spentAmountKobo },
+            totalRemainingKobo = categories.sumOf { it.remainingAmountKobo },
+            percentUsed = 82f,
+            isOverBudget = true,
+            overBudgetCategories = categories.filter { it.status == BudgetStatus.OVER_BUDGET }
+        ),
+        budgetSetupPeriodLabel = period.label,
+        budgetSetupSourceLabel = "Copied from February",
+        budgetSetupDrafts = categories.map {
+            BudgetPlanDraft(
+                categoryId = it.category.id,
+                icon = it.category.icon,
+                name = it.category.name,
+                colorToken = it.category.colorToken,
+                plannedAmountKobo = it.plannedAmountKobo
+            )
+        },
+        showSwipeHint = false,
+        isLoading = false
+    )
+}
+
+private fun previewGoalsState(trackerId: Long): GoalsUiState {
+    val now = nowEpochMillis()
+    val goals = listOf(
+        Goal("goal-1", trackerId, "Exercise", "💪", "Emerald", "30 mins", GoalFrequency.DAILY, now),
+        Goal("goal-2", trackerId, "Read", "📚", "Blue", "20 pages", GoalFrequency.DAILY, now),
+        Goal("goal-3", trackerId, "Save", "💰", "Amber", "₦10,000", GoalFrequency.WEEKLY, now)
+    )
+    val summaries = listOf(
+        GoalSummary(
+            goal = goals[0],
+            isDoneThisPeriod = true,
+            currentStreak = 4,
+            bestStreak = 8,
+            recentHistory = listOf(
+                HistoryEntry("Mon", "Mon", true),
+                HistoryEntry("Tue", "Tue", true),
+                HistoryEntry("Wed", "Wed", false),
+                HistoryEntry("Thu", "Thu", true)
+            ),
+            completionRate = 0.72f,
+            completedAtForCurrentPeriod = now
+        ),
+        GoalSummary(
+            goal = goals[1],
+            isDoneThisPeriod = false,
+            currentStreak = 1,
+            bestStreak = 5,
+            recentHistory = listOf(
+                HistoryEntry("Mon", "Mon", false),
+                HistoryEntry("Tue", "Tue", true),
+                HistoryEntry("Wed", "Wed", false),
+                HistoryEntry("Thu", "Thu", false)
+            ),
+            completionRate = 0.48f
+        ),
+        GoalSummary(
+            goal = goals[2],
+            isDoneThisPeriod = true,
+            currentStreak = 2,
+            bestStreak = 3,
+            recentHistory = listOf(
+                HistoryEntry("W09", "W9", true),
+                HistoryEntry("W10", "W10", true),
+                HistoryEntry("W11", "W11", false),
+                HistoryEntry("W12", "W12", true)
+            ),
+            completionRate = 0.63f,
+            completedAtForCurrentPeriod = now
+        )
+    )
+    return GoalsUiState(
+        trackerId = trackerId,
+        trackerName = "Goals",
+        summaries = summaries,
+        doneCount = summaries.count { it.isDoneThisPeriod },
+        totalCount = summaries.size,
+        allDoneThisPeriod = false,
+        aiInsight = "Momentum is strongest on exercise. Reading needs attention.",
+        isLoading = false
+    )
+}
+
+private fun previewTodoState(trackerId: Long): TodoUiState {
+    val today = todayLocalDate()
+    val todos = listOf(
+        TodoItem("todo-1", trackerId, "Pay rent", "Before evening", TodoPriority.HIGH, today, TodoStatus.PENDING, nowEpochMillis()),
+        TodoItem("todo-2", trackerId, "Review grocery list", null, TodoPriority.MEDIUM, today.plusDays(1), TodoStatus.PENDING, nowEpochMillis()),
+        TodoItem("todo-3", trackerId, "Submit report", "Email team copy", TodoPriority.HIGH, today.plusDays(-1), TodoStatus.OVERDUE, nowEpochMillis()),
+        TodoItem("todo-4", trackerId, "Book haircut", null, TodoPriority.LOW, null, TodoStatus.DONE, nowEpochMillis(), nowEpochMillis())
+    )
+    return TodoUiState(
+        trackerId = trackerId,
+        trackerName = "Todos",
+        filter = TodoFilter.ALL,
+        todos = todos,
+        displayedTodos = todos,
+        counts = TodoCounts(
+            pending = todos.count { it.status == TodoStatus.PENDING },
+            overdue = todos.count { it.status == TodoStatus.OVERDUE },
+            done = todos.count { it.status == TodoStatus.DONE }
+        ),
+        aiInsight = "Two important tasks should be cleared today.",
+        showSwipeHint = false,
+        isLoading = false
+    )
+}
+
+private fun previewGoalsAiResult(
+    title: String,
+    target: String?,
+    frequency: GoalFrequency,
+    emoji: String,
+    colorToken: String
+): GoalsAiResult = GoalsAiResult(
+    normalizedTitle = title.trim().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
+    suggestedTarget = target ?: "30 mins",
+    suggestedFrequency = frequency,
+    suggestedEmoji = emoji,
+    suggestedColorToken = colorToken
+)
 
 private fun iosPreviewDashboardModel(): DashboardUiModel = DashboardUiModel(
     periodLabel = "March 2026",
