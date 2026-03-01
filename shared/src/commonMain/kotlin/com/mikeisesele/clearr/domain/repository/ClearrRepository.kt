@@ -6,16 +6,14 @@ import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
 import com.mikeisesele.clearr.data.model.BudgetEntry
 import com.mikeisesele.clearr.data.model.BudgetFrequency
 import com.mikeisesele.clearr.data.model.BudgetPeriod
-import com.mikeisesele.clearr.data.model.Goal
-import com.mikeisesele.clearr.data.model.GoalCompletion
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TodoItem
 import kotlinx.coroutines.flow.Flow
 
-interface ClearrRepository : AppConfigRepository {
+interface ClearrRepository : AppConfigRepository, GoalsRepository {
     fun getAllTrackers(): Flow<List<Tracker>>
     suspend fun getTrackerById(id: Long): Tracker?
-    fun getTrackerByIdFlow(id: Long): Flow<Tracker?>
+    override fun getTrackerByIdFlow(id: Long): Flow<Tracker?>
     suspend fun insertTracker(tracker: Tracker): Long
     suspend fun updateTracker(tracker: Tracker)
     suspend fun deleteTracker(id: Long)
@@ -41,10 +39,4 @@ interface ClearrRepository : AppConfigRepository {
     suspend fun updateTodo(todo: TodoItem)
     suspend fun markTodoDone(id: String, completedAt: Long)
     suspend fun deleteTodo(id: String)
-
-    fun getGoalsForTracker(trackerId: Long): Flow<List<Goal>>
-    fun getGoalCompletionsForTracker(trackerId: Long): Flow<List<GoalCompletion>>
-    suspend fun insertGoal(goal: Goal)
-    suspend fun addGoalCompletion(completion: GoalCompletion)
-    suspend fun deleteGoal(goalId: String)
 }

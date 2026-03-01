@@ -7,6 +7,7 @@ import com.mikeisesele.clearr.domain.budget.BudgetPeriodPlanner
 import com.mikeisesele.clearr.domain.repository.AppConfigRepository
 import com.mikeisesele.clearr.domain.repository.BudgetPreferencesRepository as BudgetPreferencesContract
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
+import com.mikeisesele.clearr.domain.repository.GoalsRepository
 import com.mikeisesele.clearr.domain.repository.TodoPreferencesRepository as TodoPreferencesContract
 import com.mikeisesele.clearr.ui.feature.todo.AndroidTodoAiService
 import com.mikeisesele.clearr.ui.feature.todo.TodoAiService
@@ -28,6 +29,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindAppConfigRepository(impl: ClearrRepositoryImpl): AppConfigRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindGoalsRepository(impl: ClearrRepositoryImpl): GoalsRepository
 
     @Binds
     @Singleton
