@@ -24,8 +24,8 @@ import com.mikeisesele.clearr.data.model.HistoryEntry
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
-import com.mikeisesele.clearr.preview.SampleClearrRuntime
 import com.mikeisesele.clearr.runtime.ClearrRuntime
+import com.mikeisesele.clearr.runtime.createPlatformRuntime
 import com.mikeisesele.clearr.runtime.createBudgetStore
 import com.mikeisesele.clearr.runtime.createDashboardStore
 import com.mikeisesele.clearr.runtime.createGoalsStore
@@ -69,7 +69,7 @@ import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 fun ClearrApp(
     runtime: ClearrRuntime? = null
 ) {
-    val appRuntime = remember(runtime) { runtime ?: SampleClearrRuntime() }
+    val appRuntime = remember(runtime) { runtime ?: createPlatformRuntime() }
     ClearrSharedTheme {
         val navigator = rememberAppNavigator()
         val navigationState by navigator.state.collectAsState()
