@@ -1,6 +1,11 @@
 package com.mikeisesele.clearr.runtime
 
 import com.mikeisesele.clearr.data.model.AppConfig
+import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
+import com.mikeisesele.clearr.data.model.BudgetEntry
+import com.mikeisesele.clearr.data.model.BudgetFrequency
+import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.Goal
 import com.mikeisesele.clearr.data.model.GoalCompletion
@@ -35,6 +40,10 @@ private const val IOS_TRACKERS_KEY = "clearr.trackers"
 private const val IOS_GOALS_KEY = "clearr.goals"
 private const val IOS_GOAL_COMPLETIONS_KEY = "clearr.goalCompletions"
 private const val IOS_TODOS_KEY = "clearr.todos"
+private const val IOS_BUDGET_PERIODS_KEY = "clearr.budget.periods"
+private const val IOS_BUDGET_CATEGORIES_KEY = "clearr.budget.categories"
+private const val IOS_BUDGET_PLANS_KEY = "clearr.budget.plans"
+private const val IOS_BUDGET_ENTRIES_KEY = "clearr.budget.entries"
 private const val RECORD_SEPARATOR = "\u001E"
 private const val FIELD_SEPARATOR = "\u001F"
 private const val NULL_TOKEN = "\u0000"
@@ -43,10 +52,10 @@ class IosClearrRepository(
     private val defaults: NSUserDefaults = NSUserDefaults.standardUserDefaults,
     private val delegate: InMemoryClearrRepository = InMemoryClearrRepository.create(
         trackers = loadTrackers(defaults),
-        budgetPeriods = emptyList(),
-        budgetCategories = emptyList(),
-        budgetPlans = emptyList(),
-        budgetEntries = emptyList(),
+        budgetPeriods = loadBudgetPeriods(defaults),
+        budgetCategories = loadBudgetCategories(defaults),
+        budgetPlans = loadBudgetCategoryPlans(defaults),
+        budgetEntries = loadBudgetEntries(defaults),
         goals = loadGoals(defaults),
         goalCompletions = loadGoalCompletions(defaults),
         todos = loadTodos(defaults),
@@ -79,6 +88,10 @@ class IosClearrRepository(
     override suspend fun deleteTracker(id: Long) {
         delegate.deleteTracker(id)
         persistTrackers()
+        persistBudgetPeriods()
+        persistBudgetCategories()
+        persistBudgetCategoryPlans()
+        persistBudgetEntries()
         persistGoals()
         persistGoalCompletions()
         persistTodos()
@@ -87,6 +100,49 @@ class IosClearrRepository(
     override suspend fun clearTrackerNewFlag(id: Long) {
         delegate.clearTrackerNewFlag(id)
         persistTrackers()
+    }
+
+    override suspend fun ensureBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) {
+        delegate.ensureBudgetPeriods(trackerId, frequency)
+        persistBudgetPeriods()
+    }
+
+    override suspend fun addBudgetCategory(category: BudgetCategory): Long {
+        val id = delegate.addBudgetCategory(category)
+        persistBudgetCategories()
+        return id
+    }
+
+    override suspend fun updateBudgetCategory(category: BudgetCategory) {
+        delegate.updateBudgetCategory(category)
+        persistBudgetCategories()
+    }
+
+    override suspend fun deleteBudgetCategory(categoryId: Long) {
+        delegate.deleteBudgetCategory(categoryId)
+        persistBudgetCategories()
+        persistBudgetCategoryPlans()
+        persistBudgetEntries()
+    }
+
+    override suspend fun reorderBudgetCategories(
+        trackerId: Long,
+        frequency: BudgetFrequency,
+        orderedIds: List<Long>
+    ) {
+        delegate.reorderBudgetCategories(trackerId, frequency, orderedIds)
+        persistBudgetCategories()
+    }
+
+    override suspend fun saveBudgetCategoryPlans(periodId: Long, plans: List<BudgetCategoryPlan>) {
+        delegate.saveBudgetCategoryPlans(periodId, plans)
+        persistBudgetCategoryPlans()
+    }
+
+    override suspend fun addBudgetEntry(entry: BudgetEntry): Long {
+        val id = delegate.addBudgetEntry(entry)
+        persistBudgetEntries()
+        return id
     }
 
     override suspend fun insertTodo(todo: TodoItem) {
@@ -142,6 +198,34 @@ class IosClearrRepository(
 
     private fun persistTodos() {
         defaults.setObject(encodeTodos(delegate.snapshotTodos()), forKey = IOS_TODOS_KEY)
+    }
+
+    private fun persistBudgetPeriods() {
+        defaults.setObject(
+            encodeBudgetPeriods(delegate.snapshotBudgetPeriods()),
+            forKey = IOS_BUDGET_PERIODS_KEY
+        )
+    }
+
+    private fun persistBudgetCategories() {
+        defaults.setObject(
+            encodeBudgetCategories(delegate.snapshotBudgetCategories()),
+            forKey = IOS_BUDGET_CATEGORIES_KEY
+        )
+    }
+
+    private fun persistBudgetCategoryPlans() {
+        defaults.setObject(
+            encodeBudgetCategoryPlans(delegate.snapshotBudgetCategoryPlans()),
+            forKey = IOS_BUDGET_PLANS_KEY
+        )
+    }
+
+    private fun persistBudgetEntries() {
+        defaults.setObject(
+            encodeBudgetEntries(delegate.snapshotBudgetEntries()),
+            forKey = IOS_BUDGET_ENTRIES_KEY
+        )
     }
 }
 
@@ -202,6 +286,82 @@ private fun loadTrackers(defaults: NSUserDefaults): List<Tracker> =
                 defaultAmount = fields[5].toDouble(),
                 isNew = fields[6].toBoolean(),
                 createdAt = fields[7].toLong()
+            )
+        }
+        ?: emptyList()
+
+private fun loadBudgetPeriods(defaults: NSUserDefaults): List<BudgetPeriod> =
+    defaults.stringForKey(IOS_BUDGET_PERIODS_KEY)
+        ?.takeIf { it.isNotEmpty() }
+        ?.split(RECORD_SEPARATOR)
+        ?.filter { it.isNotEmpty() }
+        ?.map { record ->
+            val fields = decodeRecord(record)
+            BudgetPeriod(
+                id = fields[0].toLong(),
+                trackerId = fields[1].toLong(),
+                frequency = BudgetFrequency.valueOf(fields[2]),
+                label = fields[3],
+                startDate = fields[4].toLong(),
+                endDate = fields[5].toLong()
+            )
+        }
+        ?: emptyList()
+
+private fun loadBudgetCategories(defaults: NSUserDefaults): List<BudgetCategory> =
+    defaults.stringForKey(IOS_BUDGET_CATEGORIES_KEY)
+        ?.takeIf { it.isNotEmpty() }
+        ?.split(RECORD_SEPARATOR)
+        ?.filter { it.isNotEmpty() }
+        ?.map { record ->
+            val fields = decodeRecord(record)
+            BudgetCategory(
+                id = fields[0].toLong(),
+                trackerId = fields[1].toLong(),
+                frequency = BudgetFrequency.valueOf(fields[2]),
+                name = fields[3],
+                icon = fields[4],
+                colorToken = fields[5],
+                plannedAmountKobo = fields[6].toLong(),
+                sortOrder = fields[7].toInt(),
+                createdAt = fields[8].toLong()
+            )
+        }
+        ?: emptyList()
+
+private fun loadBudgetCategoryPlans(defaults: NSUserDefaults): List<BudgetCategoryPlan> =
+    defaults.stringForKey(IOS_BUDGET_PLANS_KEY)
+        ?.takeIf { it.isNotEmpty() }
+        ?.split(RECORD_SEPARATOR)
+        ?.filter { it.isNotEmpty() }
+        ?.map { record ->
+            val fields = decodeRecord(record)
+            BudgetCategoryPlan(
+                id = fields[0].toLong(),
+                trackerId = fields[1].toLong(),
+                categoryId = fields[2].toLong(),
+                periodId = fields[3].toLong(),
+                plannedAmountKobo = fields[4].toLong(),
+                createdAt = fields[5].toLong()
+            )
+        }
+        ?: emptyList()
+
+private fun loadBudgetEntries(defaults: NSUserDefaults): List<BudgetEntry> =
+    defaults.stringForKey(IOS_BUDGET_ENTRIES_KEY)
+        ?.takeIf { it.isNotEmpty() }
+        ?.split(RECORD_SEPARATOR)
+        ?.filter { it.isNotEmpty() }
+        ?.map { record ->
+            val fields = decodeRecord(record)
+            BudgetEntry(
+                id = fields[0].toLong(),
+                trackerId = fields[1].toLong(),
+                categoryId = fields[2].toLong(),
+                periodId = fields[3].toLong(),
+                amountKobo = fields[4].toLong(),
+                note = fields[5].takeUnless { it == NULL_TOKEN },
+                loggedAt = fields[6].toLong()
             )
         }
         ?: emptyList()
@@ -275,6 +435,66 @@ private fun encodeTrackers(trackers: List<Tracker>): String =
                 tracker.defaultAmount.toString(),
                 tracker.isNew.toString(),
                 tracker.createdAt.toString()
+            )
+        )
+    }
+
+private fun encodeBudgetPeriods(periods: List<BudgetPeriod>): String =
+    periods.joinToString(RECORD_SEPARATOR) { period ->
+        encodeRecord(
+            listOf(
+                period.id.toString(),
+                period.trackerId.toString(),
+                period.frequency.name,
+                period.label,
+                period.startDate.toString(),
+                period.endDate.toString()
+            )
+        )
+    }
+
+private fun encodeBudgetCategories(categories: List<BudgetCategory>): String =
+    categories.joinToString(RECORD_SEPARATOR) { category ->
+        encodeRecord(
+            listOf(
+                category.id.toString(),
+                category.trackerId.toString(),
+                category.frequency.name,
+                category.name,
+                category.icon,
+                category.colorToken,
+                category.plannedAmountKobo.toString(),
+                category.sortOrder.toString(),
+                category.createdAt.toString()
+            )
+        )
+    }
+
+private fun encodeBudgetCategoryPlans(plans: List<BudgetCategoryPlan>): String =
+    plans.joinToString(RECORD_SEPARATOR) { plan ->
+        encodeRecord(
+            listOf(
+                plan.id.toString(),
+                plan.trackerId.toString(),
+                plan.categoryId.toString(),
+                plan.periodId.toString(),
+                plan.plannedAmountKobo.toString(),
+                plan.createdAt.toString()
+            )
+        )
+    }
+
+private fun encodeBudgetEntries(entries: List<BudgetEntry>): String =
+    entries.joinToString(RECORD_SEPARATOR) { entry ->
+        encodeRecord(
+            listOf(
+                entry.id.toString(),
+                entry.trackerId.toString(),
+                entry.categoryId.toString(),
+                entry.periodId.toString(),
+                entry.amountKobo.toString(),
+                entry.note ?: NULL_TOKEN,
+                entry.loggedAt.toString()
             )
         )
     }

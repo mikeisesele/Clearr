@@ -239,6 +239,10 @@ class InMemoryClearrRepository private constructor(
 
     fun snapshotAppConfig(): AppConfig? = appConfigFlow.value
     fun snapshotTrackers(): List<Tracker> = trackersFlow.value
+    fun snapshotBudgetPeriods(): List<BudgetPeriod> = budgetPeriodsFlow.value
+    fun snapshotBudgetCategories(): List<BudgetCategory> = budgetCategoriesFlow.value
+    fun snapshotBudgetCategoryPlans(): List<BudgetCategoryPlan> = budgetPlansFlow.value
+    fun snapshotBudgetEntries(): List<BudgetEntry> = budgetEntriesFlow.value
     fun snapshotGoals(): List<Goal> = goalsFlow.value
     fun snapshotGoalCompletions(): List<GoalCompletion> = goalCompletionsFlow.value
     fun snapshotTodos(): List<TodoItem> = todosFlow.value
