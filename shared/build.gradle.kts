@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
+    alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
@@ -14,13 +15,14 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.ui)
         }
         commonTest.dependencies {
         }
         androidMain.dependencies {
-            implementation(libs.androidx.compose.ui.explicit)
-            implementation(libs.androidx.compose.foundation)
-            implementation(libs.androidx.compose.material3.explicit)
         }
     }
 }

@@ -2,14 +2,14 @@ package com.mikeisesele.clearr.ui.feature.dashboard
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
@@ -40,7 +40,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -73,6 +72,7 @@ import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerType
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUiModel
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencyItem
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardUrgencySeverity
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -235,7 +235,7 @@ private fun TrackerTile(tile: DashboardTrackerHealth, delayMs: Long, palette: Da
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(delayMs) {
-        kotlinx.coroutines.delay(delayMs)
+        delay(delayMs)
         visible = true
     }
 
@@ -401,7 +401,7 @@ private fun UrgencyCard(
                 }
                 AnimatedVisibility(
                     visible = isActionRevealed,
-                    enter = slideInHorizontally { it / 3 } + androidx.compose.animation.fadeIn(),
+                    enter = slideInHorizontally { it / 3 } + fadeIn(),
                     exit = slideOutHorizontally { it / 3 } + fadeOut()
                 ) {
                     Text(text = item.actionLabel, style = MaterialTheme.typography.labelMedium, color = item.trackerType.accentColor(), fontWeight = FontWeight.SemiBold)
