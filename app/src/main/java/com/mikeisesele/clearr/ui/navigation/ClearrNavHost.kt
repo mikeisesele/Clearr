@@ -2,8 +2,6 @@ package com.mikeisesele.clearr.ui.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -34,7 +32,6 @@ import com.mikeisesele.clearr.ui.feature.todo.AddTodoRoute
 import com.mikeisesele.clearr.ui.feature.todo.TodoRoute
 import com.mikeisesele.clearr.ui.navigation.components.AppBottomNav
 import com.mikeisesele.clearr.ui.navigation.components.AppBottomNavItem
-import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
 @Composable
@@ -44,28 +41,24 @@ fun ClearrNavHost(onThemeChange: (ThemeMode) -> Unit = {}) {
 
     val onboardingState by onboardingVm.uiState.collectAsStateWithLifecycle()
     val appConfigState by appConfigVm.uiState.collectAsStateWithLifecycle()
-    val onboardingComplete = onboardingState.isComplete
-    val appConfigLoading = appConfigState.isLoading
-    val colors = LocalClearrUiColors.current
-
-    if (onboardingComplete == null || appConfigLoading) {
-        ApplySystemBars(darkIcons = false)
-        Box(modifier = Modifier.fillMaxSize().background(ClearrColors.Violet))
-        return
-    }
-
-    if (onboardingComplete == false) {
-        OnboardingNavHost(onboardingVm = onboardingVm)
-    } else {
-        MainNavHost(onThemeChange = onThemeChange)
-    }
+    AppShellRoot(
+        onboardingState = onboardingState,
+        appConfigState = appConfigState,
+        renderLoading = { darkIcons -> ApplySystemBars(darkIcons = darkIcons) },
+        renderOnboarding = { darkIcons ->
+            ApplySystemBars(darkIcons = darkIcons)
+            OnboardingNavHost(onboardingVm = onboardingVm)
+        },
+        renderMainShell = { darkIcons ->
+            ApplySystemBars(darkIcons = darkIcons)
+            MainNavHost(onThemeChange = onThemeChange)
+        }
+    )
 }
 
 @Composable
 private fun OnboardingNavHost(onboardingVm: OnboardingViewModel) {
     val navController = rememberNavController()
-    val colors = LocalClearrUiColors.current
-    ApplySystemBars(darkIcons = !colors.isDark)
 
     NavHost(navController = navController, startDestination = "splash") {
         composable("splash") {
@@ -106,7 +99,6 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val colors = LocalClearrUiColors.current
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
-    ApplySystemBars(darkIcons = !colors.isDark)
 
     BackHandler(enabled = currentRoute.isTopLevelNonDashboardRoute()) {
         navController.navigate(NavRoutes.Dashboard.route) {
