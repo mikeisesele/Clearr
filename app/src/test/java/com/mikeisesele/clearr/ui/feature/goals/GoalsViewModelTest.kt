@@ -35,6 +35,7 @@ class GoalsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val repository = mockk<GoalsRepository>()
+    private val goalsAiService = mockk<GoalsAiService>()
     private val trackerId = 1L
 
     @Test
@@ -77,6 +78,7 @@ class GoalsViewModelTest {
 
         val viewModel = GoalsViewModel(
             repository = repository,
+            goalsAiService = goalsAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -120,6 +122,7 @@ class GoalsViewModelTest {
 
         val viewModel = GoalsViewModel(
             repository = repository,
+            goalsAiService = goalsAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -147,6 +150,7 @@ class GoalsViewModelTest {
 
         val viewModel = GoalsViewModel(
             repository = repository,
+            goalsAiService = goalsAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -174,6 +178,7 @@ class GoalsViewModelTest {
 
         val viewModel = GoalsViewModel(
             repository = repository,
+            goalsAiService = goalsAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -213,6 +218,7 @@ class GoalsViewModelTest {
 
         val viewModel = GoalsViewModel(
             repository = repository,
+            goalsAiService = goalsAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -254,6 +260,7 @@ class GoalsViewModelTest {
 
         val viewModel = GoalsViewModel(
             repository = repository,
+            goalsAiService = goalsAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -287,6 +294,7 @@ class GoalsViewModelTest {
 
         val viewModel = GoalsViewModel(
             repository = repository,
+            goalsAiService = goalsAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -309,6 +317,7 @@ class GoalsViewModelTest {
 
         val viewModel = GoalsViewModel(
             repository = repository,
+            goalsAiService = goalsAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -330,6 +339,7 @@ class GoalsViewModelTest {
 
         val viewModel = GoalsViewModel(
             repository = repository,
+            goalsAiService = goalsAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -358,5 +368,26 @@ class GoalsViewModelTest {
         )
         every { repository.getGoalsForTracker(trackerId) } returns goalsFlow
         every { repository.getGoalCompletionsForTracker(trackerId) } returns completionsFlow
+        coEvery { goalsAiService.goalsInsight(any()) } returns null
+        coEvery {
+            goalsAiService.inferGoal(
+                title = any(),
+                target = any(),
+                frequency = any(),
+                emoji = any(),
+                colorToken = any()
+            )
+        } answers {
+            GoalsAiResult(
+                normalizedTitle = firstArg<String>().trim().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
+                suggestedTarget = secondArg<String?>()?.trim()?.ifBlank { null },
+                suggestedFrequency = thirdArg(),
+                suggestedEmoji = arg(3),
+                suggestedColorToken = arg(4)
+            )
+        }
+        every { goalsAiService.normalizeTitle(any()) } answers {
+            firstArg<String>().trim().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        }
     }
 }

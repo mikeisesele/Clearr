@@ -12,6 +12,8 @@ import com.mikeisesele.clearr.domain.repository.GoalsRepository
 import com.mikeisesele.clearr.domain.repository.TodoRepository
 import com.mikeisesele.clearr.ui.feature.budget.AndroidBudgetAiService
 import com.mikeisesele.clearr.ui.feature.budget.BudgetAiService
+import com.mikeisesele.clearr.ui.feature.goals.AndroidGoalsAiService
+import com.mikeisesele.clearr.ui.feature.goals.GoalsAiService
 import com.mikeisesele.clearr.domain.repository.TodoPreferencesRepository as TodoPreferencesContract
 import com.mikeisesele.clearr.ui.feature.todo.AndroidTodoAiService
 import com.mikeisesele.clearr.ui.feature.todo.TodoAiService
@@ -61,6 +63,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindBudgetAiService(impl: AndroidBudgetAiService): BudgetAiService
+
+    @Binds
+    @Singleton
+    abstract fun bindGoalsAiService(impl: AndroidGoalsAiService): GoalsAiService
 
     companion object {
         @Provides
