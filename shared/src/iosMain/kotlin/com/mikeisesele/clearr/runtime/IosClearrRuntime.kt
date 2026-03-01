@@ -11,9 +11,9 @@ import platform.posix.timeval
 class IosClearrRuntime(
     store: KeyValueStoreDriver = NSUserDefaultsKeyValueStoreDriver(),
     override val repository: IosClearrRepository = IosClearrRepository(store),
-    override val onboardingStatusRepository: IosOnboardingStatusRepository = IosOnboardingStatusRepository(store),
-    override val budgetPreferencesRepository: IosBudgetPreferencesRepository = IosBudgetPreferencesRepository(store),
-    override val todoPreferencesRepository: IosTodoPreferencesRepository = IosTodoPreferencesRepository(store),
+    override val onboardingStatusRepository: KeyValueOnboardingStatusRepository = KeyValueOnboardingStatusRepository(store),
+    override val budgetPreferencesRepository: KeyValueBudgetPreferencesRepository = KeyValueBudgetPreferencesRepository(store),
+    override val todoPreferencesRepository: KeyValueTodoPreferencesRepository = KeyValueTodoPreferencesRepository(store),
     override val budgetAiService: IosBudgetAiService = IosBudgetAiService(),
     override val todoAiService: IosTodoAiService = IosTodoAiService(),
     override val goalsAiService: IosGoalsAiService = IosGoalsAiService(),
