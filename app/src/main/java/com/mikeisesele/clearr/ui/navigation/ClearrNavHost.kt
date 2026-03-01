@@ -5,7 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -95,6 +97,8 @@ private fun OnboardingNavHost(onboardingVm: OnboardingViewModel) {
 @Composable
 private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val navController = rememberNavController()
+    val shellNavigator = rememberAppShellNavigator()
+    val shellNavState by shellNavigator.state.collectAsState()
     val shellViewModel: AppShellViewModel = hiltViewModel()
     val shellState by shellViewModel.uiState.collectAsStateWithLifecycle()
     val colors = LocalClearrUiColors.current
@@ -102,12 +106,29 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val currentRoute = currentBackStack?.destination?.route
 
     BackHandler(enabled = currentRoute.isTopLevelNonDashboardRoute()) {
-        navController.navigateTopLevel(AppShellDestination.Dashboard) {
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
-            }
-            launchSingleTop = true
-            restoreState = true
+        shellNavigator.openTopLevel(AppShellDestination.Dashboard)
+    }
+
+    BackHandler(
+        enabled = currentRoute?.toAppShellDestinationKind() == AppShellDestinationKind.TODO_ADD ||
+            currentRoute?.toAppShellDestinationKind() == AppShellDestinationKind.GOAL_ADD ||
+            currentRoute?.toAppShellDestinationKind() == AppShellDestinationKind.BUDGET_ADD_CATEGORY
+    ) {
+        shellNavigator.pop()
+    }
+
+    LaunchedEffect(shellNavState.current.route) {
+        val desired = shellNavState.current
+        if (currentRoute == desired.route) return@LaunchedEffect
+        when (desired) {
+            AppShellDestination.Dashboard,
+            is AppShellDestination.BudgetRoot,
+            is AppShellDestination.TodoRoot,
+            is AppShellDestination.GoalsRoot -> navController.navigateTopLevel(desired)
+
+            is AppShellDestination.TodoAdd,
+            is AppShellDestination.GoalAdd,
+            is AppShellDestination.BudgetAddCategory -> navController.navigate(desired.route)
         }
     }
 
@@ -118,7 +139,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                 AppBottomNav(
                     selectedItem = currentRoute?.toBottomNavItem(),
                     onSelect = { item ->
-                        shellState.destinationFor(item)?.let(navController::navigateTopLevel)
+                        shellState.destinationFor(item)?.let(shellNavigator::openTopLevel)
                     }
                 )
             }
@@ -132,9 +153,9 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
             ) {
                 composable(AppShellDestinationKind.DASHBOARD.routePattern) {
                     DashboardRoute(
-                        onOpenBudget = { shellState.destinationFor(DashboardTrackerType.BUDGET)?.let(navController::navigateTopLevel) },
-                        onOpenTodos = { shellState.destinationFor(DashboardTrackerType.TODOS)?.let(navController::navigateTopLevel) },
-                        onOpenGoals = { shellState.destinationFor(DashboardTrackerType.GOALS)?.let(navController::navigateTopLevel) }
+                        onOpenBudget = { shellState.destinationFor(DashboardTrackerType.BUDGET)?.let(shellNavigator::openTopLevel) },
+                        onOpenTodos = { shellState.destinationFor(DashboardTrackerType.TODOS)?.let(shellNavigator::openTopLevel) },
+                        onOpenGoals = { shellState.destinationFor(DashboardTrackerType.GOALS)?.let(shellNavigator::openTopLevel) }
                     )
                 }
                 composable(
@@ -142,42 +163,60 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     arguments = listOf(navArgument(AppShellRouteArgs.TRACKER_ID) { type = NavType.LongType })
                 ) { backStackEntry ->
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
-                    BudgetDetailScreen(trackerId = trackerId, onAddCategory = { navController.navigate(AppShellDestination.BudgetAddCategory(trackerId).route) })
+                    BudgetDetailScreen(
+                        trackerId = trackerId,
+                        onAddCategory = { shellNavigator.push(AppShellDestination.BudgetAddCategory(trackerId)) }
+                    )
                 }
                 composable(
                     route = AppShellDestinationKind.TODO_ROOT.routePattern,
                     arguments = listOf(navArgument(AppShellRouteArgs.TRACKER_ID) { type = NavType.LongType })
                 ) { backStackEntry ->
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
-                    TodoRoute(trackerId = trackerId, onAddTodo = { navController.navigate(AppShellDestination.TodoAdd(trackerId).route) })
+                    TodoRoute(
+                        trackerId = trackerId,
+                        onAddTodo = { shellNavigator.push(AppShellDestination.TodoAdd(trackerId)) }
+                    )
                 }
                 composable(
                     route = AppShellDestinationKind.GOALS_ROOT.routePattern,
                     arguments = listOf(navArgument(AppShellRouteArgs.TRACKER_ID) { type = NavType.LongType })
                 ) { backStackEntry ->
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
-                    GoalsDetailScreen(trackerId = trackerId, onAddGoal = { navController.navigate(AppShellDestination.GoalAdd(trackerId).route) })
+                    GoalsDetailScreen(
+                        trackerId = trackerId,
+                        onAddGoal = { shellNavigator.push(AppShellDestination.GoalAdd(trackerId)) }
+                    )
                 }
                 composable(
                     route = AppShellDestinationKind.TODO_ADD.routePattern,
                     arguments = listOf(navArgument(AppShellRouteArgs.TRACKER_ID) { type = NavType.LongType })
                 ) { backStackEntry ->
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
-                    AddTodoRoute(trackerId = trackerId, onClose = { navController.popBackStack() })
+                    AddTodoRoute(
+                        trackerId = trackerId,
+                        onClose = { shellNavigator.pop() }
+                    )
                 }
                 composable(
                     route = AppShellDestinationKind.GOAL_ADD.routePattern,
                     arguments = listOf(navArgument(AppShellRouteArgs.TRACKER_ID) { type = NavType.LongType })
                 ) { backStackEntry ->
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
-                    AddGoalScreen(trackerId = trackerId, onClose = { navController.popBackStack() })
+                    AddGoalScreen(
+                        trackerId = trackerId,
+                        onClose = { shellNavigator.pop() }
+                    )
                 }
                 composable(
                     route = AppShellDestinationKind.BUDGET_ADD_CATEGORY.routePattern,
                     arguments = listOf(navArgument(AppShellRouteArgs.TRACKER_ID) { type = NavType.LongType })
                 ) { backStackEntry ->
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
-                    AddBudgetCategoryScreen(trackerId = trackerId, onClose = { navController.popBackStack() })
+                    AddBudgetCategoryScreen(
+                        trackerId = trackerId,
+                        onClose = { shellNavigator.pop() }
+                    )
                 }
             }
         }
