@@ -1,7 +1,7 @@
 package com.mikeisesele.clearr.ui.navigation
 
 import com.mikeisesele.clearr.data.model.AppConfig
-import com.mikeisesele.clearr.domain.repository.ClearrRepository
+import com.mikeisesele.clearr.domain.repository.AppConfigRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AppConfigStore(
-    private val repository: ClearrRepository,
+    private val repository: AppConfigRepository,
     private val scope: CoroutineScope,
     private val onConfigChanged: (AppConfig?) -> Unit = {}
 ) {

@@ -12,11 +12,7 @@ import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TodoItem
 import kotlinx.coroutines.flow.Flow
 
-interface ClearrRepository {
-    fun getAppConfigFlow(): Flow<AppConfig?>
-    suspend fun getAppConfig(): AppConfig?
-    suspend fun upsertAppConfig(config: AppConfig)
-
+interface ClearrRepository : AppConfigRepository {
     fun getAllTrackers(): Flow<List<Tracker>>
     suspend fun getTrackerById(id: Long): Tracker?
     fun getTrackerByIdFlow(id: Long): Flow<Tracker?>

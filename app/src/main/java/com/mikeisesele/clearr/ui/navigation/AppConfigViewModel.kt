@@ -3,7 +3,7 @@ package com.mikeisesele.clearr.ui.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mikeisesele.clearr.di.AppStateHolder
-import com.mikeisesele.clearr.domain.repository.ClearrRepository
+import com.mikeisesele.clearr.domain.repository.AppConfigRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 @HiltViewModel
 class AppConfigViewModel @Inject constructor(
-    repository: ClearrRepository,
+    repository: AppConfigRepository,
     appState: AppStateHolder
 ) : ViewModel() {
 
