@@ -22,7 +22,7 @@ import androidx.navigation.navArgument
 import com.mikeisesele.clearr.ui.commons.state.ThemeMode
 import com.mikeisesele.clearr.ui.feature.budget.AddBudgetCategoryScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetDetailScreen
-import com.mikeisesele.clearr.ui.feature.dashboard.DashboardScreen
+import com.mikeisesele.clearr.ui.feature.dashboard.DashboardRoute
 import com.mikeisesele.clearr.ui.feature.goals.AddGoalScreen
 import com.mikeisesele.clearr.ui.feature.goals.GoalsDetailScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.CompletionScreen
@@ -143,7 +143,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                 modifier = Modifier.background(colors.bg).padding(innerPadding)
             ) {
                 composable(NavRoutes.Dashboard.route) {
-                    DashboardScreen(
+                    DashboardRoute(
                         onOpenBudget = { shellState.budgetTrackerId?.let { navController.navigateTopLevel(NavRoutes.BudgetRoot.createRoute(it)) } },
                         onOpenTodos = { shellState.todoTrackerId?.let { navController.navigateTopLevel(NavRoutes.TodoRoot.createRoute(it)) } },
                         onOpenGoals = { shellState.goalsTrackerId?.let { navController.navigateTopLevel(NavRoutes.GoalsRoot.createRoute(it)) } }

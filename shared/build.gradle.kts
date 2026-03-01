@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.compose)
 }
 
 kotlin {
@@ -17,6 +18,9 @@ kotlin {
         commonTest.dependencies {
         }
         androidMain.dependencies {
+            implementation(libs.androidx.compose.ui.explicit)
+            implementation(libs.androidx.compose.foundation)
+            implementation(libs.androidx.compose.material3.explicit)
         }
     }
 }
@@ -36,5 +40,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        compose = true
     }
 }

@@ -18,6 +18,20 @@ data class DashboardUiModel(
     val hasTrackers: Boolean
 )
 
+fun emptyDashboardUiModel(): DashboardUiModel = DashboardUiModel(
+    periodLabel = "",
+    daysLabel = "",
+    score = DashboardClearanceScore(
+        overall = 0,
+        budget = DashboardTrackerHealth(DashboardTrackerType.BUDGET, 0, "₦0 / ₦0 spent", "Not started"),
+        goals = DashboardTrackerHealth(DashboardTrackerType.GOALS, 0, "0 / 0 done", "Not started"),
+        todos = DashboardTrackerHealth(DashboardTrackerType.TODOS, 0, "0 / 0 done", "Not started")
+    ),
+    urgencyItems = emptyList(),
+    visibleTiles = emptyList(),
+    hasTrackers = false
+)
+
 data class DashboardClearanceScore(
     val overall: Int,
     val budget: DashboardTrackerHealth,
