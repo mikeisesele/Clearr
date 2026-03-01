@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
-internal enum class AppBottomNavItem(
+enum class AppBottomNavItem(
     val label: String,
     val icon: ImageVector
 ) {
@@ -28,7 +28,7 @@ internal enum class AppBottomNavItem(
 }
 
 @Composable
-internal fun AppBottomNav(
+fun AppBottomNav(
     selectedItem: AppBottomNavItem?,
     onSelect: (AppBottomNavItem) -> Unit
 ) {

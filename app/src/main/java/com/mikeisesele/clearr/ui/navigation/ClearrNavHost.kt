@@ -117,12 +117,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                 AppBottomNav(
                     selectedItem = currentRoute?.toBottomNavItem(),
                     onSelect = { item ->
-                        when (item) {
-                            AppBottomNavItem.HOME -> navController.navigateTopLevel(NavRoutes.Dashboard.route)
-                            AppBottomNavItem.BUDGET -> shellState.budgetTrackerId?.let { navController.navigateTopLevel(NavRoutes.BudgetRoot.createRoute(it)) }
-                            AppBottomNavItem.TODOS -> shellState.todoTrackerId?.let { navController.navigateTopLevel(NavRoutes.TodoRoot.createRoute(it)) }
-                            AppBottomNavItem.GOALS -> shellState.goalsTrackerId?.let { navController.navigateTopLevel(NavRoutes.GoalsRoot.createRoute(it)) }
-                        }
+                        shellState.routeFor(item)?.let(navController::navigateTopLevel)
                     }
                 )
             }
@@ -186,31 +181,6 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
             }
         }
     }
-}
-
-private fun String?.isBottomNavRoute(): Boolean = when {
-    this == null -> false
-    this == NavRoutes.Dashboard.route -> true
-    this.startsWith(NavRoutes.BudgetRoot.baseRoute) -> true
-    this.startsWith(NavRoutes.TodoRoot.baseRoute) -> true
-    this.startsWith(NavRoutes.GoalsRoot.baseRoute) -> true
-    else -> false
-}
-
-private fun String?.toBottomNavItem(): AppBottomNavItem? = when {
-    this == NavRoutes.Dashboard.route -> AppBottomNavItem.HOME
-    this?.startsWith(NavRoutes.BudgetRoot.baseRoute) == true -> AppBottomNavItem.BUDGET
-    this?.startsWith(NavRoutes.TodoRoot.baseRoute) == true -> AppBottomNavItem.TODOS
-    this?.startsWith(NavRoutes.GoalsRoot.baseRoute) == true -> AppBottomNavItem.GOALS
-    else -> null
-}
-
-private fun String?.isTopLevelNonDashboardRoute(): Boolean = when {
-    this == null -> false
-    this.startsWith(NavRoutes.BudgetRoot.baseRoute) -> true
-    this.startsWith(NavRoutes.TodoRoot.baseRoute) -> true
-    this.startsWith(NavRoutes.GoalsRoot.baseRoute) -> true
-    else -> false
 }
 
 private fun NavHostController.navigateTopLevel(route: String) {
