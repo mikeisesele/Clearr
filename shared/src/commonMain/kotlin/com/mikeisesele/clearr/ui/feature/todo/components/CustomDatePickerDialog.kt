@@ -27,14 +27,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.mikeisesele.clearr.core.time.dayOfWeekNumber
+import com.mikeisesele.clearr.core.time.daysInMonth
+import com.mikeisesele.clearr.core.time.formatFullMonthYear
+import com.mikeisesele.clearr.core.time.plusDays
+import com.mikeisesele.clearr.core.time.plusMonths
+import com.mikeisesele.clearr.core.time.todayLocalDate
 import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import kotlinx.datetime.LocalDate
 
 @Composable
 internal fun CustomDatePickerDialog(
@@ -43,16 +46,15 @@ internal fun CustomDatePickerDialog(
     onDateSelected: (LocalDate) -> Unit
 ) {
     val colors = LocalClearrUiColors.current
-    val minSelectableDate = LocalDate.now().plusDays(1)
-    val initial = if (initialDate.isBefore(minSelectableDate)) minSelectableDate else initialDate
-    var displayedMonth by remember { mutableStateOf(YearMonth.from(initial)) }
+    val minSelectableDate = todayLocalDate().plusDays(1)
+    val initial = if (initialDate < minSelectableDate) minSelectableDate else initialDate
+    var displayedMonth by remember { mutableStateOf(LocalDate(initial.year, initial.monthNumber, 1)) }
     var selectedDate by remember { mutableStateOf(initial) }
-    val firstDayOfMonth = displayedMonth.atDay(1)
-    val leadingSpaces = firstDayOfMonth.dayOfWeek.value - 1
-    val monthDays = displayedMonth.lengthOfMonth()
+    val leadingSpaces = dayOfWeekNumber(displayedMonth.dayOfWeek) - 1
+    val monthDays = daysInMonth(displayedMonth.year, displayedMonth.monthNumber)
     val cells = buildList<LocalDate?> {
         repeat(leadingSpaces) { add(null) }
-        (1..monthDays).forEach { day -> add(displayedMonth.atDay(day)) }
+        (1..monthDays).forEach { day -> add(LocalDate(displayedMonth.year, displayedMonth.monthNumber, day)) }
         while (size % 7 != 0) add(null)
     }.chunked(7)
 
@@ -82,11 +84,11 @@ internal fun CustomDatePickerDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(onClick = { displayedMonth = displayedMonth.minusMonths(1) }) {
+                        TextButton(onClick = { displayedMonth = displayedMonth.plusMonths(-1) }) {
                             Text("‹", color = ClearrColors.Blue)
                         }
                         Text(
-                            displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
+                            formatFullMonthYear(displayedMonth),
                             fontSize = ClearrTextSizes.sp16,
                             color = colors.text
                         )
@@ -114,7 +116,7 @@ internal fun CustomDatePickerDialog(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (date != null) {
-                                        val selectable = !date.isBefore(minSelectableDate)
+                                        val selectable = date >= minSelectableDate
                                         val isSelected = date == selectedDate
                                         Surface(
                                             modifier = Modifier

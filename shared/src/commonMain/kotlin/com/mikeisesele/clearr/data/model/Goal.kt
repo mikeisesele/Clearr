@@ -1,9 +1,14 @@
 package com.mikeisesele.clearr.data.model
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.temporal.WeekFields
-import java.util.Locale
+import com.mikeisesele.clearr.core.time.epochMillisToLocalDate
+import com.mikeisesele.clearr.core.time.isoWeekKey
+import com.mikeisesele.clearr.core.time.minusDays
+import com.mikeisesele.clearr.core.time.minusWeeks
+import com.mikeisesele.clearr.core.time.plusDays
+import com.mikeisesele.clearr.core.time.plusWeeks
+import com.mikeisesele.clearr.core.time.todayLocalDate
+import com.mikeisesele.clearr.core.time.weekdayShortName
+import kotlinx.datetime.LocalDate
 
 data class Goal(
     val id: String,
@@ -42,16 +47,9 @@ data class GoalSummary(
 )
 
 object GoalPeriodKey {
-    private val weekFields = WeekFields.ISO
+    fun dailyKey(date: LocalDate = todayLocalDate()): String = date.toString()
 
-    fun dailyKey(date: LocalDate = LocalDate.now()): String =
-        date.format(DateTimeFormatter.ISO_LOCAL_DATE)
-
-    fun weeklyKey(date: LocalDate = LocalDate.now()): String {
-        val week = date.get(weekFields.weekOfWeekBasedYear())
-        val weekYear = date.get(weekFields.weekBasedYear())
-        return "$weekYear-W${week.toString().padStart(2, '0')}"
-    }
+    fun weeklyKey(date: LocalDate = todayLocalDate()): String = isoWeekKey(date)
 
     fun currentKey(frequency: GoalFrequency): String = when (frequency) {
         GoalFrequency.DAILY -> dailyKey()
@@ -59,15 +57,15 @@ object GoalPeriodKey {
     }
 
     fun recentKeys(frequency: GoalFrequency, count: Int = 7): List<String> {
-        val today = LocalDate.now()
+        val today = todayLocalDate()
         return when (frequency) {
-            GoalFrequency.DAILY -> (count - 1 downTo 0).map { dailyKey(today.minusDays(it.toLong())) }
-            GoalFrequency.WEEKLY -> (count - 1 downTo 0).map { weeklyKey(today.minusWeeks(it.toLong())) }
+            GoalFrequency.DAILY -> (count - 1 downTo 0).map { dailyKey(today.minusDays(it)) }
+            GoalFrequency.WEEKLY -> (count - 1 downTo 0).map { weeklyKey(today.minusWeeks(it)) }
         }
     }
 
     fun label(key: String, frequency: GoalFrequency): String = when (frequency) {
-        GoalFrequency.DAILY -> LocalDate.parse(key).dayOfWeek.name.take(3).lowercase()
+        GoalFrequency.DAILY -> weekdayShortName(LocalDate.parse(key).dayOfWeek).lowercase()
             .replaceFirstChar { it.uppercase() }
         GoalFrequency.WEEKLY -> "W${key.substringAfter("-W").trimStart('0').ifBlank { "0" }}"
     }
@@ -76,7 +74,7 @@ object GoalPeriodKey {
 fun computeCurrentStreak(
     completionKeys: Set<String>,
     frequency: GoalFrequency,
-    today: LocalDate = LocalDate.now()
+    today: LocalDate = todayLocalDate()
 ): Int {
     var streak = 0
     var cursor = today
@@ -106,15 +104,13 @@ fun computeBestStreak(
     completionKeys: Set<String>,
     frequency: GoalFrequency,
     createdAtMs: Long,
-    today: LocalDate = LocalDate.now()
+    today: LocalDate = todayLocalDate()
 ): Int {
-    val created = java.time.Instant.ofEpochMilli(createdAtMs)
-        .atZone(java.time.ZoneId.systemDefault())
-        .toLocalDate()
+    val created = epochMillisToLocalDate(createdAtMs)
     var best = 0
     var current = 0
     var cursor = created
-    while (!cursor.isAfter(today)) {
+    while (cursor <= today) {
         val key = when (frequency) {
             GoalFrequency.DAILY -> GoalPeriodKey.dailyKey(cursor)
             GoalFrequency.WEEKLY -> GoalPeriodKey.weeklyKey(cursor)

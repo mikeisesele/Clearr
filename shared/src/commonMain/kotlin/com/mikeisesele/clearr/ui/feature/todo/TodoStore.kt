@@ -3,10 +3,11 @@ package com.mikeisesele.clearr.ui.feature.todo
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
+import com.mikeisesele.clearr.core.time.MaxLocalDate
+import com.mikeisesele.clearr.core.time.randomId
+import com.mikeisesele.clearr.core.time.todayLocalDate
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import com.mikeisesele.clearr.domain.repository.TodoPreferencesRepository
-import java.time.LocalDate
-import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TodoStore(
@@ -127,7 +129,7 @@ class TodoStore(
             if (ai.normalizedTitle.isBlank()) return@launch
             repository.insertTodo(
                 TodoItem(
-                    id = UUID.randomUUID().toString(),
+                    id = randomId(),
                     trackerId = trackerId,
                     title = ai.normalizedTitle,
                     note = ai.normalizedNote,
@@ -189,12 +191,12 @@ class TodoStore(
     }
 }
 
-private fun List<TodoItem>.sortedForUi(now: LocalDate = LocalDate.now()): List<TodoItem> {
+private fun List<TodoItem>.sortedForUi(now: LocalDate = todayLocalDate()): List<TodoItem> {
     val overdue = filter { it.uiDerivedStatus(now) == TodoStatus.OVERDUE }
-        .sortedBy { it.dueDate ?: LocalDate.MAX }
+        .sortedBy { it.dueDate ?: MaxLocalDate }
 
     val pending = filter { it.uiDerivedStatus(now) == TodoStatus.PENDING }
-        .sortedWith(compareBy<TodoItem>({ it.priority.ordinal }, { it.dueDate ?: LocalDate.MAX }))
+        .sortedWith(compareBy<TodoItem>({ it.priority.ordinal }, { it.dueDate ?: MaxLocalDate }))
 
     val done = filter { it.uiDerivedStatus(now) == TodoStatus.DONE }
         .sortedByDescending { it.completedAt ?: 0L }
@@ -202,7 +204,7 @@ private fun List<TodoItem>.sortedForUi(now: LocalDate = LocalDate.now()): List<T
     return overdue + pending + done
 }
 
-private fun TodoItem.uiDerivedStatus(today: LocalDate = LocalDate.now()): TodoStatus = when {
+private fun TodoItem.uiDerivedStatus(today: LocalDate = todayLocalDate()): TodoStatus = when {
     status == TodoStatus.DONE -> TodoStatus.DONE
     dueDate?.let { it < today } == true -> TodoStatus.OVERDUE
     else -> TodoStatus.PENDING

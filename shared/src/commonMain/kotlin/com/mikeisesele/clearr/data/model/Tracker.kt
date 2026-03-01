@@ -1,5 +1,7 @@
 package com.mikeisesele.clearr.data.model
 
+import com.mikeisesele.clearr.core.time.nowEpochMillis
+
 data class Tracker(
     val id: Long = 0,
     val name: String,
@@ -8,7 +10,7 @@ data class Tracker(
     val layoutStyle: LayoutStyle = LayoutStyle.GRID,
     val defaultAmount: Double = 0.0,
     val isNew: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = nowEpochMillis()
 )
 
 data class TrackerSummary(

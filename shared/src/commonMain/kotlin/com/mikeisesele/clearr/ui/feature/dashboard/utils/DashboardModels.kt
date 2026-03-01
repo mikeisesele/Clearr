@@ -2,11 +2,13 @@ package com.mikeisesele.clearr.ui.feature.dashboard.utils
 
 import com.mikeisesele.clearr.data.model.TrackerSummary
 import com.mikeisesele.clearr.data.model.TrackerType
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import com.mikeisesele.clearr.core.time.MaxLocalDate
+import com.mikeisesele.clearr.core.time.daysInMonth
+import com.mikeisesele.clearr.core.time.formatMonthYear
+import com.mikeisesele.clearr.core.time.todayLocalDate
+import kotlinx.datetime.LocalDate
 import kotlin.math.max
+import kotlin.math.round
 import kotlin.math.roundToInt
 
 data class DashboardUiModel(
@@ -65,7 +67,7 @@ enum class DashboardTrackerType(
     TODOS("Todos", "☑")
 }
 
-fun List<TrackerSummary>.toDashboardUiModel(today: LocalDate = LocalDate.now()): DashboardUiModel {
+fun List<TrackerSummary>.toDashboardUiModel(today: LocalDate = todayLocalDate()): DashboardUiModel {
     val prioritized = prioritizeTrackers(this)
     val budgetSummary = prioritized.primarySummaryOf(TrackerType.BUDGET)
     val goalsSummary = prioritized.primarySummaryOf(TrackerType.GOALS)
@@ -249,19 +251,25 @@ private fun Int.toHealthLabel(): String = when {
 private fun formatCompactKobo(kobo: Long): String {
     val naira = kobo / 100.0
     return when {
-        naira >= 1_000_000 -> "₦" + "%.1f".format(naira / 1_000_000).trimEnd('0').trimEnd('.') + "M"
-        naira >= 100_000 -> "₦" + "%.0f".format(naira / 1_000) + "k"
-        naira >= 10_000 -> "₦" + "%.1f".format(naira / 1_000).trimEnd('0').trimEnd('.') + "k"
-        else -> "₦" + "%,d".format(naira.toLong())
+        naira >= 1_000_000 -> "₦" + compactDecimal(naira / 1_000_000) + "M"
+        naira >= 100_000 -> "₦" + round(naira / 1_000).toLong().toString() + "k"
+        naira >= 10_000 -> "₦" + compactDecimal(naira / 1_000) + "k"
+        else -> "₦" + naira.toLong().toString()
     }
 }
 
+private fun compactDecimal(value: Double): String {
+    val tenths = (value * 10).roundToInt()
+    val whole = tenths / 10
+    val fraction = tenths % 10
+    return if (fraction == 0) whole.toString() else "$whole.$fraction"
+}
+
 private fun currentMonthLabel(today: LocalDate): String =
-    today.format(DateTimeFormatter.ofPattern("MMM yyyy", Locale.getDefault()))
+    formatMonthYear(today)
 
 private fun periodContextLabel(today: LocalDate): String {
-    val currentMonth = YearMonth.from(today)
-    val remaining = currentMonth.lengthOfMonth() - today.dayOfMonth
+    val remaining = daysInMonth(today.year, today.monthNumber) - today.dayOfMonth
     return when {
         remaining <= 0 -> "Last day"
         remaining == 1 -> "1 day left"

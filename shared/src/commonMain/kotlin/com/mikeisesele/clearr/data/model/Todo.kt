@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.data.model
 
-import java.time.LocalDate
+import com.mikeisesele.clearr.core.time.todayLocalDate
+import kotlinx.datetime.LocalDate
 
 data class TodoItem(
     val id: String,
@@ -18,7 +19,7 @@ enum class TodoPriority { HIGH, MEDIUM, LOW }
 
 enum class TodoStatus { PENDING, OVERDUE, DONE }
 
-fun TodoItem.derivedStatus(today: LocalDate = LocalDate.now()): TodoStatus = when {
+fun TodoItem.derivedStatus(today: LocalDate = todayLocalDate()): TodoStatus = when {
     status == TodoStatus.DONE -> TodoStatus.DONE
     dueDate != null && dueDate < today -> TodoStatus.OVERDUE
     else -> TodoStatus.PENDING

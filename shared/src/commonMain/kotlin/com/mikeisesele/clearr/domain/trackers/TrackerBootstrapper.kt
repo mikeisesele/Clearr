@@ -5,6 +5,7 @@ import com.mikeisesele.clearr.data.model.Frequency
 import com.mikeisesele.clearr.data.model.LayoutStyle
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerType
+import com.mikeisesele.clearr.core.time.nowEpochMillis
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import kotlinx.coroutines.flow.first
 
@@ -12,7 +13,7 @@ class TrackerBootstrapper(
     private val repository: ClearrRepository
 ) {
     suspend fun ensureStaticTrackers() {
-        val now = System.currentTimeMillis()
+        val now = nowEpochMillis()
         val existing = repository.getAllTrackers().first()
         val existingTypes = existing.mapTo(mutableSetOf()) { it.type }
 

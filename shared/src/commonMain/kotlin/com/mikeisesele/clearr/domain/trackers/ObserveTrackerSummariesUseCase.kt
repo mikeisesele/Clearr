@@ -8,10 +8,10 @@ import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.data.model.TrackerSummary
 import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.data.model.derivedStatus
+import com.mikeisesele.clearr.core.time.formatFullMonthYear
+import com.mikeisesele.clearr.core.time.isoWeekKey
+import com.mikeisesele.clearr.core.time.todayLocalDate
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -115,14 +115,14 @@ class ObserveTrackerSummariesUseCase(
     )
 
     private fun currentPeriodLabel(frequency: Frequency): String {
-        val calendar = Calendar.getInstance()
+        val today = todayLocalDate()
         return when (frequency) {
-            Frequency.MONTHLY -> SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(calendar.time)
-            Frequency.WEEKLY -> "Week ${calendar.get(Calendar.WEEK_OF_YEAR)}, ${calendar.get(Calendar.YEAR)}"
-            Frequency.QUARTERLY -> "Q${(calendar.get(Calendar.MONTH) / 3) + 1} ${calendar.get(Calendar.YEAR)}"
-            Frequency.TERMLY -> "Term ${(calendar.get(Calendar.MONTH) / 4) + 1} ${calendar.get(Calendar.YEAR)}"
-            Frequency.BIANNUAL -> "H${if (calendar.get(Calendar.MONTH) < 6) 1 else 2} ${calendar.get(Calendar.YEAR)}"
-            Frequency.ANNUAL -> "${calendar.get(Calendar.YEAR)}"
+            Frequency.MONTHLY -> formatFullMonthYear(today)
+            Frequency.WEEKLY -> "Week ${isoWeekKey(today).substringAfter("-W").toInt()}, ${isoWeekKey(today).substringBefore("-W")}"
+            Frequency.QUARTERLY -> "Q${((today.monthNumber - 1) / 3) + 1} ${today.year}"
+            Frequency.TERMLY -> "Term ${((today.monthNumber - 1) / 4) + 1} ${today.year}"
+            Frequency.BIANNUAL -> "H${if (today.monthNumber <= 6) 1 else 2} ${today.year}"
+            Frequency.ANNUAL -> "${today.year}"
             Frequency.CUSTOM -> "Current Period"
         }
     }

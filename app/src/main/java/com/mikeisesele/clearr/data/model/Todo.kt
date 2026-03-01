@@ -3,7 +3,7 @@ package com.mikeisesele.clearr.data.model
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 @Entity(
     tableName = "todos",

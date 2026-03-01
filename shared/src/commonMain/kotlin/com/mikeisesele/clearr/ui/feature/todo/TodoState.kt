@@ -4,6 +4,7 @@ import com.mikeisesele.clearr.core.base.contract.BaseState
 import com.mikeisesele.clearr.core.base.contract.ViewEvent
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
+import kotlinx.datetime.LocalDate
 
 data class TodoUiState(
     val trackerId: Long = -1,
@@ -31,7 +32,7 @@ sealed interface TodoAction {
         val title: String,
         val note: String?,
         val priority: TodoPriority,
-        val dueDate: java.time.LocalDate?
+        val dueDate: LocalDate?
     ) : TodoAction
     data class Rename(val id: String, val title: String) : TodoAction
     data class MarkDone(val id: String) : TodoAction

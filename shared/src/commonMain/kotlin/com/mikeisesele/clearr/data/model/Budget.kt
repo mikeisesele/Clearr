@@ -1,5 +1,7 @@
 package com.mikeisesele.clearr.data.model
 
+import com.mikeisesele.clearr.core.time.nowEpochMillis
+
 enum class BudgetFrequency {
     MONTHLY,
     WEEKLY
@@ -23,7 +25,7 @@ data class BudgetCategory(
     val colorToken: String,
     val plannedAmountKobo: Long,
     val sortOrder: Int,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = nowEpochMillis()
 )
 
 data class BudgetEntry(
@@ -33,7 +35,7 @@ data class BudgetEntry(
     val periodId: Long,
     val amountKobo: Long,
     val note: String? = null,
-    val loggedAt: Long = System.currentTimeMillis()
+    val loggedAt: Long = nowEpochMillis()
 )
 
 data class BudgetCategoryPlan(
@@ -42,7 +44,7 @@ data class BudgetCategoryPlan(
     val categoryId: Long,
     val periodId: Long,
     val plannedAmountKobo: Long,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = nowEpochMillis()
 )
 
 enum class BudgetStatus {

@@ -36,6 +36,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import com.mikeisesele.clearr.core.time.formatMonthDay
+import com.mikeisesele.clearr.core.time.plusDays
+import com.mikeisesele.clearr.core.time.todayLocalDate
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.feature.todo.components.CustomDatePickerDialog
@@ -45,9 +48,7 @@ import com.mikeisesele.clearr.ui.theme.ClearrColors
 import com.mikeisesele.clearr.ui.theme.ClearrDimens
 import com.mikeisesele.clearr.ui.theme.ClearrTextSizes
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -65,7 +66,7 @@ fun AddTodoScreen(
     val titleFocusRequester = remember { FocusRequester() }
     val canSubmit = title.trim().isNotEmpty()
     val options = listOf("Today", "Tomorrow", "This week", "Next week", "Custom", "No due date")
-    val customLabel = customDate?.format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))
+    val customLabel = customDate?.let(::formatMonthDay)
 
     LaunchedEffect(Unit) { titleFocusRequester.requestFocus() }
 
@@ -185,7 +186,7 @@ fun AddTodoScreen(
 
     if (showCustomDatePicker) {
         CustomDatePickerDialog(
-            initialDate = customDate ?: LocalDate.now().plusDays(1),
+            initialDate = customDate ?: todayLocalDate().plusDays(1),
             onDismiss = { showCustomDatePicker = false },
             onDateSelected = { date ->
                 customDate = date

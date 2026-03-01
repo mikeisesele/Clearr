@@ -3,6 +3,9 @@ package com.mikeisesele.clearr.ui.feature.todo
 import com.mikeisesele.clearr.core.ai.ClearrEdgeAi
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
 
 @Singleton
 class AndroidTodoAiService @Inject constructor() : TodoAiService {
@@ -10,19 +13,19 @@ class AndroidTodoAiService @Inject constructor() : TodoAiService {
         title: String,
         note: String?,
         selectedPriority: com.mikeisesele.clearr.data.model.TodoPriority,
-        selectedDueDate: java.time.LocalDate?
+        selectedDueDate: LocalDate?
     ): TodoAiResult {
         val result = ClearrEdgeAi.inferTodoNanoAware(
             title = title,
             note = note,
             selectedPriority = selectedPriority,
-            selectedDueDate = selectedDueDate
+            selectedDueDate = selectedDueDate?.toJavaLocalDate()
         )
         return TodoAiResult(
             normalizedTitle = result.normalizedTitle,
             normalizedNote = result.normalizedNote,
             suggestedPriority = result.suggestedPriority,
-            suggestedDueDate = result.suggestedDueDate
+            suggestedDueDate = result.suggestedDueDate?.toKotlinLocalDate()
         )
     }
 

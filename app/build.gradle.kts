@@ -89,6 +89,7 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.datetime)
 
     // DataStore (onboarding flag persistence)
     implementation(libs.datastore.preferences)
