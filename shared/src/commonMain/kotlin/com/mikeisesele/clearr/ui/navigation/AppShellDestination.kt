@@ -38,6 +38,17 @@ sealed interface AppShellDestination {
     }
 }
 
+val AppShellDestination.kind: AppShellDestinationKind
+    get() = when (this) {
+        AppShellDestination.Dashboard -> AppShellDestinationKind.DASHBOARD
+        is AppShellDestination.BudgetRoot -> AppShellDestinationKind.BUDGET_ROOT
+        is AppShellDestination.TodoRoot -> AppShellDestinationKind.TODO_ROOT
+        is AppShellDestination.GoalsRoot -> AppShellDestinationKind.GOALS_ROOT
+        is AppShellDestination.TodoAdd -> AppShellDestinationKind.TODO_ADD
+        is AppShellDestination.GoalAdd -> AppShellDestinationKind.GOAL_ADD
+        is AppShellDestination.BudgetAddCategory -> AppShellDestinationKind.BUDGET_ADD_CATEGORY
+    }
+
 enum class AppShellDestinationKind(
     val routePattern: String,
     val baseRoute: String,
@@ -55,6 +66,16 @@ enum class AppShellDestinationKind(
         DASHBOARD -> baseRoute
         else -> "$baseRoute/${requireNotNull(trackerId)}"
     }
+
+    fun createDestination(trackerId: Long? = null): AppShellDestination = when (this) {
+        DASHBOARD -> AppShellDestination.Dashboard
+        BUDGET_ROOT -> AppShellDestination.BudgetRoot(requireNotNull(trackerId))
+        TODO_ROOT -> AppShellDestination.TodoRoot(requireNotNull(trackerId))
+        GOALS_ROOT -> AppShellDestination.GoalsRoot(requireNotNull(trackerId))
+        TODO_ADD -> AppShellDestination.TodoAdd(requireNotNull(trackerId))
+        GOAL_ADD -> AppShellDestination.GoalAdd(requireNotNull(trackerId))
+        BUDGET_ADD_CATEGORY -> AppShellDestination.BudgetAddCategory(requireNotNull(trackerId))
+    }
 }
 
 fun String?.toAppShellDestinationKind(): AppShellDestinationKind? = when {
@@ -68,3 +89,15 @@ fun String?.toAppShellDestinationKind(): AppShellDestinationKind? = when {
     this.startsWith(AppShellDestinationKind.BUDGET_ADD_CATEGORY.baseRoute) -> AppShellDestinationKind.BUDGET_ADD_CATEGORY
     else -> null
 }
+
+fun AppShellDestination.topLevelDestination(): AppShellDestination = when (this) {
+    AppShellDestination.Dashboard -> AppShellDestination.Dashboard
+    is AppShellDestination.BudgetRoot -> this
+    is AppShellDestination.TodoRoot -> this
+    is AppShellDestination.GoalsRoot -> this
+    is AppShellDestination.TodoAdd -> AppShellDestination.TodoRoot(trackerId)
+    is AppShellDestination.GoalAdd -> AppShellDestination.GoalsRoot(trackerId)
+    is AppShellDestination.BudgetAddCategory -> AppShellDestination.BudgetRoot(trackerId)
+}
+
+fun AppShellDestination.isTopLevelDestination(): Boolean = this == topLevelDestination()

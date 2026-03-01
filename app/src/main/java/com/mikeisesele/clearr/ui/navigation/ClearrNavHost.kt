@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -103,32 +104,31 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val shellState by shellViewModel.uiState.collectAsStateWithLifecycle()
     val colors = LocalClearrUiColors.current
     val currentBackStack by navController.currentBackStackEntryAsState()
+    val currentDestination = currentBackStack.toAppShellDestination()
     val currentRoute = currentBackStack?.destination?.route
 
     BackHandler(enabled = currentRoute.isTopLevelNonDashboardRoute()) {
         shellNavigator.openTopLevel(AppShellDestination.Dashboard)
     }
 
-    BackHandler(
-        enabled = currentRoute?.toAppShellDestinationKind() == AppShellDestinationKind.TODO_ADD ||
-            currentRoute?.toAppShellDestinationKind() == AppShellDestinationKind.GOAL_ADD ||
-            currentRoute?.toAppShellDestinationKind() == AppShellDestinationKind.BUDGET_ADD_CATEGORY
-    ) {
+    BackHandler(enabled = currentRoute.isAddFlowRoute()) {
         shellNavigator.pop()
     }
 
-    LaunchedEffect(shellNavState.current.route) {
+    LaunchedEffect(shellNavState.current, currentDestination) {
         val desired = shellNavState.current
-        if (currentRoute == desired.route) return@LaunchedEffect
-        when (desired) {
-            AppShellDestination.Dashboard,
-            is AppShellDestination.BudgetRoot,
-            is AppShellDestination.TodoRoot,
-            is AppShellDestination.GoalsRoot -> navController.navigateTopLevel(desired)
+        if (currentDestination == desired) return@LaunchedEffect
 
-            is AppShellDestination.TodoAdd,
-            is AppShellDestination.GoalAdd,
-            is AppShellDestination.BudgetAddCategory -> navController.navigate(desired.route)
+        val currentTopLevel = currentDestination?.topLevelDestination()
+        when {
+            currentDestination != null &&
+                !currentDestination.isTopLevelDestination() &&
+                desired == currentTopLevel -> {
+                navController.popBackStack()
+            }
+
+            desired.isTopLevelDestination() -> navController.navigateTopLevel(desired)
+            else -> navController.navigate(desired.route)
         }
     }
 
@@ -137,7 +137,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
         bottomBar = {
             if (currentRoute.isBottomNavRoute()) {
                 AppBottomNav(
-                    selectedItem = currentRoute?.toBottomNavItem(),
+                    selectedItem = currentDestination?.toBottomNavItem() ?: currentRoute?.toBottomNavItem(),
                     onSelect = { item ->
                         shellState.destinationFor(item)?.let(shellNavigator::openTopLevel)
                     }
@@ -235,4 +235,12 @@ private fun NavHostController.navigateTopLevel(
         restoreState = true
         builder()
     }
+}
+
+private fun NavBackStackEntry?.toAppShellDestination(): AppShellDestination? {
+    val entry = this ?: return null
+    val kind = entry.destination.route.toAppShellDestinationKind() ?: return null
+    val trackerId = if (kind == AppShellDestinationKind.DASHBOARD) null
+    else entry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID)
+    return kind.createDestination(trackerId)
 }

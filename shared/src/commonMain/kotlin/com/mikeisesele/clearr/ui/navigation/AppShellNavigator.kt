@@ -23,15 +23,7 @@ class AppShellNavigator(
     val state: StateFlow<AppShellNavigationState> = mutableState.asStateFlow()
 
     fun openTopLevel(destination: AppShellDestination) {
-        val topLevelDestination = when (destination) {
-            AppShellDestination.Dashboard -> destination
-            is AppShellDestination.BudgetRoot -> destination
-            is AppShellDestination.TodoRoot -> destination
-            is AppShellDestination.GoalsRoot -> destination
-            is AppShellDestination.TodoAdd -> AppShellDestination.TodoRoot(destination.trackerId)
-            is AppShellDestination.GoalAdd -> AppShellDestination.GoalsRoot(destination.trackerId)
-            is AppShellDestination.BudgetAddCategory -> AppShellDestination.BudgetRoot(destination.trackerId)
-        }
+        val topLevelDestination = destination.topLevelDestination()
         mutableState.update { AppShellNavigationState(backstack = listOf(topLevelDestination)) }
     }
 
