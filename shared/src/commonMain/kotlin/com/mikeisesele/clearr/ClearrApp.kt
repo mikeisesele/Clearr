@@ -26,8 +26,10 @@ import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
 import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
+import com.mikeisesele.clearr.preview.InMemoryBudgetPreferencesRepository
 import com.mikeisesele.clearr.preview.InMemoryClearrRepository
 import com.mikeisesele.clearr.preview.InMemoryTodoPreferencesRepository
+import com.mikeisesele.clearr.preview.PreviewBudgetAiService
 import com.mikeisesele.clearr.preview.PreviewGoalsAiService
 import com.mikeisesele.clearr.preview.PreviewTodoAiService
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardAction
@@ -35,6 +37,7 @@ import com.mikeisesele.clearr.ui.feature.budget.AddBudgetCategoryScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetAction
 import com.mikeisesele.clearr.ui.feature.budget.BudgetPlanDraft
 import com.mikeisesele.clearr.ui.feature.budget.BudgetScreen
+import com.mikeisesele.clearr.ui.feature.budget.BudgetStore
 import com.mikeisesele.clearr.ui.feature.budget.BudgetUiState
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardScreen
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardEvent
@@ -94,7 +97,9 @@ private fun MainShellPreview(
     val colors = LocalClearrUiColors.current
     val scope = rememberCoroutineScope()
     val repository = remember { InMemoryClearrRepository.sample() }
+    val budgetPreferencesRepository = remember { InMemoryBudgetPreferencesRepository() }
     val todoPreferencesRepository = remember { InMemoryTodoPreferencesRepository() }
+    val budgetAiService = remember { PreviewBudgetAiService() }
     val todoAiService = remember { PreviewTodoAiService() }
     val goalsAiService = remember { PreviewGoalsAiService() }
     val dashboardStore = remember(scope) {
@@ -105,6 +110,11 @@ private fun MainShellPreview(
         )
     }
     val dashboardState by dashboardStore.uiState.collectAsState()
+    val activeBudgetTrackerId = when (destination) {
+        is AppShellDestination.BudgetRoot -> destination.trackerId
+        is AppShellDestination.BudgetAddCategory -> destination.trackerId
+        else -> null
+    }
     val activeTodoTrackerId = when (destination) {
         is AppShellDestination.TodoRoot -> destination.trackerId
         is AppShellDestination.TodoAdd -> destination.trackerId
@@ -115,6 +125,20 @@ private fun MainShellPreview(
         is AppShellDestination.GoalAdd -> destination.trackerId
         else -> null
     }
+    val budgetStore = activeBudgetTrackerId?.let { trackerId ->
+        remember(trackerId, scope) {
+            BudgetStore(
+                trackerId = trackerId,
+                repository = repository,
+                budgetPreferencesRepository = budgetPreferencesRepository,
+                budgetAiService = budgetAiService,
+                scope = scope,
+                nowMillis = ::nowEpochMillis
+            )
+        }
+    }
+    val budgetState by (budgetStore?.uiState?.collectAsState()
+        ?: remember { androidx.compose.runtime.mutableStateOf<BudgetUiState?>(null) })
     val todoStore = activeTodoTrackerId?.let { trackerId ->
         remember(trackerId, scope) {
             TodoStore(
@@ -165,13 +189,19 @@ private fun MainShellPreview(
             onQuickAction = { dashboardStore.onAction(DashboardAction.QuickAction(it)) }
         )
 
-        is AppShellDestination.BudgetRoot -> BudgetScreen(
-            state = previewBudgetState(destination.trackerId),
-            colors = colors,
-            onAction = {},
-            onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
-            onAddCategory = { onNavigate(AppShellDestination.BudgetAddCategory(destination.trackerId)) }
-        )
+        is AppShellDestination.BudgetRoot -> {
+            val state = budgetState
+            val store = budgetStore
+            if (state != null && store != null) {
+                BudgetScreen(
+                    state = state,
+                    colors = colors,
+                    onAction = store::onAction,
+                    onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
+                    onAddCategory = { onNavigate(AppShellDestination.BudgetAddCategory(destination.trackerId)) }
+                )
+            }
+        }
 
         is AppShellDestination.GoalsRoot -> {
             val state = goalsState
@@ -224,12 +254,19 @@ private fun MainShellPreview(
             }
         }
 
-        is AppShellDestination.BudgetAddCategory -> AddBudgetCategoryScreen(
-            state = previewBudgetState(destination.trackerId),
-            colors = colors,
-            onClose = { onNavigate(AppShellDestination.BudgetRoot(destination.trackerId)) },
-            onAddCategory = { _, _, _, _ -> }
-        )
+        is AppShellDestination.BudgetAddCategory -> {
+            val state = budgetState
+            if (state != null) {
+                AddBudgetCategoryScreen(
+                    state = state,
+                    colors = colors,
+                    onClose = { onNavigate(AppShellDestination.BudgetRoot(destination.trackerId)) },
+                    onAddCategory = { name, icon, colorToken, plannedAmountNaira ->
+                        budgetStore?.onAction(BudgetAction.AddCategory(name, icon, colorToken, plannedAmountNaira))
+                    }
+                )
+            }
+        }
     }
 }
 
