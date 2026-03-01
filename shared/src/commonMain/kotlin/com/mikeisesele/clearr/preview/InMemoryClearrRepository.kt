@@ -238,6 +238,18 @@ class InMemoryClearrRepository private constructor(
     }
 
     companion object {
+        fun empty(setupComplete: Boolean = false): InMemoryClearrRepository = InMemoryClearrRepository(
+            trackers = emptyList(),
+            budgetPeriods = emptyList(),
+            budgetCategories = emptyList(),
+            budgetPlans = emptyList(),
+            budgetEntries = emptyList(),
+            goals = emptyList(),
+            goalCompletions = emptyList(),
+            todos = emptyList(),
+            appConfig = AppConfig(setupComplete = setupComplete)
+        )
+
         fun sample(): InMemoryClearrRepository {
             val now = nowEpochMillis()
             val today = todayLocalDate()
