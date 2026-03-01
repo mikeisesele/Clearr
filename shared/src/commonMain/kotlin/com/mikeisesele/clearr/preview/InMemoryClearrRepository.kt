@@ -238,8 +238,32 @@ class InMemoryClearrRepository private constructor(
     }
 
     fun snapshotAppConfig(): AppConfig? = appConfigFlow.value
+    fun snapshotTrackers(): List<Tracker> = trackersFlow.value
+    fun snapshotTodos(): List<TodoItem> = todosFlow.value
 
     companion object {
+        fun create(
+            trackers: List<Tracker>,
+            budgetPeriods: List<BudgetPeriod>,
+            budgetCategories: List<BudgetCategory>,
+            budgetPlans: List<BudgetCategoryPlan>,
+            budgetEntries: List<BudgetEntry>,
+            goals: List<Goal>,
+            goalCompletions: List<GoalCompletion>,
+            todos: List<TodoItem>,
+            appConfig: AppConfig? = null
+        ): InMemoryClearrRepository = InMemoryClearrRepository(
+            trackers = trackers,
+            budgetPeriods = budgetPeriods,
+            budgetCategories = budgetCategories,
+            budgetPlans = budgetPlans,
+            budgetEntries = budgetEntries,
+            goals = goals,
+            goalCompletions = goalCompletions,
+            todos = todos,
+            appConfig = appConfig
+        )
+
         fun empty(appConfig: AppConfig? = AppConfig(setupComplete = false)): InMemoryClearrRepository = InMemoryClearrRepository(
             trackers = emptyList(),
             budgetPeriods = emptyList(),
