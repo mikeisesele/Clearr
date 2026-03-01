@@ -1,8 +1,11 @@
 package com.mikeisesele.clearr
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import com.mikeisesele.clearr.core.time.localDateAtEndOfDayEpochMillis
 import com.mikeisesele.clearr.core.time.localDateAtStartOfDayEpochMillis
 import com.mikeisesele.clearr.core.time.nowEpochMillis
@@ -21,12 +24,18 @@ import com.mikeisesele.clearr.data.model.HistoryEntry
 import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
+import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
+import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
+import com.mikeisesele.clearr.preview.InMemoryClearrRepository
+import com.mikeisesele.clearr.ui.feature.dashboard.DashboardAction
 import com.mikeisesele.clearr.ui.feature.budget.AddBudgetCategoryScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetAction
 import com.mikeisesele.clearr.ui.feature.budget.BudgetPlanDraft
 import com.mikeisesele.clearr.ui.feature.budget.BudgetScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetUiState
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardScreen
+import com.mikeisesele.clearr.ui.feature.dashboard.DashboardEvent
+import com.mikeisesele.clearr.ui.feature.dashboard.DashboardStore
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardClearanceScore
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerHealth
 import com.mikeisesele.clearr.ui.feature.dashboard.utils.DashboardTrackerType
@@ -80,21 +89,39 @@ private fun MainShellPreview(
     onNavigate: (AppShellDestination) -> Unit
 ) {
     val colors = LocalClearrUiColors.current
+    val scope = rememberCoroutineScope()
+    val repository = remember { InMemoryClearrRepository.sample() }
+    val dashboardStore = remember(scope) {
+        DashboardStore(
+            trackerBootstrapper = TrackerBootstrapper(repository),
+            observeTrackerSummaries = ObserveTrackerSummariesUseCase(repository),
+            scope = scope
+        )
+    }
+    val dashboardState by dashboardStore.uiState.collectAsState()
+
+    LaunchedEffect(dashboardStore) {
+        dashboardStore.events.collect { event ->
+            when (event) {
+                is DashboardEvent.OpenTracker -> {
+                    onNavigate(
+                        when (event.trackerType) {
+                            DashboardTrackerType.BUDGET -> AppShellDestination.BudgetRoot(PREVIEW_BUDGET_TRACKER_ID)
+                            DashboardTrackerType.GOALS -> AppShellDestination.GoalsRoot(PREVIEW_GOALS_TRACKER_ID)
+                            DashboardTrackerType.TODOS -> AppShellDestination.TodoRoot(PREVIEW_TODO_TRACKER_ID)
+                        }
+                    )
+                }
+            }
+        }
+    }
 
     when (destination) {
         AppShellDestination.Dashboard -> DashboardScreen(
-            state = iosPreviewDashboardModel(),
-            isLoading = false,
-            onDismissUrgency = {},
-            onQuickAction = { trackerType ->
-                onNavigate(
-                    when (trackerType) {
-                        DashboardTrackerType.BUDGET -> AppShellDestination.BudgetRoot(PREVIEW_BUDGET_TRACKER_ID)
-                        DashboardTrackerType.GOALS -> AppShellDestination.GoalsRoot(PREVIEW_GOALS_TRACKER_ID)
-                        DashboardTrackerType.TODOS -> AppShellDestination.TodoRoot(PREVIEW_TODO_TRACKER_ID)
-                    }
-                )
-            }
+            state = dashboardState.model,
+            isLoading = dashboardState.isLoading,
+            onDismissUrgency = { dashboardStore.onAction(DashboardAction.DismissUrgency(it)) },
+            onQuickAction = { dashboardStore.onAction(DashboardAction.QuickAction(it)) }
         )
 
         is AppShellDestination.BudgetRoot -> BudgetScreen(
@@ -323,45 +350,4 @@ private fun previewGoalsAiResult(
     suggestedFrequency = frequency,
     suggestedEmoji = emoji,
     suggestedColorToken = colorToken
-)
-
-private fun iosPreviewDashboardModel(): DashboardUiModel = DashboardUiModel(
-    periodLabel = "March 2026",
-    daysLabel = "31 days in view",
-    score = DashboardClearanceScore(
-        overall = 71,
-        budget = DashboardTrackerHealth(
-            trackerType = DashboardTrackerType.BUDGET,
-            percent = 82,
-            detail = "N82k / N100k spent",
-            statusLabel = "Looking good"
-        ),
-        goals = DashboardTrackerHealth(
-            trackerType = DashboardTrackerType.GOALS,
-            percent = 66,
-            detail = "2 / 3 done",
-            statusLabel = "In progress"
-        ),
-        todos = DashboardTrackerHealth(
-            trackerType = DashboardTrackerType.TODOS,
-            percent = 54,
-            detail = "7 / 13 done",
-            statusLabel = "In progress"
-        )
-    ),
-    urgencyItems = listOf(
-        DashboardUrgencyItem(
-            id = "ios-todos",
-            message = "6 todos still need attention",
-            severity = DashboardUrgencySeverity.WARNING,
-            trackerType = DashboardTrackerType.TODOS,
-            actionLabel = "Review todos"
-        )
-    ),
-    visibleTiles = listOf(
-        DashboardTrackerType.BUDGET,
-        DashboardTrackerType.GOALS,
-        DashboardTrackerType.TODOS
-    ),
-    hasTrackers = true
 )
