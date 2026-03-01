@@ -38,6 +38,7 @@ class BudgetViewModelTest {
 
     private val repository = mockk<BudgetRepository>()
     private val budgetPreferencesRepository = mockk<BudgetPreferencesRepository>()
+    private val budgetAiService = mockk<BudgetAiService>()
     private val trackerId = 77L
 
     @Test
@@ -101,6 +102,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             repository = repository,
             budgetPreferencesRepository = budgetPreferencesRepository,
+            budgetAiService = budgetAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -139,6 +141,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             repository = repository,
             budgetPreferencesRepository = budgetPreferencesRepository,
+            budgetAiService = budgetAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -174,6 +177,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             repository = repository,
             budgetPreferencesRepository = budgetPreferencesRepository,
+            budgetAiService = budgetAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -253,10 +257,13 @@ class BudgetViewModelTest {
         coEvery { repository.saveBudgetCategoryPlans(any(), any()) } just runs
         coEvery { budgetPreferencesRepository.shouldShowSwipeHint(any()) } returns false
         coEvery { budgetPreferencesRepository.markSwipeHintShown(any()) } just runs
+        coEvery { budgetAiService.budgetInsight(any()) } returns null
+        coEvery { budgetAiService.inferBudgetCategoryId(any(), any()) } returns null
 
         val viewModel = BudgetViewModel(
             repository = repository,
             budgetPreferencesRepository = budgetPreferencesRepository,
+            budgetAiService = budgetAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -345,6 +352,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             repository = repository,
             budgetPreferencesRepository = budgetPreferencesRepository,
+            budgetAiService = budgetAiService,
             savedStateHandle = SavedStateHandle(mapOf("trackerId" to trackerId))
         )
         advanceUntilIdle()
@@ -388,5 +396,7 @@ class BudgetViewModelTest {
         coEvery { repository.saveBudgetCategoryPlans(any(), any()) } just runs
         coEvery { budgetPreferencesRepository.shouldShowSwipeHint(any()) } returns false
         coEvery { budgetPreferencesRepository.markSwipeHintShown(any()) } just runs
+        coEvery { budgetAiService.budgetInsight(any()) } returns null
+        coEvery { budgetAiService.inferBudgetCategoryId(any(), any()) } answers { arg<List<BudgetCategory>>(1).firstOrNull()?.id }
     }
 }
