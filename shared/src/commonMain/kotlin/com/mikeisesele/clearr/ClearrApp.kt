@@ -27,6 +27,8 @@ import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.domain.trackers.ObserveTrackerSummariesUseCase
 import com.mikeisesele.clearr.domain.trackers.TrackerBootstrapper
 import com.mikeisesele.clearr.preview.InMemoryClearrRepository
+import com.mikeisesele.clearr.preview.InMemoryTodoPreferencesRepository
+import com.mikeisesele.clearr.preview.PreviewTodoAiService
 import com.mikeisesele.clearr.ui.feature.dashboard.DashboardAction
 import com.mikeisesele.clearr.ui.feature.budget.AddBudgetCategoryScreen
 import com.mikeisesele.clearr.ui.feature.budget.BudgetAction
@@ -52,9 +54,8 @@ import com.mikeisesele.clearr.ui.feature.onboarding.OnboardingScreen
 import com.mikeisesele.clearr.ui.feature.onboarding.SplashScreen
 import com.mikeisesele.clearr.ui.feature.todo.AddTodoScreen
 import com.mikeisesele.clearr.ui.feature.todo.TodoAction
-import com.mikeisesele.clearr.ui.feature.todo.TodoCounts
 import com.mikeisesele.clearr.ui.feature.todo.TodoDetailScreen
-import com.mikeisesele.clearr.ui.feature.todo.TodoFilter
+import com.mikeisesele.clearr.ui.feature.todo.TodoStore
 import com.mikeisesele.clearr.ui.feature.todo.TodoUiState
 import com.mikeisesele.clearr.ui.navigation.AppDestination
 import com.mikeisesele.clearr.ui.navigation.AppShellDestination
@@ -91,6 +92,8 @@ private fun MainShellPreview(
     val colors = LocalClearrUiColors.current
     val scope = rememberCoroutineScope()
     val repository = remember { InMemoryClearrRepository.sample() }
+    val todoPreferencesRepository = remember { InMemoryTodoPreferencesRepository() }
+    val todoAiService = remember { PreviewTodoAiService() }
     val dashboardStore = remember(scope) {
         DashboardStore(
             trackerBootstrapper = TrackerBootstrapper(repository),
@@ -99,6 +102,24 @@ private fun MainShellPreview(
         )
     }
     val dashboardState by dashboardStore.uiState.collectAsState()
+    val activeTodoTrackerId = when (destination) {
+        is AppShellDestination.TodoRoot -> destination.trackerId
+        is AppShellDestination.TodoAdd -> destination.trackerId
+        else -> null
+    }
+    val todoStore = activeTodoTrackerId?.let { trackerId ->
+        remember(trackerId, scope) {
+            TodoStore(
+                trackerId = trackerId,
+                repository = repository,
+                todoPreferencesRepository = todoPreferencesRepository,
+                todoAiService = todoAiService,
+                scope = scope,
+                nowMillis = ::nowEpochMillis
+            )
+        }
+    }
+    val todoState by (todoStore?.uiState?.collectAsState() ?: remember { androidx.compose.runtime.mutableStateOf<TodoUiState?>(null) })
 
     LaunchedEffect(dashboardStore) {
         dashboardStore.events.collect { event ->
@@ -140,16 +161,24 @@ private fun MainShellPreview(
             onAddGoal = { onNavigate(AppShellDestination.GoalAdd(destination.trackerId)) }
         )
 
-        is AppShellDestination.TodoRoot -> TodoDetailScreen(
-            state = previewTodoState(destination.trackerId),
-            onAction = {},
-            onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
-            onAddTodo = { onNavigate(AppShellDestination.TodoAdd(destination.trackerId)) }
-        )
+        is AppShellDestination.TodoRoot -> {
+            val state = todoState
+            val store = todoStore
+            if (state != null && store != null) {
+                TodoDetailScreen(
+                    state = state,
+                    onAction = store::onAction,
+                    onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
+                    onAddTodo = { onNavigate(AppShellDestination.TodoAdd(destination.trackerId)) }
+                )
+            }
+        }
 
         is AppShellDestination.TodoAdd -> AddTodoScreen(
             onClose = { onNavigate(AppShellDestination.TodoRoot(destination.trackerId)) },
-            onAddTodo = { _, _, _, _ -> }
+            onAddTodo = { title, note, priority, dueDate ->
+                todoStore?.onAction(TodoAction.AddTodo(title, note, priority, dueDate))
+            }
         )
 
         is AppShellDestination.GoalAdd -> AddGoalScreen(
@@ -309,31 +338,6 @@ private fun previewGoalsState(trackerId: Long): GoalsUiState {
         totalCount = summaries.size,
         allDoneThisPeriod = false,
         aiInsight = "Momentum is strongest on exercise. Reading needs attention.",
-        isLoading = false
-    )
-}
-
-private fun previewTodoState(trackerId: Long): TodoUiState {
-    val today = todayLocalDate()
-    val todos = listOf(
-        TodoItem("todo-1", trackerId, "Pay rent", "Before evening", TodoPriority.HIGH, today, TodoStatus.PENDING, nowEpochMillis()),
-        TodoItem("todo-2", trackerId, "Review grocery list", null, TodoPriority.MEDIUM, today.plusDays(1), TodoStatus.PENDING, nowEpochMillis()),
-        TodoItem("todo-3", trackerId, "Submit report", "Email team copy", TodoPriority.HIGH, today.plusDays(-1), TodoStatus.OVERDUE, nowEpochMillis()),
-        TodoItem("todo-4", trackerId, "Book haircut", null, TodoPriority.LOW, null, TodoStatus.DONE, nowEpochMillis(), nowEpochMillis())
-    )
-    return TodoUiState(
-        trackerId = trackerId,
-        trackerName = "Todos",
-        filter = TodoFilter.ALL,
-        todos = todos,
-        displayedTodos = todos,
-        counts = TodoCounts(
-            pending = todos.count { it.status == TodoStatus.PENDING },
-            overdue = todos.count { it.status == TodoStatus.OVERDUE },
-            done = todos.count { it.status == TodoStatus.DONE }
-        ),
-        aiInsight = "Two important tasks should be cleared today.",
-        showSwipeHint = false,
         isLoading = false
     )
 }
