@@ -1,11 +1,16 @@
 package com.mikeisesele.clearr
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.Scaffold
+import androidx.compose.ui.Modifier
 import com.mikeisesele.clearr.core.time.localDateAtEndOfDayEpochMillis
 import com.mikeisesele.clearr.core.time.localDateAtStartOfDayEpochMillis
 import com.mikeisesele.clearr.core.time.nowEpochMillis
@@ -60,8 +65,12 @@ import com.mikeisesele.clearr.ui.navigation.AppDestination
 import com.mikeisesele.clearr.ui.navigation.AppShellDestination
 import com.mikeisesele.clearr.ui.navigation.addFlowDestinationOrNull
 import com.mikeisesele.clearr.ui.navigation.backDestinationOrNull
+import com.mikeisesele.clearr.ui.navigation.components.AppBottomNav
+import com.mikeisesele.clearr.ui.navigation.components.AppBottomNavItem
+import com.mikeisesele.clearr.ui.navigation.isTopLevelDestination
 import com.mikeisesele.clearr.ui.navigation.rememberAppShellNavigator
 import com.mikeisesele.clearr.ui.navigation.rememberAppNavigator
+import com.mikeisesele.clearr.ui.navigation.topLevelDestination
 import com.mikeisesele.clearr.ui.theme.ClearrSharedTheme
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
 
@@ -146,102 +155,122 @@ private fun MainShellPreview(
         }
     }
 
-    when (destination) {
-        AppShellDestination.Dashboard -> DashboardScreen(
-            state = dashboardState.model,
-            isLoading = dashboardState.isLoading,
-            onDismissUrgency = { dashboardStore.onAction(DashboardAction.DismissUrgency(it)) },
-            onQuickAction = { dashboardStore.onAction(DashboardAction.QuickAction(it)) }
-        )
-
-        is AppShellDestination.BudgetRoot -> {
-            val state = budgetState
-            val store = budgetStore
-            if (state != null && store != null) {
-                BudgetScreen(
-                    state = state,
-                    colors = colors,
-                    onAction = store::onAction,
-                    onNavigateBack = {
-                        destination.backDestinationOrNull()?.let(shellNavigator::openTopLevel)
-                    },
-                    onAddCategory = {
-                        destination.addFlowDestinationOrNull()?.let(shellNavigator::push)
+    Scaffold(
+        containerColor = colors.bg,
+        bottomBar = {
+            if (destination.isTopLevelDestination()) {
+                AppBottomNav(
+                    selectedItem = destination.bottomNavItemOrNull(),
+                    onSelect = { item ->
+                        shellNavigator.openTopLevel(item.toTopLevelDestination())
                     }
                 )
             }
         }
-
-        is AppShellDestination.GoalsRoot -> {
-            val state = goalsState
-            val store = goalsStore
-            if (state != null && store != null) {
-                GoalsScreen(
-                    state = state,
-                    colors = colors,
-                    onAction = store::onAction,
-                    onNavigateBack = {
-                        destination.backDestinationOrNull()?.let(shellNavigator::openTopLevel)
-                    },
-                    onAddGoal = {
-                        destination.addFlowDestinationOrNull()?.let(shellNavigator::push)
-                    }
+    ) { contentPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+        ) {
+            when (destination) {
+                AppShellDestination.Dashboard -> DashboardScreen(
+                    state = dashboardState.model,
+                    isLoading = dashboardState.isLoading,
+                    onDismissUrgency = { dashboardStore.onAction(DashboardAction.DismissUrgency(it)) },
+                    onQuickAction = { dashboardStore.onAction(DashboardAction.QuickAction(it)) }
                 )
-            }
-        }
 
-        is AppShellDestination.TodoRoot -> {
-            val state = todoState
-            val store = todoStore
-            if (state != null && store != null) {
-                TodoDetailScreen(
-                    state = state,
-                    onAction = store::onAction,
-                    onNavigateBack = {
-                        destination.backDestinationOrNull()?.let(shellNavigator::openTopLevel)
-                    },
-                    onAddTodo = {
-                        destination.addFlowDestinationOrNull()?.let(shellNavigator::push)
+                is AppShellDestination.BudgetRoot -> {
+                    val state = budgetState
+                    val store = budgetStore
+                    if (state != null && store != null) {
+                        BudgetScreen(
+                            state = state,
+                            colors = colors,
+                            onAction = store::onAction,
+                            onNavigateBack = {
+                                destination.backDestinationOrNull()?.let(shellNavigator::openTopLevel)
+                            },
+                            onAddCategory = {
+                                destination.addFlowDestinationOrNull()?.let(shellNavigator::push)
+                            }
+                        )
                     }
-                )
-            }
-        }
+                }
 
-        is AppShellDestination.TodoAdd -> AddTodoScreen(
-            onClose = { shellNavigator.pop() },
-            onAddTodo = { title, note, priority, dueDate ->
-                todoStore?.onAction(TodoAction.AddTodo(title, note, priority, dueDate))
-            }
-        )
+                is AppShellDestination.GoalsRoot -> {
+                    val state = goalsState
+                    val store = goalsStore
+                    if (state != null && store != null) {
+                        GoalsScreen(
+                            state = state,
+                            colors = colors,
+                            onAction = store::onAction,
+                            onNavigateBack = {
+                                destination.backDestinationOrNull()?.let(shellNavigator::openTopLevel)
+                            },
+                            onAddGoal = {
+                                destination.addFlowDestinationOrNull()?.let(shellNavigator::push)
+                            }
+                        )
+                    }
+                }
 
-        is AppShellDestination.GoalAdd -> {
-            val state = goalsState
-            if (state != null) {
-                AddGoalScreen(
-                    state = state,
-                    colors = colors,
+                is AppShellDestination.TodoRoot -> {
+                    val state = todoState
+                    val store = todoStore
+                    if (state != null && store != null) {
+                        TodoDetailScreen(
+                            state = state,
+                            onAction = store::onAction,
+                            onNavigateBack = {
+                                destination.backDestinationOrNull()?.let(shellNavigator::openTopLevel)
+                            },
+                            onAddTodo = {
+                                destination.addFlowDestinationOrNull()?.let(shellNavigator::push)
+                            }
+                        )
+                    }
+                }
+
+                is AppShellDestination.TodoAdd -> AddTodoScreen(
                     onClose = { shellNavigator.pop() },
-                    onAddGoal = { title, emoji, colorToken, target, frequency ->
-                        goalsStore?.onAction(GoalsAction.AddGoal(title, emoji, colorToken, target, frequency))
-                    },
-                    inferGoalDraft = { title, target, frequency, emoji, colorToken ->
-                        runtime.goalsAiService.inferGoal(title, target, frequency, emoji, colorToken)
+                    onAddTodo = { title, note, priority, dueDate ->
+                        todoStore?.onAction(TodoAction.AddTodo(title, note, priority, dueDate))
                     }
                 )
-            }
-        }
 
-        is AppShellDestination.BudgetAddCategory -> {
-            val state = budgetState
-            if (state != null) {
-                AddBudgetCategoryScreen(
-                    state = state,
-                    colors = colors,
-                    onClose = { shellNavigator.pop() },
-                    onAddCategory = { name, icon, colorToken, plannedAmountNaira ->
-                        budgetStore?.onAction(BudgetAction.AddCategory(name, icon, colorToken, plannedAmountNaira))
+                is AppShellDestination.GoalAdd -> {
+                    val state = goalsState
+                    if (state != null) {
+                        AddGoalScreen(
+                            state = state,
+                            colors = colors,
+                            onClose = { shellNavigator.pop() },
+                            onAddGoal = { title, emoji, colorToken, target, frequency ->
+                                goalsStore?.onAction(GoalsAction.AddGoal(title, emoji, colorToken, target, frequency))
+                            },
+                            inferGoalDraft = { title, target, frequency, emoji, colorToken ->
+                                runtime.goalsAiService.inferGoal(title, target, frequency, emoji, colorToken)
+                            }
+                        )
                     }
-                )
+                }
+
+                is AppShellDestination.BudgetAddCategory -> {
+                    val state = budgetState
+                    if (state != null) {
+                        AddBudgetCategoryScreen(
+                            state = state,
+                            colors = colors,
+                            onClose = { shellNavigator.pop() },
+                            onAddCategory = { name, icon, colorToken, plannedAmountNaira ->
+                                budgetStore?.onAction(BudgetAction.AddCategory(name, icon, colorToken, plannedAmountNaira))
+                            }
+                        )
+                    }
+                }
             }
         }
     }
@@ -250,6 +279,21 @@ private fun MainShellPreview(
 private const val PREVIEW_BUDGET_TRACKER_ID = 1001L
 private const val PREVIEW_GOALS_TRACKER_ID = 1002L
 private const val PREVIEW_TODO_TRACKER_ID = 1003L
+
+private fun AppShellDestination.bottomNavItemOrNull(): AppBottomNavItem? = when (topLevelDestination()) {
+    AppShellDestination.Dashboard -> AppBottomNavItem.HOME
+    is AppShellDestination.BudgetRoot -> AppBottomNavItem.BUDGET
+    is AppShellDestination.TodoRoot -> AppBottomNavItem.TODOS
+    is AppShellDestination.GoalsRoot -> AppBottomNavItem.GOALS
+    else -> null
+}
+
+private fun AppBottomNavItem.toTopLevelDestination(): AppShellDestination = when (this) {
+    AppBottomNavItem.HOME -> AppShellDestination.Dashboard
+    AppBottomNavItem.BUDGET -> AppShellDestination.BudgetRoot(PREVIEW_BUDGET_TRACKER_ID)
+    AppBottomNavItem.TODOS -> AppShellDestination.TodoRoot(PREVIEW_TODO_TRACKER_ID)
+    AppBottomNavItem.GOALS -> AppShellDestination.GoalsRoot(PREVIEW_GOALS_TRACKER_ID)
+}
 
 private fun previewBudgetState(trackerId: Long): BudgetUiState {
     val today = todayLocalDate()
