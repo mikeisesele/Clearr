@@ -64,6 +64,7 @@ import com.mikeisesele.clearr.ui.feature.todo.TodoStore
 import com.mikeisesele.clearr.ui.feature.todo.TodoUiState
 import com.mikeisesele.clearr.ui.navigation.AppDestination
 import com.mikeisesele.clearr.ui.navigation.AppShellDestination
+import com.mikeisesele.clearr.ui.navigation.rememberAppShellNavigator
 import com.mikeisesele.clearr.ui.navigation.rememberAppNavigator
 import com.mikeisesele.clearr.ui.theme.ClearrSharedTheme
 import com.mikeisesele.clearr.ui.theme.LocalClearrUiColors
@@ -82,8 +83,7 @@ fun ClearrApp() {
             )
             AppDestination.Completion -> CompletionScreen(onOpenApp = navigator::openDashboard)
             is AppDestination.MainShell -> MainShellPreview(
-                destination = (navigationState.current as AppDestination.MainShell).destination,
-                onNavigate = navigator::openShellDestination
+                initialDestination = (navigationState.current as AppDestination.MainShell).destination
             )
         }
     }
@@ -91,11 +91,13 @@ fun ClearrApp() {
 
 @Composable
 private fun MainShellPreview(
-    destination: AppShellDestination,
-    onNavigate: (AppShellDestination) -> Unit
+    initialDestination: AppShellDestination
 ) {
     val colors = LocalClearrUiColors.current
     val scope = rememberCoroutineScope()
+    val shellNavigator = rememberAppShellNavigator(initialDestination)
+    val shellState by shellNavigator.state.collectAsState()
+    val destination = shellState.current
     val repository = remember { InMemoryClearrRepository.sample() }
     val budgetPreferencesRepository = remember { InMemoryBudgetPreferencesRepository() }
     val todoPreferencesRepository = remember { InMemoryTodoPreferencesRepository() }
@@ -169,7 +171,7 @@ private fun MainShellPreview(
         dashboardStore.events.collect { event ->
             when (event) {
                 is DashboardEvent.OpenTracker -> {
-                    onNavigate(
+                    shellNavigator.openTopLevel(
                         when (event.trackerType) {
                             DashboardTrackerType.BUDGET -> AppShellDestination.BudgetRoot(PREVIEW_BUDGET_TRACKER_ID)
                             DashboardTrackerType.GOALS -> AppShellDestination.GoalsRoot(PREVIEW_GOALS_TRACKER_ID)
@@ -197,8 +199,8 @@ private fun MainShellPreview(
                     state = state,
                     colors = colors,
                     onAction = store::onAction,
-                    onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
-                    onAddCategory = { onNavigate(AppShellDestination.BudgetAddCategory(destination.trackerId)) }
+                    onNavigateBack = { shellNavigator.openTopLevel(AppShellDestination.Dashboard) },
+                    onAddCategory = { shellNavigator.push(AppShellDestination.BudgetAddCategory(destination.trackerId)) }
                 )
             }
         }
@@ -211,8 +213,8 @@ private fun MainShellPreview(
                     state = state,
                     colors = colors,
                     onAction = store::onAction,
-                    onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
-                    onAddGoal = { onNavigate(AppShellDestination.GoalAdd(destination.trackerId)) }
+                    onNavigateBack = { shellNavigator.openTopLevel(AppShellDestination.Dashboard) },
+                    onAddGoal = { shellNavigator.push(AppShellDestination.GoalAdd(destination.trackerId)) }
                 )
             }
         }
@@ -224,14 +226,14 @@ private fun MainShellPreview(
                 TodoDetailScreen(
                     state = state,
                     onAction = store::onAction,
-                    onNavigateBack = { onNavigate(AppShellDestination.Dashboard) },
-                    onAddTodo = { onNavigate(AppShellDestination.TodoAdd(destination.trackerId)) }
+                    onNavigateBack = { shellNavigator.openTopLevel(AppShellDestination.Dashboard) },
+                    onAddTodo = { shellNavigator.push(AppShellDestination.TodoAdd(destination.trackerId)) }
                 )
             }
         }
 
         is AppShellDestination.TodoAdd -> AddTodoScreen(
-            onClose = { onNavigate(AppShellDestination.TodoRoot(destination.trackerId)) },
+            onClose = { shellNavigator.pop() },
             onAddTodo = { title, note, priority, dueDate ->
                 todoStore?.onAction(TodoAction.AddTodo(title, note, priority, dueDate))
             }
@@ -243,7 +245,7 @@ private fun MainShellPreview(
                 AddGoalScreen(
                     state = state,
                     colors = colors,
-                    onClose = { onNavigate(AppShellDestination.GoalsRoot(destination.trackerId)) },
+                    onClose = { shellNavigator.pop() },
                     onAddGoal = { title, emoji, colorToken, target, frequency ->
                         goalsStore?.onAction(GoalsAction.AddGoal(title, emoji, colorToken, target, frequency))
                     },
@@ -260,7 +262,7 @@ private fun MainShellPreview(
                 AddBudgetCategoryScreen(
                     state = state,
                     colors = colors,
-                    onClose = { onNavigate(AppShellDestination.BudgetRoot(destination.trackerId)) },
+                    onClose = { shellNavigator.pop() },
                     onAddCategory = { name, icon, colorToken, plannedAmountNaira ->
                         budgetStore?.onAction(BudgetAction.AddCategory(name, icon, colorToken, plannedAmountNaira))
                     }
