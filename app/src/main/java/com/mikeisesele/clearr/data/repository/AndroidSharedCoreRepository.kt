@@ -2,9 +2,11 @@ package com.mikeisesele.clearr.data.repository
 
 import com.mikeisesele.clearr.data.local.room.ClearrSharedDatabase
 import com.mikeisesele.clearr.data.local.room.RoomAppConfigTrackerRepository
+import com.mikeisesele.clearr.data.local.room.RoomGoalsRepository
 import com.mikeisesele.clearr.data.local.room.RoomTodoRepository
 import com.mikeisesele.clearr.data.model.AppConfig
-import com.mikeisesele.clearr.data.model.TodoItem
+import com.mikeisesele.clearr.data.model.Goal
+import com.mikeisesele.clearr.data.model.GoalCompletion
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.domain.repository.AppConfigRepository
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
@@ -26,6 +28,9 @@ class AndroidSharedCoreRepository @Inject constructor(
     )
     private val sharedTodoRepository = RoomTodoRepository(
         todoDao = sharedDatabase.todoDao()
+    )
+    private val sharedGoalsRepository = RoomGoalsRepository(
+        goalDao = sharedDatabase.goalDao()
     )
 
     init {
@@ -60,6 +65,7 @@ class AndroidSharedCoreRepository @Inject constructor(
 
     override suspend fun deleteTracker(id: Long) {
         featureRepository.deleteTracker(id)
+        sharedGoalsRepository.deleteGoalsForTracker(id)
         sharedTodoRepository.deleteTodosForTracker(id)
         sharedRepository.deleteTracker(id)
     }
@@ -120,21 +126,24 @@ class AndroidSharedCoreRepository @Inject constructor(
     override suspend fun addBudgetEntry(entry: com.mikeisesele.clearr.data.model.BudgetEntry): Long =
         featureRepository.addBudgetEntry(entry)
 
-    override fun getGoalsForTracker(trackerId: Long) = featureRepository.getGoalsForTracker(trackerId)
+    override fun getGoalsForTracker(trackerId: Long) = sharedGoalsRepository.getGoalsForTracker(trackerId)
 
     override fun getGoalCompletionsForTracker(trackerId: Long) =
-        featureRepository.getGoalCompletionsForTracker(trackerId)
+        sharedGoalsRepository.getGoalCompletionsForTracker(trackerId)
 
     override suspend fun insertGoal(goal: com.mikeisesele.clearr.data.model.Goal) {
         featureRepository.insertGoal(goal)
+        sharedGoalsRepository.insertGoal(goal)
     }
 
     override suspend fun addGoalCompletion(completion: com.mikeisesele.clearr.data.model.GoalCompletion) {
         featureRepository.addGoalCompletion(completion)
+        sharedGoalsRepository.addGoalCompletion(completion)
     }
 
     override suspend fun deleteGoal(goalId: String) {
         featureRepository.deleteGoal(goalId)
+        sharedGoalsRepository.deleteGoal(goalId)
     }
 
     override fun getTodosForTracker(trackerId: Long) = sharedTodoRepository.getTodosForTracker(trackerId)
@@ -181,6 +190,7 @@ class AndroidSharedCoreRepository @Inject constructor(
         }
 
         synchronizeTodosIfNeeded(featureTrackers, sharedTrackers)
+        synchronizeGoalsIfNeeded(featureTrackers, sharedTrackers)
     }
 
     private suspend fun synchronizeTodosIfNeeded(
@@ -203,5 +213,39 @@ class AndroidSharedCoreRepository @Inject constructor(
                 }
             }
         }
+    }
+
+    private suspend fun synchronizeGoalsIfNeeded(
+        featureTrackers: List<Tracker>,
+        sharedTrackers: List<Tracker>
+    ) {
+        val featureTrackerIds = featureTrackers.map(Tracker::id).toSet()
+        val sharedTrackerIds = sharedTrackers.map(Tracker::id).toSet()
+        val trackerIds = (featureTrackerIds + sharedTrackerIds).filter { id -> id > 0L }
+
+        trackerIds.forEach { trackerId ->
+            val sharedGoals = sharedGoalsRepository.getGoalsForTracker(trackerId).first()
+            val sharedCompletions = sharedGoalsRepository.getGoalCompletionsForTracker(trackerId).first()
+            val featureGoals = featureRepository.getGoalsForTracker(trackerId).first()
+            val featureCompletions = featureRepository.getGoalCompletionsForTracker(trackerId).first()
+            when {
+                sharedGoals.isEmpty() && sharedCompletions.isEmpty() &&
+                    (featureGoals.isNotEmpty() || featureCompletions.isNotEmpty()) -> {
+                    sharedGoalsRepository.seedGoals(featureGoals, featureCompletions)
+                }
+                featureGoals.isEmpty() && featureCompletions.isEmpty() &&
+                    (sharedGoals.isNotEmpty() || sharedCompletions.isNotEmpty()) -> {
+                    seedFeatureGoals(sharedGoals, sharedCompletions)
+                }
+            }
+        }
+    }
+
+    private suspend fun seedFeatureGoals(
+        goals: List<Goal>,
+        completions: List<GoalCompletion>
+    ) {
+        goals.forEach { goal -> featureRepository.insertGoal(goal) }
+        completions.forEach { completion -> featureRepository.addGoalCompletion(completion) }
     }
 }

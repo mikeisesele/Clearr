@@ -39,7 +39,7 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindGoalsRepository(impl: ClearrRepositoryImpl): GoalsRepository
+    abstract fun bindGoalsRepository(impl: AndroidSharedCoreRepository): GoalsRepository
 
     @Binds
     @Singleton
