@@ -67,11 +67,13 @@ import com.mikeisesele.clearr.ui.feature.todo.TodoDetailScreen
 import com.mikeisesele.clearr.ui.feature.todo.TodoUiState
 import com.mikeisesele.clearr.ui.navigation.AppDestination
 import com.mikeisesele.clearr.ui.navigation.AppShellDestination
+import com.mikeisesele.clearr.ui.navigation.AppShellUiState
 import com.mikeisesele.clearr.ui.navigation.AppConfigStore
 import com.mikeisesele.clearr.ui.navigation.addFlowDestinationOrNull
 import com.mikeisesele.clearr.ui.navigation.backDestinationOrNull
 import com.mikeisesele.clearr.ui.navigation.components.AppBottomNav
 import com.mikeisesele.clearr.ui.navigation.components.AppBottomNavItem
+import com.mikeisesele.clearr.ui.navigation.destinationFor
 import com.mikeisesele.clearr.ui.navigation.isTopLevelDestination
 import com.mikeisesele.clearr.ui.navigation.rememberAppShellNavigator
 import com.mikeisesele.clearr.ui.navigation.rememberAppNavigator
@@ -149,6 +151,14 @@ private fun MainShellPreview(
     val budgetTrackerId = trackers.firstOrNull { it.type == TrackerType.BUDGET }?.id
     val todoTrackerId = trackers.firstOrNull { it.type == TrackerType.TODO }?.id
     val goalsTrackerId = trackers.firstOrNull { it.type == TrackerType.GOALS }?.id
+    val shellUiState = remember(budgetTrackerId, todoTrackerId, goalsTrackerId) {
+        AppShellUiState(
+            budgetTrackerId = budgetTrackerId,
+            todoTrackerId = todoTrackerId,
+            goalsTrackerId = goalsTrackerId,
+            isLoading = false
+        )
+    }
     val activeBudgetTrackerId = when (destination) {
         is AppShellDestination.BudgetRoot -> destination.trackerId
         is AppShellDestination.BudgetAddCategory -> destination.trackerId
@@ -178,15 +188,11 @@ private fun MainShellPreview(
     }
     val goalsState by (goalsStore?.uiState?.collectAsState() ?: remember { androidx.compose.runtime.mutableStateOf<GoalsUiState?>(null) })
 
-    LaunchedEffect(dashboardStore) {
+    LaunchedEffect(dashboardStore, shellUiState) {
         dashboardStore.events.collect { event ->
             when (event) {
                 is DashboardEvent.OpenTracker -> {
-                    event.trackerType.toTopLevelDestination(
-                        budgetTrackerId = budgetTrackerId,
-                        todoTrackerId = todoTrackerId,
-                        goalsTrackerId = goalsTrackerId
-                    )?.let(shellNavigator::openTopLevel)
+                    shellUiState.destinationFor(event.trackerType)?.let(shellNavigator::openTopLevel)
                 }
             }
         }
@@ -199,11 +205,7 @@ private fun MainShellPreview(
                 AppBottomNav(
                     selectedItem = destination.bottomNavItemOrNull(),
                     onSelect = { item ->
-                        item.toTopLevelDestination(
-                            budgetTrackerId = budgetTrackerId,
-                            todoTrackerId = todoTrackerId,
-                            goalsTrackerId = goalsTrackerId
-                        )?.let(shellNavigator::openTopLevel)
+                        shellUiState.destinationFor(item)?.let(shellNavigator::openTopLevel)
                     }
                 )
             }
@@ -336,27 +338,6 @@ private fun AppShellDestination.bottomNavItemOrNull(): AppBottomNavItem? = when 
     is AppShellDestination.TodoRoot -> AppBottomNavItem.TODOS
     is AppShellDestination.GoalsRoot -> AppBottomNavItem.GOALS
     else -> null
-}
-
-private fun AppBottomNavItem.toTopLevelDestination(
-    budgetTrackerId: Long?,
-    todoTrackerId: Long?,
-    goalsTrackerId: Long?
-): AppShellDestination? = when (this) {
-    AppBottomNavItem.HOME -> AppShellDestination.Dashboard
-    AppBottomNavItem.BUDGET -> budgetTrackerId?.let(AppShellDestination::BudgetRoot)
-    AppBottomNavItem.TODOS -> todoTrackerId?.let(AppShellDestination::TodoRoot)
-    AppBottomNavItem.GOALS -> goalsTrackerId?.let(AppShellDestination::GoalsRoot)
-}
-
-private fun DashboardTrackerType.toTopLevelDestination(
-    budgetTrackerId: Long?,
-    todoTrackerId: Long?,
-    goalsTrackerId: Long?
-): AppShellDestination? = when (this) {
-    DashboardTrackerType.BUDGET -> budgetTrackerId?.let(AppShellDestination::BudgetRoot)
-    DashboardTrackerType.GOALS -> goalsTrackerId?.let(AppShellDestination::GoalsRoot)
-    DashboardTrackerType.TODOS -> todoTrackerId?.let(AppShellDestination::TodoRoot)
 }
 
 private fun previewBudgetState(trackerId: Long): BudgetUiState {
