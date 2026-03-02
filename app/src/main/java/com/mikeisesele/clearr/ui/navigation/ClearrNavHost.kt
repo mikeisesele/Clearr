@@ -120,6 +120,15 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
         if (currentDestination == desired) return@LaunchedEffect
 
         val currentTopLevel = currentDestination?.topLevelDestination()
+        if (
+            currentDestination != null &&
+            desired.isAddFlowDestination() &&
+            currentDestination == desired.topLevelDestination()
+        ) {
+            shellNavigator.pop()
+            return@LaunchedEffect
+        }
+
         when {
             currentDestination != null &&
                 !currentDestination.isTopLevelDestination() &&
