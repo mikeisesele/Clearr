@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.mikeisesele.clearr.data.model.CategorySummary
+import com.mikeisesele.clearr.ui.commons.components.PlatformBackHandler
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
 import com.mikeisesele.clearr.ui.feature.budget.components.BudgetCategoryTable
 import com.mikeisesele.clearr.ui.feature.budget.components.BudgetHeroSection
@@ -41,6 +42,10 @@ fun BudgetScreen(
 ) {
     var loggingCategory by remember { mutableStateOf<CategorySummary?>(null) }
     var showLogDialog by remember { mutableStateOf(false) }
+
+    PlatformBackHandler(enabled = onNavigateBack != null) {
+        onNavigateBack?.invoke()
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         Column(modifier = Modifier.fillMaxSize()) {

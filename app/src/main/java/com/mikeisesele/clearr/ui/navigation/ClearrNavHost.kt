@@ -116,17 +116,6 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
         }
     }
 
-    LaunchedEffect(currentDestination) {
-        val destination = currentDestination ?: return@LaunchedEffect
-        if (destination == shellNavState.current) return@LaunchedEffect
-
-        if (destination.isTopLevelDestination()) {
-            shellNavigator.openTopLevel(destination)
-        } else {
-            shellNavigator.replaceCurrent(destination)
-        }
-    }
-
     LaunchedEffect(shellNavState.current, currentDestination) {
         val desired = shellNavState.current
         if (currentDestination == desired) return@LaunchedEffect

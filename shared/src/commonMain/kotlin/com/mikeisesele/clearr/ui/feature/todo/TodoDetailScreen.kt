@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.mikeisesele.clearr.data.model.TodoItem
+import com.mikeisesele.clearr.ui.commons.components.PlatformBackHandler
 import com.mikeisesele.clearr.ui.feature.todo.components.SwipeableTodoRow
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoActionsDropdown
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoDetailSheet
@@ -44,6 +45,10 @@ fun TodoDetailScreen(
     var renameTarget by remember { mutableStateOf<TodoItem?>(null) }
     var renameValue by remember { mutableStateOf("") }
     var showActionsMenu by remember { mutableStateOf(false) }
+
+    PlatformBackHandler(enabled = onNavigateBack != null) {
+        onNavigateBack?.invoke()
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         Column(modifier = Modifier.fillMaxSize()) {

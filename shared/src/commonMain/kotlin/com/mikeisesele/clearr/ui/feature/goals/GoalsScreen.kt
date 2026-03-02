@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.mikeisesele.clearr.data.model.GoalSummary
+import com.mikeisesele.clearr.ui.commons.components.PlatformBackHandler
 import com.mikeisesele.clearr.ui.feature.goals.components.AllClearedBanner
 import com.mikeisesele.clearr.ui.feature.goals.components.GoalDetailSheet
 import com.mikeisesele.clearr.ui.feature.goals.components.GoalsEmptyState
@@ -54,6 +55,10 @@ fun GoalsScreen(
     var renameTarget by remember { mutableStateOf<GoalSummary?>(null) }
     var renameValue by remember { mutableStateOf("") }
     var playDeleteHint by rememberSaveable { mutableStateOf(true) }
+
+    PlatformBackHandler(enabled = onNavigateBack != null) {
+        onNavigateBack?.invoke()
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
