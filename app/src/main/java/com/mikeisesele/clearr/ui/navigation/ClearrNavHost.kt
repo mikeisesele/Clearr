@@ -2,6 +2,7 @@ package com.mikeisesele.clearr.ui.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -145,11 +146,17 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
             }
         }
     ) { innerPadding ->
-        Surface(color = colors.bg) {
+        Surface(
+            color = colors.bg,
+            modifier = Modifier.fillMaxSize()
+        ) {
             NavHost(
                 navController = navController,
                 startDestination = AppShellDestinationKind.DASHBOARD.routePattern,
-                modifier = Modifier.background(colors.bg).padding(innerPadding)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(colors.bg)
+                    .padding(innerPadding)
             ) {
                 composable(AppShellDestinationKind.DASHBOARD.routePattern) {
                     DashboardRoute(
