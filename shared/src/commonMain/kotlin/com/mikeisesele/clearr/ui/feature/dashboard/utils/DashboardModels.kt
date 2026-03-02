@@ -5,6 +5,7 @@ import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.core.time.MaxLocalDate
 import com.mikeisesele.clearr.core.time.daysInMonth
 import com.mikeisesele.clearr.core.time.formatMonthYear
+import com.mikeisesele.clearr.core.time.monthValue
 import com.mikeisesele.clearr.core.time.todayLocalDate
 import kotlinx.datetime.LocalDate
 import kotlin.math.max
@@ -269,7 +270,7 @@ private fun currentMonthLabel(today: LocalDate): String =
     formatMonthYear(today)
 
 private fun periodContextLabel(today: LocalDate): String {
-    val remaining = daysInMonth(today.year, today.monthNumber) - today.dayOfMonth
+    val remaining = daysInMonth(today.year, monthValue(today.month)) - today.day
     return when {
         remaining <= 0 -> "Last day"
         remaining == 1 -> "1 day left"

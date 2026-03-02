@@ -30,6 +30,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.mikeisesele.clearr.core.time.dayOfWeekNumber
 import com.mikeisesele.clearr.core.time.daysInMonth
 import com.mikeisesele.clearr.core.time.formatFullMonthYear
+import com.mikeisesele.clearr.core.time.monthValue
 import com.mikeisesele.clearr.core.time.plusDays
 import com.mikeisesele.clearr.core.time.plusMonths
 import com.mikeisesele.clearr.core.time.todayLocalDate
@@ -48,13 +49,13 @@ internal fun CustomDatePickerDialog(
     val colors = LocalClearrUiColors.current
     val minSelectableDate = todayLocalDate().plusDays(1)
     val initial = if (initialDate < minSelectableDate) minSelectableDate else initialDate
-    var displayedMonth by remember { mutableStateOf(LocalDate(initial.year, initial.monthNumber, 1)) }
+    var displayedMonth by remember { mutableStateOf(LocalDate(initial.year, initial.month, 1)) }
     var selectedDate by remember { mutableStateOf(initial) }
     val leadingSpaces = dayOfWeekNumber(displayedMonth.dayOfWeek) - 1
-    val monthDays = daysInMonth(displayedMonth.year, displayedMonth.monthNumber)
+    val monthDays = daysInMonth(displayedMonth.year, monthValue(displayedMonth.month))
     val cells = buildList<LocalDate?> {
         repeat(leadingSpaces) { add(null) }
-        (1..monthDays).forEach { day -> add(LocalDate(displayedMonth.year, displayedMonth.monthNumber, day)) }
+        (1..monthDays).forEach { day -> add(LocalDate(displayedMonth.year, displayedMonth.month, day)) }
         while (size % 7 != 0) add(null)
     }.chunked(7)
 
@@ -131,7 +132,7 @@ internal fun CustomDatePickerDialog(
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
                                                 Text(
-                                                    date.dayOfMonth.toString(),
+                                                    date.day.toString(),
                                                     color = when {
                                                         isSelected -> ClearrColors.Surface
                                                         selectable -> colors.text

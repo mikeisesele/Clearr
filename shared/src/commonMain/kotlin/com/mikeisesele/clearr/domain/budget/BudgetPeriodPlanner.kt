@@ -5,6 +5,7 @@ import com.mikeisesele.clearr.core.time.formatMonthYear
 import com.mikeisesele.clearr.core.time.isoWeekKey
 import com.mikeisesele.clearr.core.time.localDateAtEndOfDayEpochMillis
 import com.mikeisesele.clearr.core.time.localDateAtStartOfDayEpochMillis
+import com.mikeisesele.clearr.core.time.monthValue
 import com.mikeisesele.clearr.core.time.plusDays
 import com.mikeisesele.clearr.core.time.plusMonths
 import com.mikeisesele.clearr.core.time.plusWeeks
@@ -21,7 +22,7 @@ class BudgetPeriodPlanner {
         today: LocalDate = todayLocalDate()
     ): List<BudgetPeriod> = when (frequency) {
         BudgetFrequency.MONTHLY -> {
-            val baseMonth = LocalDate(today.year, today.monthNumber, 1).plusMonths(-4)
+            val baseMonth = LocalDate(today.year, today.month, 1).plusMonths(-4)
             (0 until 5).map { buildMonthlyPeriod(trackerId, baseMonth.plusMonths(it)) }
         }
         BudgetFrequency.WEEKLY -> {
@@ -47,10 +48,10 @@ class BudgetPeriodPlanner {
     ): List<BudgetPeriod> {
         val latestMonthStart = LocalDate(
             epochMillisToLocalDate(latest.startDate).year,
-            epochMillisToLocalDate(latest.startDate).monthNumber,
+            epochMillisToLocalDate(latest.startDate).month,
             1
         )
-        val currentMonthStart = LocalDate(today.year, today.monthNumber, 1)
+        val currentMonthStart = LocalDate(today.year, today.month, 1)
         if (latestMonthStart >= currentMonthStart) return emptyList()
 
         val periods = mutableListOf<BudgetPeriod>()
@@ -83,8 +84,8 @@ class BudgetPeriodPlanner {
     private fun buildMonthlyPeriod(trackerId: Long, monthStart: LocalDate): BudgetPeriod {
         val monthEnd = LocalDate(
             monthStart.year,
-            monthStart.monthNumber,
-            com.mikeisesele.clearr.core.time.daysInMonth(monthStart.year, monthStart.monthNumber)
+            monthStart.month,
+            com.mikeisesele.clearr.core.time.daysInMonth(monthStart.year, monthValue(monthStart.month))
         )
         return BudgetPeriod(
             trackerId = trackerId,

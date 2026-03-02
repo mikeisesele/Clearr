@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.mikeisesele.clearr.core.time
 
 import kotlin.random.Random
@@ -6,6 +8,7 @@ import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.minus
@@ -25,16 +28,18 @@ fun epochMillisToLocalDate(epochMillis: Long): LocalDate =
     Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(systemTimeZone).date
 
 fun localDateAtStartOfDayEpochMillis(date: LocalDate): Long =
-    LocalDateTime(date.year, date.monthNumber, date.dayOfMonth, 0, 0, 0, 0)
+    LocalDateTime(date.year, date.month, date.day, 0, 0, 0, 0)
         .toInstant(systemTimeZone)
         .toEpochMilliseconds()
 
 fun localDateAtEndOfDayEpochMillis(date: LocalDate): Long =
-    LocalDateTime(date.year, date.monthNumber, date.dayOfMonth, 23, 59, 59, 999_000_000)
+    LocalDateTime(date.year, date.month, date.day, 23, 59, 59, 999_000_000)
         .toInstant(systemTimeZone)
         .toEpochMilliseconds()
 
 fun randomId(): String = "${nowEpochMillis()}-${Random.nextLong().toString(16)}"
+
+fun monthValue(month: Month): Int = month.ordinal + 1
 
 fun LocalDate.minusDays(days: Int): LocalDate = this - DatePeriod(days = days)
 
@@ -107,14 +112,14 @@ fun weekdayShortName(dayOfWeek: DayOfWeek): String = when (dayOfWeek) {
     DayOfWeek.SUNDAY -> "Sun"
 }
 
-fun formatMonthYear(date: LocalDate): String = "${monthShortName(date.monthNumber)} ${date.year}"
+fun formatMonthYear(date: LocalDate): String = "${monthShortName(monthValue(date.month))} ${date.year}"
 
-fun formatFullMonthYear(date: LocalDate): String = "${monthFullName(date.monthNumber)} ${date.year}"
+fun formatFullMonthYear(date: LocalDate): String = "${monthFullName(monthValue(date.month))} ${date.year}"
 
-fun formatMonthDay(date: LocalDate): String = "${monthShortName(date.monthNumber)} ${date.dayOfMonth}"
+fun formatMonthDay(date: LocalDate): String = "${monthShortName(monthValue(date.month))} ${date.day}"
 
 fun formatWeekdayMonthDay(date: LocalDate): String =
-    "${weekdayShortName(date.dayOfWeek)}, ${monthShortName(date.monthNumber)} ${date.dayOfMonth}"
+    "${weekdayShortName(date.dayOfWeek)}, ${monthShortName(monthValue(date.month))} ${date.day}"
 
 fun daysInMonth(year: Int, monthNumber: Int): Int = when (monthNumber) {
     1, 3, 5, 7, 8, 10, 12 -> 31

@@ -158,12 +158,14 @@ internal fun SwipeableBudgetCategoryRow(
     val cardShape = RoundedCornerShape(ClearrDimens.dp10)
     val hintOffset = remember { Animatable(0f) }
     val dismissState = rememberSwipeToDismissBoxState(
-        positionalThreshold = { it * 0.35f },
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) onDelete()
-            false
-        }
+        positionalThreshold = { it * 0.35f }
     )
+
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+            onDelete()
+        }
+    }
 
     LaunchedEffect(shouldHintSwipe) {
         if (shouldHintSwipe) {

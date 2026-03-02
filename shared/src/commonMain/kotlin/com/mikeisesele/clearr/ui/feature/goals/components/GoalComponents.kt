@@ -115,11 +115,7 @@ internal fun SwipeableGoalRow(
     var hintShown by rememberSaveable(summary.goal.id) { mutableStateOf(false) }
     val hintAlpha = (kotlin.math.abs(hintOffset.value) / maxHintOffsetPx).coerceIn(0f, 1f)
     val dismissState = rememberSwipeToDismissBoxState(
-        positionalThreshold = { it * 0.35f },
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) onDelete(summary.goal.id)
-            false
-        }
+        positionalThreshold = { it * 0.35f }
     )
     val doneThisPeriod = summary.isDoneThisPeriod
     val palette = goalPalette(summary.goal.colorToken)
@@ -130,6 +126,12 @@ internal fun SwipeableGoalRow(
             hintOffset.animateTo(-maxHintOffsetPx, animationSpec = tween(280))
             hintOffset.animateTo(0f, animationSpec = tween(260))
             onHintAnimationPlayed()
+        }
+    }
+
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+            onDelete(summary.goal.id)
         }
     }
 

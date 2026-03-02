@@ -10,6 +10,7 @@ import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.data.model.derivedStatus
 import com.mikeisesele.clearr.core.time.formatFullMonthYear
 import com.mikeisesele.clearr.core.time.isoWeekKey
+import com.mikeisesele.clearr.core.time.monthValue
 import com.mikeisesele.clearr.core.time.todayLocalDate
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -119,9 +120,9 @@ class ObserveTrackerSummariesUseCase(
         return when (frequency) {
             Frequency.MONTHLY -> formatFullMonthYear(today)
             Frequency.WEEKLY -> "Week ${isoWeekKey(today).substringAfter("-W").toInt()}, ${isoWeekKey(today).substringBefore("-W")}"
-            Frequency.QUARTERLY -> "Q${((today.monthNumber - 1) / 3) + 1} ${today.year}"
-            Frequency.TERMLY -> "Term ${((today.monthNumber - 1) / 4) + 1} ${today.year}"
-            Frequency.BIANNUAL -> "H${if (today.monthNumber <= 6) 1 else 2} ${today.year}"
+            Frequency.QUARTERLY -> "Q${((monthValue(today.month) - 1) / 3) + 1} ${today.year}"
+            Frequency.TERMLY -> "Term ${((monthValue(today.month) - 1) / 4) + 1} ${today.year}"
+            Frequency.BIANNUAL -> "H${if (monthValue(today.month) <= 6) 1 else 2} ${today.year}"
             Frequency.ANNUAL -> "${today.year}"
             Frequency.CUSTOM -> "Current Period"
         }
