@@ -1,7 +1,10 @@
 package com.mikeisesele.clearr.runtime
 
 import com.mikeisesele.clearr.data.local.room.RoomAppConfigTrackerRepository
+import com.mikeisesele.clearr.data.local.room.RoomTodoRepository
 import com.mikeisesele.clearr.data.local.room.createIosClearrSharedDatabase
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -14,13 +17,7 @@ class IosClearrRuntime(
     store: KeyValueStoreDriver = NSUserDefaultsKeyValueStoreDriver(),
     featureRepository: IosClearrRepository = IosClearrRepository(store),
     roomDatabase: com.mikeisesele.clearr.data.local.room.ClearrSharedDatabase = createIosClearrSharedDatabase(),
-    override val repository: HybridClearrRepository = HybridClearrRepository(
-        trackerRepository = RoomAppConfigTrackerRepository(
-            appConfigDao = roomDatabase.appConfigDao(),
-            trackerDao = roomDatabase.trackerDao()
-        ),
-        featureRepository = featureRepository
-    ),
+    override val repository: HybridClearrRepository = createIosHybridRepository(roomDatabase, featureRepository),
     override val onboardingStatusRepository: KeyValueOnboardingStatusRepository = KeyValueOnboardingStatusRepository(store),
     override val budgetPreferencesRepository: KeyValueBudgetPreferencesRepository = KeyValueBudgetPreferencesRepository(store),
     override val todoPreferencesRepository: KeyValueTodoPreferencesRepository = KeyValueTodoPreferencesRepository(store),
@@ -35,3 +32,37 @@ class IosClearrRuntime(
         }
     }
 ) : ClearrRuntime
+
+private fun createIosHybridRepository(
+    roomDatabase: com.mikeisesele.clearr.data.local.room.ClearrSharedDatabase,
+    featureRepository: IosClearrRepository
+): HybridClearrRepository {
+    val trackerRepository = RoomAppConfigTrackerRepository(
+        appConfigDao = roomDatabase.appConfigDao(),
+        trackerDao = roomDatabase.trackerDao()
+    )
+    val todoRepository = RoomTodoRepository(roomDatabase.todoDao())
+    runBlocking {
+        migrateLegacyTodosIfNeeded(
+            trackerRepository = trackerRepository,
+            todoRepository = todoRepository,
+            featureRepository = featureRepository
+        )
+    }
+    return HybridClearrRepository(
+        trackerRepository = trackerRepository,
+        todoRepository = todoRepository,
+        featureRepository = featureRepository
+    )
+}
+
+private suspend fun migrateLegacyTodosIfNeeded(
+    trackerRepository: RoomAppConfigTrackerRepository,
+    todoRepository: RoomTodoRepository,
+    featureRepository: IosClearrRepository
+) {
+    if (!todoRepository.isEmpty()) return
+    val legacyTodos = trackerRepository.getAllTrackers().first()
+        .flatMap { tracker -> featureRepository.getTodosForTracker(tracker.id).first() }
+    todoRepository.seedTodos(legacyTodos)
+}

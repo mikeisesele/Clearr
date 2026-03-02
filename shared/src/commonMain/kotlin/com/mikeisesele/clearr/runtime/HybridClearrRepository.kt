@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.runtime
 
 import com.mikeisesele.clearr.data.local.room.RoomAppConfigTrackerRepository
+import com.mikeisesele.clearr.data.local.room.RoomTodoRepository
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.BudgetCategory
 import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 
 class HybridClearrRepository(
     private val trackerRepository: RoomAppConfigTrackerRepository,
+    private val todoRepository: RoomTodoRepository,
     private val featureRepository: ClearrRepository
 ) : ClearrRepository {
     override fun getAppConfigFlow(): Flow<AppConfig?> = trackerRepository.getAppConfigFlow()
@@ -40,6 +42,7 @@ class HybridClearrRepository(
 
     override suspend fun deleteTracker(id: Long) {
         featureRepository.deleteTracker(id)
+        todoRepository.deleteTodosForTracker(id)
         trackerRepository.deleteTracker(id)
     }
 
@@ -109,23 +112,23 @@ class HybridClearrRepository(
     }
 
     override fun getTodosForTracker(trackerId: Long): Flow<List<TodoItem>> =
-        featureRepository.getTodosForTracker(trackerId)
+        todoRepository.getTodosForTracker(trackerId)
 
-    override suspend fun getTodoById(id: String): TodoItem? = featureRepository.getTodoById(id)
+    override suspend fun getTodoById(id: String): TodoItem? = todoRepository.getTodoById(id)
 
     override suspend fun insertTodo(todo: TodoItem) {
-        featureRepository.insertTodo(todo)
+        todoRepository.insertTodo(todo)
     }
 
     override suspend fun updateTodo(todo: TodoItem) {
-        featureRepository.updateTodo(todo)
+        todoRepository.updateTodo(todo)
     }
 
     override suspend fun markTodoDone(id: String, completedAt: Long) {
-        featureRepository.markTodoDone(id, completedAt)
+        todoRepository.markTodoDone(id, completedAt)
     }
 
     override suspend fun deleteTodo(id: String) {
-        featureRepository.deleteTodo(id)
+        todoRepository.deleteTodo(id)
     }
 }
