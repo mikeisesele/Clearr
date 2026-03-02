@@ -10,7 +10,6 @@ import com.mikeisesele.clearr.data.model.BudgetCategory
 import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
 import com.mikeisesele.clearr.data.model.BudgetEntry
 import com.mikeisesele.clearr.data.model.BudgetFrequency
-import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.Goal
 import com.mikeisesele.clearr.data.model.GoalCompletion
 import com.mikeisesele.clearr.data.model.Tracker
@@ -19,12 +18,9 @@ import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 
 @Singleton
 class AndroidSharedCoreRepository @Inject constructor(
-    private val legacyMigrationStore: LegacyAndroidMigrationStore,
     sharedDatabase: ClearrSharedDatabase
 ) : ClearrRepository, AppConfigRepository {
 
@@ -41,10 +37,6 @@ class AndroidSharedCoreRepository @Inject constructor(
     private val sharedBudgetRepository = RoomBudgetRepository(
         budgetDao = sharedDatabase.budgetDao()
     )
-
-    init {
-        runBlocking { migrateLegacyDataIfNeeded() }
-    }
 
     override fun getAppConfigFlow(): Flow<AppConfig?> = sharedRepository.getAppConfigFlow()
 
@@ -139,87 +131,4 @@ class AndroidSharedCoreRepository @Inject constructor(
         sharedTodoRepository.markTodoDone(id, completedAt)
 
     override suspend fun deleteTodo(id: String) = sharedTodoRepository.deleteTodo(id)
-
-    private suspend fun migrateLegacyDataIfNeeded() {
-        val sharedConfig = sharedRepository.getAppConfig()
-        val legacyConfig = legacyMigrationStore.getAppConfig()
-        if (sharedConfig == null && legacyConfig != null) {
-            sharedRepository.upsertAppConfig(legacyConfig)
-        }
-
-        val sharedTrackers = sharedRepository.getAllTrackers().first()
-        val legacyTrackers = legacyMigrationStore.getAllTrackers().first()
-        if (sharedTrackers.isEmpty() && legacyTrackers.isNotEmpty()) {
-            legacyTrackers.forEach { tracker -> sharedRepository.insertTracker(tracker) }
-        }
-
-        migrateLegacyTodosIfNeeded(legacyTrackers)
-        migrateLegacyGoalsIfNeeded(legacyTrackers)
-        migrateLegacyBudgetIfNeeded(legacyTrackers)
-    }
-
-    private suspend fun migrateLegacyTodosIfNeeded(legacyTrackers: List<Tracker>) {
-        legacyTrackers.map(Tracker::id).filter { id -> id > 0L }.forEach { trackerId ->
-            val sharedTodos = sharedTodoRepository.getTodosForTracker(trackerId).first()
-            if (sharedTodos.isEmpty()) {
-                val legacyTodos = legacyMigrationStore.getTodosForTracker(trackerId).first()
-                sharedTodoRepository.seedTodos(legacyTodos)
-            }
-        }
-    }
-
-    private suspend fun migrateLegacyGoalsIfNeeded(legacyTrackers: List<Tracker>) {
-        legacyTrackers.map(Tracker::id).filter { id -> id > 0L }.forEach { trackerId ->
-            val sharedGoals = sharedGoalsRepository.getGoalsForTracker(trackerId).first()
-            val sharedCompletions = sharedGoalsRepository.getGoalCompletionsForTracker(trackerId).first()
-            if (sharedGoals.isEmpty() && sharedCompletions.isEmpty()) {
-                val legacyGoals = legacyMigrationStore.getGoalsForTracker(trackerId).first()
-                val legacyCompletions = legacyMigrationStore.getGoalCompletionsForTracker(trackerId).first()
-                sharedGoalsRepository.seedGoals(legacyGoals, legacyCompletions)
-            }
-        }
-    }
-
-    private suspend fun migrateLegacyBudgetIfNeeded(legacyTrackers: List<Tracker>) {
-        legacyTrackers.map(Tracker::id).filter { id -> id > 0L }.forEach { trackerId ->
-            BudgetFrequency.entries.forEach { frequency ->
-                val sharedPeriods = sharedBudgetRepository.getBudgetPeriods(trackerId, frequency).first()
-                val sharedCategories = sharedBudgetRepository.getBudgetCategories(trackerId, frequency).first()
-                if (
-                    sharedPeriods.isEmpty() &&
-                    sharedCategories.isEmpty()
-                ) {
-                    val legacyPeriods = legacyMigrationStore.getBudgetPeriods(trackerId, frequency).first()
-                    val legacyCategories = legacyMigrationStore.getBudgetCategories(trackerId, frequency).first()
-                    migrateLegacyBudgetFrequency(
-                        trackerId = trackerId,
-                        frequency = frequency,
-                        periods = legacyPeriods,
-                        categories = legacyCategories
-                    )
-                }
-            }
-        }
-    }
-
-    private suspend fun migrateLegacyBudgetFrequency(
-        trackerId: Long,
-        frequency: BudgetFrequency,
-        periods: List<BudgetPeriod>,
-        categories: List<BudgetCategory>
-    ) {
-        val periodIds = periods.map(BudgetPeriod::id).toSet()
-        val categoryIds = categories.map(BudgetCategory::id).toSet()
-        val plans = legacyMigrationStore.getBudgetCategoryPlansForTracker(trackerId).first()
-            .filter { plan -> plan.periodId in periodIds && plan.categoryId in categoryIds }
-        val entries = legacyMigrationStore.getBudgetEntriesForTracker(trackerId).first()
-            .filter { entry -> entry.periodId in periodIds && entry.categoryId in categoryIds }
-
-        sharedBudgetRepository.seedBudgetData(
-            periods = periods.filter { period -> period.frequency == frequency },
-            categories = categories.filter { category -> category.frequency == frequency },
-            plans = plans,
-            entries = entries
-        )
-    }
 }
