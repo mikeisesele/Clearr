@@ -1,3 +1,5 @@
+@file:JvmName("AndroidAddBudgetCategoryScreenKt")
+
 package com.mikeisesele.clearr.ui.feature.budget
 
 import androidx.compose.runtime.Composable

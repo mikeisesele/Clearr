@@ -1,3 +1,5 @@
+@file:JvmName("AndroidAddGoalScreenKt")
+
 package com.mikeisesele.clearr.ui.feature.goals
 
 import androidx.compose.runtime.Composable
