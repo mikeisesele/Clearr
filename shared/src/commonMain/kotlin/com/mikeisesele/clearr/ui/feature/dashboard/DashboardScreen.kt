@@ -63,6 +63,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -219,11 +220,24 @@ private fun TrackerHealthTiles(
 
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         tiles.chunked(2).forEachIndexed { rowIndex, rowTiles ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                rowTiles.forEachIndexed { columnIndex, tile ->
-                    TrackerTile(tile = tile, delayMs = ((rowIndex * 2 + columnIndex) * 60).toLong(), palette = palette, modifier = Modifier.weight(1f))
+            if (rowTiles.size == 1) {
+                TrackerTile(
+                    tile = rowTiles.single(),
+                    delayMs = (rowIndex * 2 * 60).toLong(),
+                    palette = palette,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    rowTiles.forEachIndexed { columnIndex, tile ->
+                        TrackerTile(
+                            tile = tile,
+                            delayMs = ((rowIndex * 2 + columnIndex) * 60).toLong(),
+                            palette = palette,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
-                if (rowTiles.size == 1) Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
@@ -563,8 +577,16 @@ private fun QuickActionButton(label: String, palette: DashboardPalette, onClick:
                 }
                 onClick()
             }
+            .heightIn(min = 48.dp)
             .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
-        Text(text = label, style = MaterialTheme.typography.labelLarge, color = palette.accent)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = palette.accent,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
+        )
     }
 }
