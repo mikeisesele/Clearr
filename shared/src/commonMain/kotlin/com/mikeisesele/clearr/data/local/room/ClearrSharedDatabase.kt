@@ -10,11 +10,14 @@ import androidx.room.AutoMigration
     entities = [
         AppConfigRoomEntity::class,
         TrackerRoomEntity::class,
-        TodoRoomEntity::class
+        TodoRoomEntity::class,
+        GoalRoomEntity::class,
+        GoalCompletionRoomEntity::class
     ],
-    version = 2,
+    version = 3,
     autoMigrations = [
-        AutoMigration(from = 1, to = 2)
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3)
     ],
     exportSchema = true
 )
@@ -23,6 +26,7 @@ abstract class ClearrSharedDatabase : RoomDatabase() {
     abstract fun appConfigDao(): AppConfigRoomDao
     abstract fun trackerDao(): TrackerRoomDao
     abstract fun todoDao(): TodoRoomDao
+    abstract fun goalDao(): GoalRoomDao
 }
 
 @Suppress("NO_ACTUAL_FOR_EXPECT")

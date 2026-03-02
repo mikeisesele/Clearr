@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.runtime
 
 import com.mikeisesele.clearr.data.local.room.RoomAppConfigTrackerRepository
+import com.mikeisesele.clearr.data.local.room.RoomGoalsRepository
 import com.mikeisesele.clearr.data.local.room.RoomTodoRepository
 import com.mikeisesele.clearr.data.local.room.createIosClearrSharedDatabase
 import kotlinx.coroutines.flow.first
@@ -41,6 +42,7 @@ private fun createIosHybridRepository(
         appConfigDao = roomDatabase.appConfigDao(),
         trackerDao = roomDatabase.trackerDao()
     )
+    val goalsRepository = RoomGoalsRepository(roomDatabase.goalDao())
     val todoRepository = RoomTodoRepository(roomDatabase.todoDao())
     runBlocking {
         migrateLegacyTodosIfNeeded(
@@ -48,9 +50,15 @@ private fun createIosHybridRepository(
             todoRepository = todoRepository,
             featureRepository = featureRepository
         )
+        migrateLegacyGoalsIfNeeded(
+            trackerRepository = trackerRepository,
+            goalsRepository = goalsRepository,
+            featureRepository = featureRepository
+        )
     }
     return HybridClearrRepository(
         trackerRepository = trackerRepository,
+        goalsRepository = goalsRepository,
         todoRepository = todoRepository,
         featureRepository = featureRepository
     )
@@ -65,4 +73,16 @@ private suspend fun migrateLegacyTodosIfNeeded(
     val legacyTodos = trackerRepository.getAllTrackers().first()
         .flatMap { tracker -> featureRepository.getTodosForTracker(tracker.id).first() }
     todoRepository.seedTodos(legacyTodos)
+}
+
+private suspend fun migrateLegacyGoalsIfNeeded(
+    trackerRepository: RoomAppConfigTrackerRepository,
+    goalsRepository: RoomGoalsRepository,
+    featureRepository: IosClearrRepository
+) {
+    if (!goalsRepository.isEmpty()) return
+    val trackers = trackerRepository.getAllTrackers().first()
+    val legacyGoals = trackers.flatMap { tracker -> featureRepository.getGoalsForTracker(tracker.id).first() }
+    val legacyCompletions = trackers.flatMap { tracker -> featureRepository.getGoalCompletionsForTracker(tracker.id).first() }
+    goalsRepository.seedGoals(legacyGoals, legacyCompletions)
 }

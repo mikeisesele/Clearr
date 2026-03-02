@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.runtime
 
 import com.mikeisesele.clearr.data.local.room.RoomAppConfigTrackerRepository
+import com.mikeisesele.clearr.data.local.room.RoomGoalsRepository
 import com.mikeisesele.clearr.data.local.room.RoomTodoRepository
 import com.mikeisesele.clearr.data.model.AppConfig
 import com.mikeisesele.clearr.data.model.BudgetCategory
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 
 class HybridClearrRepository(
     private val trackerRepository: RoomAppConfigTrackerRepository,
+    private val goalsRepository: RoomGoalsRepository,
     private val todoRepository: RoomTodoRepository,
     private val featureRepository: ClearrRepository
 ) : ClearrRepository {
@@ -42,6 +44,7 @@ class HybridClearrRepository(
 
     override suspend fun deleteTracker(id: Long) {
         featureRepository.deleteTracker(id)
+        goalsRepository.deleteGoalsForTracker(id)
         todoRepository.deleteTodosForTracker(id)
         trackerRepository.deleteTracker(id)
     }
@@ -94,21 +97,21 @@ class HybridClearrRepository(
     override suspend fun addBudgetEntry(entry: BudgetEntry): Long = featureRepository.addBudgetEntry(entry)
 
     override fun getGoalsForTracker(trackerId: Long): Flow<List<Goal>> =
-        featureRepository.getGoalsForTracker(trackerId)
+        goalsRepository.getGoalsForTracker(trackerId)
 
     override fun getGoalCompletionsForTracker(trackerId: Long): Flow<List<GoalCompletion>> =
-        featureRepository.getGoalCompletionsForTracker(trackerId)
+        goalsRepository.getGoalCompletionsForTracker(trackerId)
 
     override suspend fun insertGoal(goal: Goal) {
-        featureRepository.insertGoal(goal)
+        goalsRepository.insertGoal(goal)
     }
 
     override suspend fun addGoalCompletion(completion: GoalCompletion) {
-        featureRepository.addGoalCompletion(completion)
+        goalsRepository.addGoalCompletion(completion)
     }
 
     override suspend fun deleteGoal(goalId: String) {
-        featureRepository.deleteGoal(goalId)
+        goalsRepository.deleteGoal(goalId)
     }
 
     override fun getTodosForTracker(trackerId: Long): Flow<List<TodoItem>> =
