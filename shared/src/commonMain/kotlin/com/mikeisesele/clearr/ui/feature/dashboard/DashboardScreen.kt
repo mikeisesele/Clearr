@@ -225,6 +225,7 @@ private fun TrackerHealthTiles(
                     tile = rowTiles.single(),
                     delayMs = (rowIndex * 2 * 60).toLong(),
                     palette = palette,
+                    fillRow = true,
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
@@ -244,7 +245,13 @@ private fun TrackerHealthTiles(
 }
 
 @Composable
-private fun TrackerTile(tile: DashboardTrackerHealth, delayMs: Long, palette: DashboardPalette, modifier: Modifier = Modifier) {
+private fun TrackerTile(
+    tile: DashboardTrackerHealth,
+    delayMs: Long,
+    palette: DashboardPalette,
+    fillRow: Boolean = false,
+    modifier: Modifier = Modifier
+) {
     val health = remember(tile.percent, palette) { tile.percent.toTileHealth(palette) }
     var visible by remember { mutableStateOf(false) }
 
@@ -259,7 +266,11 @@ private fun TrackerTile(tile: DashboardTrackerHealth, delayMs: Long, palette: Da
         modifier = modifier,
     ) {
         Box(
-            modifier = Modifier.fillMaxWidth().aspectRatio(1.3f).clip(RoundedCornerShape(18.dp)).background(health.bgColor),
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (fillRow) Modifier.wrapContentHeight() else Modifier.aspectRatio(1.3f))
+                .clip(RoundedCornerShape(18.dp))
+                .background(health.bgColor),
             contentAlignment = Alignment.TopStart,
         ) {
             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.SpaceBetween) {
