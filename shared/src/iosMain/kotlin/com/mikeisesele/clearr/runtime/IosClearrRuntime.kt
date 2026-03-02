@@ -1,5 +1,7 @@
 package com.mikeisesele.clearr.runtime
 
+import com.mikeisesele.clearr.data.local.room.RoomAppConfigTrackerRepository
+import com.mikeisesele.clearr.data.local.room.createIosClearrSharedDatabase
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -10,7 +12,15 @@ import platform.posix.timeval
 @OptIn(ExperimentalForeignApi::class)
 class IosClearrRuntime(
     store: KeyValueStoreDriver = NSUserDefaultsKeyValueStoreDriver(),
-    override val repository: IosClearrRepository = IosClearrRepository(store),
+    featureRepository: IosClearrRepository = IosClearrRepository(store),
+    roomDatabase: com.mikeisesele.clearr.data.local.room.ClearrSharedDatabase = createIosClearrSharedDatabase(),
+    override val repository: HybridClearrRepository = HybridClearrRepository(
+        trackerRepository = RoomAppConfigTrackerRepository(
+            appConfigDao = roomDatabase.appConfigDao(),
+            trackerDao = roomDatabase.trackerDao()
+        ),
+        featureRepository = featureRepository
+    ),
     override val onboardingStatusRepository: KeyValueOnboardingStatusRepository = KeyValueOnboardingStatusRepository(store),
     override val budgetPreferencesRepository: KeyValueBudgetPreferencesRepository = KeyValueBudgetPreferencesRepository(store),
     override val todoPreferencesRepository: KeyValueTodoPreferencesRepository = KeyValueTodoPreferencesRepository(store),

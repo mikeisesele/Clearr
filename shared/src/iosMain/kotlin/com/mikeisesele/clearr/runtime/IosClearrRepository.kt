@@ -15,27 +15,12 @@ import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.data.model.TodoStatus
 import com.mikeisesele.clearr.data.model.Tracker
-import com.mikeisesele.clearr.data.model.TrackerType
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
 import com.mikeisesele.clearr.preview.InMemoryClearrRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
 
-private const val IOS_APP_CONFIG_PRESENT_KEY = "clearr.appconfig.present"
-private const val IOS_APP_CONFIG_GROUP_NAME_KEY = "clearr.appconfig.groupName"
-private const val IOS_APP_CONFIG_ADMIN_NAME_KEY = "clearr.appconfig.adminName"
-private const val IOS_APP_CONFIG_ADMIN_PHONE_KEY = "clearr.appconfig.adminPhone"
-private const val IOS_APP_CONFIG_TRACKER_TYPE_KEY = "clearr.appconfig.trackerType"
-private const val IOS_APP_CONFIG_FREQUENCY_KEY = "clearr.appconfig.frequency"
-private const val IOS_APP_CONFIG_DEFAULT_AMOUNT_KEY = "clearr.appconfig.defaultAmount"
-private const val IOS_APP_CONFIG_CUSTOM_PERIOD_LABELS_KEY = "clearr.appconfig.customPeriodLabels"
-private const val IOS_APP_CONFIG_VARIABLE_AMOUNTS_KEY = "clearr.appconfig.variableAmounts"
-private const val IOS_APP_CONFIG_LAYOUT_STYLE_KEY = "clearr.appconfig.layoutStyle"
-private const val IOS_APP_CONFIG_REMINDERS_ENABLED_KEY = "clearr.appconfig.remindersEnabled"
-private const val IOS_APP_CONFIG_REMINDER_DAY_KEY = "clearr.appconfig.reminderDayOfPeriod"
-private const val IOS_APP_CONFIG_SETUP_COMPLETE_KEY = "clearr.appconfig.setupComplete"
-private const val IOS_TRACKERS_KEY = "clearr.trackers"
 private const val IOS_GOALS_KEY = "clearr.goals"
 private const val IOS_GOAL_COMPLETIONS_KEY = "clearr.goalCompletions"
 private const val IOS_TODOS_KEY = "clearr.todos"
@@ -50,7 +35,7 @@ private const val NULL_TOKEN = "\u0000"
 class IosClearrRepository(
     private val store: KeyValueStoreDriver = NSUserDefaultsKeyValueStoreDriver(),
     private val delegate: InMemoryClearrRepository = InMemoryClearrRepository.create(
-        trackers = loadTrackers(store),
+        trackers = emptyList(),
         budgetPeriods = loadBudgetPeriods(store),
         budgetCategories = loadBudgetCategories(store),
         budgetPlans = loadBudgetCategoryPlans(store),
@@ -58,35 +43,30 @@ class IosClearrRepository(
         goals = loadGoals(store),
         goalCompletions = loadGoalCompletions(store),
         todos = loadTodos(store),
-        appConfig = loadAppConfig(store)
+        appConfig = null
     )
 ) : ClearrRepository by delegate {
-    private val appConfigFlow = MutableStateFlow(loadAppConfig(store))
+    private val appConfigFlow = MutableStateFlow<AppConfig?>(null)
 
     override fun getAppConfigFlow(): Flow<AppConfig?> = appConfigFlow
 
     override suspend fun getAppConfig(): AppConfig? = appConfigFlow.value
 
     override suspend fun upsertAppConfig(config: AppConfig) {
-        saveAppConfig(store, config)
         delegate.upsertAppConfig(config)
         appConfigFlow.value = config
     }
 
     override suspend fun insertTracker(tracker: Tracker): Long {
-        val id = delegate.insertTracker(tracker)
-        persistTrackers()
-        return id
+        return delegate.insertTracker(tracker)
     }
 
     override suspend fun updateTracker(tracker: Tracker) {
         delegate.updateTracker(tracker)
-        persistTrackers()
     }
 
     override suspend fun deleteTracker(id: Long) {
         delegate.deleteTracker(id)
-        persistTrackers()
         persistBudgetPeriods()
         persistBudgetCategories()
         persistBudgetCategoryPlans()
@@ -98,7 +78,6 @@ class IosClearrRepository(
 
     override suspend fun clearTrackerNewFlag(id: Long) {
         delegate.clearTrackerNewFlag(id)
-        persistTrackers()
     }
 
     override suspend fun ensureBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) {
@@ -180,10 +159,6 @@ class IosClearrRepository(
         persistGoalCompletions()
     }
 
-    private fun persistTrackers() {
-        store.setString(IOS_TRACKERS_KEY, encodeTrackers(delegate.snapshotTrackers()))
-    }
-
     private fun persistGoals() {
         store.setString(IOS_GOALS_KEY, encodeGoals(delegate.snapshotGoals()))
     }
@@ -212,67 +187,6 @@ class IosClearrRepository(
         store.setString(IOS_BUDGET_ENTRIES_KEY, encodeBudgetEntries(delegate.snapshotBudgetEntries()))
     }
 }
-
-private fun loadAppConfig(store: KeyValueStoreDriver): AppConfig? {
-    if (!store.getBoolean(IOS_APP_CONFIG_PRESENT_KEY)) return null
-
-    return AppConfig(
-        groupName = store.getString(IOS_APP_CONFIG_GROUP_NAME_KEY) ?: "Clearr",
-        adminName = store.getString(IOS_APP_CONFIG_ADMIN_NAME_KEY) ?: "",
-        adminPhone = store.getString(IOS_APP_CONFIG_ADMIN_PHONE_KEY) ?: "",
-        trackerType = store.getString(IOS_APP_CONFIG_TRACKER_TYPE_KEY)
-            ?.let { runCatching { TrackerType.valueOf(it) }.getOrNull() }
-            ?: TrackerType.BUDGET,
-        frequency = store.getString(IOS_APP_CONFIG_FREQUENCY_KEY)
-            ?.let { runCatching { Frequency.valueOf(it) }.getOrNull() }
-            ?: Frequency.MONTHLY,
-        defaultAmount = store.getDouble(IOS_APP_CONFIG_DEFAULT_AMOUNT_KEY),
-        customPeriodLabels = store.getString(IOS_APP_CONFIG_CUSTOM_PERIOD_LABELS_KEY) ?: "[]",
-        variableAmounts = store.getString(IOS_APP_CONFIG_VARIABLE_AMOUNTS_KEY) ?: "[]",
-        layoutStyle = store.getString(IOS_APP_CONFIG_LAYOUT_STYLE_KEY)
-            ?.let { runCatching { LayoutStyle.valueOf(it) }.getOrNull() }
-            ?: LayoutStyle.GRID,
-        remindersEnabled = store.getBoolean(IOS_APP_CONFIG_REMINDERS_ENABLED_KEY),
-        reminderDayOfPeriod = store.getLong(IOS_APP_CONFIG_REMINDER_DAY_KEY)?.toInt()?.takeIf { it > 0 } ?: 5,
-        setupComplete = store.getBoolean(IOS_APP_CONFIG_SETUP_COMPLETE_KEY)
-    )
-}
-
-private fun saveAppConfig(store: KeyValueStoreDriver, config: AppConfig) {
-    store.setBoolean(IOS_APP_CONFIG_PRESENT_KEY, true)
-    store.setString(IOS_APP_CONFIG_GROUP_NAME_KEY, config.groupName)
-    store.setString(IOS_APP_CONFIG_ADMIN_NAME_KEY, config.adminName)
-    store.setString(IOS_APP_CONFIG_ADMIN_PHONE_KEY, config.adminPhone)
-    store.setString(IOS_APP_CONFIG_TRACKER_TYPE_KEY, config.trackerType.name)
-    store.setString(IOS_APP_CONFIG_FREQUENCY_KEY, config.frequency.name)
-    store.setDouble(IOS_APP_CONFIG_DEFAULT_AMOUNT_KEY, config.defaultAmount)
-    store.setString(IOS_APP_CONFIG_CUSTOM_PERIOD_LABELS_KEY, config.customPeriodLabels)
-    store.setString(IOS_APP_CONFIG_VARIABLE_AMOUNTS_KEY, config.variableAmounts)
-    store.setString(IOS_APP_CONFIG_LAYOUT_STYLE_KEY, config.layoutStyle.name)
-    store.setBoolean(IOS_APP_CONFIG_REMINDERS_ENABLED_KEY, config.remindersEnabled)
-    store.setLong(IOS_APP_CONFIG_REMINDER_DAY_KEY, config.reminderDayOfPeriod.toLong())
-    store.setBoolean(IOS_APP_CONFIG_SETUP_COMPLETE_KEY, config.setupComplete)
-}
-
-private fun loadTrackers(store: KeyValueStoreDriver): List<Tracker> =
-    store.getString(IOS_TRACKERS_KEY)
-        ?.takeIf { it.isNotEmpty() }
-        ?.split(RECORD_SEPARATOR)
-        ?.filter { it.isNotEmpty() }
-        ?.map { record ->
-            val fields = decodeRecord(record)
-            Tracker(
-                id = fields[0].toLong(),
-                name = fields[1],
-                type = TrackerType.valueOf(fields[2]),
-                frequency = Frequency.valueOf(fields[3]),
-                layoutStyle = LayoutStyle.valueOf(fields[4]),
-                defaultAmount = fields[5].toDouble(),
-                isNew = fields[6].toBoolean(),
-                createdAt = fields[7].toLong()
-            )
-        }
-        ?: emptyList()
 
 private fun loadBudgetPeriods(store: KeyValueStoreDriver): List<BudgetPeriod> =
     store.getString(IOS_BUDGET_PERIODS_KEY)
@@ -406,22 +320,6 @@ private fun loadTodos(store: KeyValueStoreDriver): List<TodoItem> =
             )
         }
         ?: emptyList()
-
-private fun encodeTrackers(trackers: List<Tracker>): String =
-    trackers.joinToString(RECORD_SEPARATOR) { tracker ->
-        encodeRecord(
-            listOf(
-                tracker.id.toString(),
-                tracker.name,
-                tracker.type.name,
-                tracker.frequency.name,
-                tracker.layoutStyle.name,
-                tracker.defaultAmount.toString(),
-                tracker.isNew.toString(),
-                tracker.createdAt.toString()
-            )
-        )
-    }
 
 private fun encodeBudgetPeriods(periods: List<BudgetPeriod>): String =
     periods.joinToString(RECORD_SEPARATOR) { period ->
