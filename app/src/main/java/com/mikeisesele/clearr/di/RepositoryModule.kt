@@ -47,7 +47,7 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindBudgetRepository(impl: ClearrRepositoryImpl): BudgetRepository
+    abstract fun bindBudgetRepository(impl: AndroidSharedCoreRepository): BudgetRepository
 
     @Binds
     @Singleton

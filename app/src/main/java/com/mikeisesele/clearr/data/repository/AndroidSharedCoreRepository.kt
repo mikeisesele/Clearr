@@ -2,9 +2,15 @@ package com.mikeisesele.clearr.data.repository
 
 import com.mikeisesele.clearr.data.local.room.ClearrSharedDatabase
 import com.mikeisesele.clearr.data.local.room.RoomAppConfigTrackerRepository
+import com.mikeisesele.clearr.data.local.room.RoomBudgetRepository
 import com.mikeisesele.clearr.data.local.room.RoomGoalsRepository
 import com.mikeisesele.clearr.data.local.room.RoomTodoRepository
 import com.mikeisesele.clearr.data.model.AppConfig
+import com.mikeisesele.clearr.data.model.BudgetCategory
+import com.mikeisesele.clearr.data.model.BudgetCategoryPlan
+import com.mikeisesele.clearr.data.model.BudgetEntry
+import com.mikeisesele.clearr.data.model.BudgetFrequency
+import com.mikeisesele.clearr.data.model.BudgetPeriod
 import com.mikeisesele.clearr.data.model.Goal
 import com.mikeisesele.clearr.data.model.GoalCompletion
 import com.mikeisesele.clearr.data.model.Tracker
@@ -31,6 +37,9 @@ class AndroidSharedCoreRepository @Inject constructor(
     )
     private val sharedGoalsRepository = RoomGoalsRepository(
         goalDao = sharedDatabase.goalDao()
+    )
+    private val sharedBudgetRepository = RoomBudgetRepository(
+        budgetDao = sharedDatabase.budgetDao()
     )
 
     init {
@@ -65,6 +74,7 @@ class AndroidSharedCoreRepository @Inject constructor(
 
     override suspend fun deleteTracker(id: Long) {
         featureRepository.deleteTracker(id)
+        sharedBudgetRepository.deleteBudgetDataForTracker(id)
         sharedGoalsRepository.deleteGoalsForTracker(id)
         sharedTodoRepository.deleteTodosForTracker(id)
         sharedRepository.deleteTracker(id)
@@ -75,56 +85,67 @@ class AndroidSharedCoreRepository @Inject constructor(
         sharedRepository.clearTrackerNewFlag(id)
     }
 
-    override fun getBudgetPeriods(trackerId: Long, frequency: com.mikeisesele.clearr.data.model.BudgetFrequency) =
-        featureRepository.getBudgetPeriods(trackerId, frequency)
+    override fun getBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) =
+        sharedBudgetRepository.getBudgetPeriods(trackerId, frequency)
 
-    override suspend fun ensureBudgetPeriods(trackerId: Long, frequency: com.mikeisesele.clearr.data.model.BudgetFrequency) {
+    override suspend fun ensureBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) {
         featureRepository.ensureBudgetPeriods(trackerId, frequency)
+        sharedBudgetRepository.ensureBudgetPeriods(trackerId, frequency)
     }
 
-    override fun getBudgetCategories(trackerId: Long, frequency: com.mikeisesele.clearr.data.model.BudgetFrequency) =
-        featureRepository.getBudgetCategories(trackerId, frequency)
+    override fun getBudgetCategories(trackerId: Long, frequency: BudgetFrequency) =
+        sharedBudgetRepository.getBudgetCategories(trackerId, frequency)
 
-    override suspend fun getBudgetMaxSortOrder(trackerId: Long, frequency: com.mikeisesele.clearr.data.model.BudgetFrequency): Int =
-        featureRepository.getBudgetMaxSortOrder(trackerId, frequency)
+    override suspend fun getBudgetMaxSortOrder(trackerId: Long, frequency: BudgetFrequency): Int =
+        sharedBudgetRepository.getBudgetMaxSortOrder(trackerId, frequency)
 
-    override suspend fun addBudgetCategory(category: com.mikeisesele.clearr.data.model.BudgetCategory): Long =
-        featureRepository.addBudgetCategory(category)
+    override suspend fun addBudgetCategory(category: BudgetCategory): Long {
+        val id = featureRepository.addBudgetCategory(category)
+        sharedBudgetRepository.addBudgetCategory(category.copy(id = id))
+        return id
+    }
 
-    override suspend fun updateBudgetCategory(category: com.mikeisesele.clearr.data.model.BudgetCategory) {
+    override suspend fun updateBudgetCategory(category: BudgetCategory) {
         featureRepository.updateBudgetCategory(category)
+        sharedBudgetRepository.updateBudgetCategory(category)
     }
 
     override suspend fun deleteBudgetCategory(categoryId: Long) {
         featureRepository.deleteBudgetCategory(categoryId)
+        sharedBudgetRepository.deleteBudgetCategory(categoryId)
     }
 
     override suspend fun reorderBudgetCategories(
         trackerId: Long,
-        frequency: com.mikeisesele.clearr.data.model.BudgetFrequency,
+        frequency: BudgetFrequency,
         orderedIds: List<Long>
     ) {
         featureRepository.reorderBudgetCategories(trackerId, frequency, orderedIds)
+        sharedBudgetRepository.reorderBudgetCategories(trackerId, frequency, orderedIds)
     }
 
     override fun getBudgetCategoryPlansForTracker(trackerId: Long) =
-        featureRepository.getBudgetCategoryPlansForTracker(trackerId)
+        sharedBudgetRepository.getBudgetCategoryPlansForTracker(trackerId)
 
     override suspend fun getBudgetCategoryPlansForPeriod(periodId: Long) =
-        featureRepository.getBudgetCategoryPlansForPeriod(periodId)
+        sharedBudgetRepository.getBudgetCategoryPlansForPeriod(periodId)
 
     override suspend fun saveBudgetCategoryPlans(
         periodId: Long,
-        plans: List<com.mikeisesele.clearr.data.model.BudgetCategoryPlan>
+        plans: List<BudgetCategoryPlan>
     ) {
         featureRepository.saveBudgetCategoryPlans(periodId, plans)
+        sharedBudgetRepository.saveBudgetCategoryPlans(periodId, plans)
     }
 
     override fun getBudgetEntriesForTracker(trackerId: Long) =
-        featureRepository.getBudgetEntriesForTracker(trackerId)
+        sharedBudgetRepository.getBudgetEntriesForTracker(trackerId)
 
-    override suspend fun addBudgetEntry(entry: com.mikeisesele.clearr.data.model.BudgetEntry): Long =
-        featureRepository.addBudgetEntry(entry)
+    override suspend fun addBudgetEntry(entry: BudgetEntry): Long {
+        val id = featureRepository.addBudgetEntry(entry)
+        sharedBudgetRepository.addBudgetEntry(entry.copy(id = id))
+        return id
+    }
 
     override fun getGoalsForTracker(trackerId: Long) = sharedGoalsRepository.getGoalsForTracker(trackerId)
 
@@ -191,6 +212,7 @@ class AndroidSharedCoreRepository @Inject constructor(
 
         synchronizeTodosIfNeeded(featureTrackers, sharedTrackers)
         synchronizeGoalsIfNeeded(featureTrackers, sharedTrackers)
+        synchronizeBudgetIfNeeded(featureTrackers, sharedTrackers)
     }
 
     private suspend fun synchronizeTodosIfNeeded(
@@ -247,5 +269,56 @@ class AndroidSharedCoreRepository @Inject constructor(
     ) {
         goals.forEach { goal -> featureRepository.insertGoal(goal) }
         completions.forEach { completion -> featureRepository.addGoalCompletion(completion) }
+    }
+
+    private suspend fun synchronizeBudgetIfNeeded(
+        featureTrackers: List<Tracker>,
+        sharedTrackers: List<Tracker>
+    ) {
+        val featureTrackerIds = featureTrackers.map(Tracker::id).toSet()
+        val sharedTrackerIds = sharedTrackers.map(Tracker::id).toSet()
+        val trackerIds = (featureTrackerIds + sharedTrackerIds).filter { id -> id > 0L }
+
+        trackerIds.forEach { trackerId ->
+            BudgetFrequency.entries.forEach { frequency ->
+                val sharedPeriods = sharedBudgetRepository.getBudgetPeriods(trackerId, frequency).first()
+                val sharedCategories = sharedBudgetRepository.getBudgetCategories(trackerId, frequency).first()
+                val featurePeriods = featureRepository.getBudgetPeriods(trackerId, frequency).first()
+                val featureCategories = featureRepository.getBudgetCategories(trackerId, frequency).first()
+                if (
+                    sharedPeriods.isEmpty() &&
+                    sharedCategories.isEmpty() &&
+                    (featurePeriods.isNotEmpty() || featureCategories.isNotEmpty())
+                ) {
+                    seedSharedBudgetForFrequency(
+                        trackerId = trackerId,
+                        frequency = frequency,
+                        periods = featurePeriods,
+                        categories = featureCategories
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun seedSharedBudgetForFrequency(
+        trackerId: Long,
+        frequency: BudgetFrequency,
+        periods: List<BudgetPeriod>,
+        categories: List<BudgetCategory>
+    ) {
+        val periodIds = periods.map(BudgetPeriod::id).toSet()
+        val categoryIds = categories.map(BudgetCategory::id).toSet()
+        val plans = featureRepository.getBudgetCategoryPlansForTracker(trackerId).first()
+            .filter { plan -> plan.periodId in periodIds && plan.categoryId in categoryIds }
+        val entries = featureRepository.getBudgetEntriesForTracker(trackerId).first()
+            .filter { entry -> entry.periodId in periodIds && entry.categoryId in categoryIds }
+
+        sharedBudgetRepository.seedBudgetData(
+            periods = periods.filter { period -> period.frequency == frequency },
+            categories = categories.filter { category -> category.frequency == frequency },
+            plans = plans,
+            entries = entries
+        )
     }
 }
