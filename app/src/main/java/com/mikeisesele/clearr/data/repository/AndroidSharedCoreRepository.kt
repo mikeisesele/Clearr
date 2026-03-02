@@ -24,7 +24,7 @@ import kotlinx.coroutines.runBlocking
 
 @Singleton
 class AndroidSharedCoreRepository @Inject constructor(
-    private val legacyRepository: ClearrRepositoryImpl,
+    private val legacyMigrationStore: LegacyAndroidMigrationStore,
     sharedDatabase: ClearrSharedDatabase
 ) : ClearrRepository, AppConfigRepository {
 
@@ -142,13 +142,13 @@ class AndroidSharedCoreRepository @Inject constructor(
 
     private suspend fun migrateLegacyDataIfNeeded() {
         val sharedConfig = sharedRepository.getAppConfig()
-        val legacyConfig = legacyRepository.getAppConfig()
+        val legacyConfig = legacyMigrationStore.getAppConfig()
         if (sharedConfig == null && legacyConfig != null) {
             sharedRepository.upsertAppConfig(legacyConfig)
         }
 
         val sharedTrackers = sharedRepository.getAllTrackers().first()
-        val legacyTrackers = legacyRepository.getAllTrackers().first()
+        val legacyTrackers = legacyMigrationStore.getAllTrackers().first()
         if (sharedTrackers.isEmpty() && legacyTrackers.isNotEmpty()) {
             legacyTrackers.forEach { tracker -> sharedRepository.insertTracker(tracker) }
         }
@@ -162,7 +162,7 @@ class AndroidSharedCoreRepository @Inject constructor(
         legacyTrackers.map(Tracker::id).filter { id -> id > 0L }.forEach { trackerId ->
             val sharedTodos = sharedTodoRepository.getTodosForTracker(trackerId).first()
             if (sharedTodos.isEmpty()) {
-                val legacyTodos = legacyRepository.getTodosForTracker(trackerId).first()
+                val legacyTodos = legacyMigrationStore.getTodosForTracker(trackerId).first()
                 sharedTodoRepository.seedTodos(legacyTodos)
             }
         }
@@ -173,8 +173,8 @@ class AndroidSharedCoreRepository @Inject constructor(
             val sharedGoals = sharedGoalsRepository.getGoalsForTracker(trackerId).first()
             val sharedCompletions = sharedGoalsRepository.getGoalCompletionsForTracker(trackerId).first()
             if (sharedGoals.isEmpty() && sharedCompletions.isEmpty()) {
-                val legacyGoals = legacyRepository.getGoalsForTracker(trackerId).first()
-                val legacyCompletions = legacyRepository.getGoalCompletionsForTracker(trackerId).first()
+                val legacyGoals = legacyMigrationStore.getGoalsForTracker(trackerId).first()
+                val legacyCompletions = legacyMigrationStore.getGoalCompletionsForTracker(trackerId).first()
                 sharedGoalsRepository.seedGoals(legacyGoals, legacyCompletions)
             }
         }
@@ -189,8 +189,8 @@ class AndroidSharedCoreRepository @Inject constructor(
                     sharedPeriods.isEmpty() &&
                     sharedCategories.isEmpty()
                 ) {
-                    val legacyPeriods = legacyRepository.getBudgetPeriods(trackerId, frequency).first()
-                    val legacyCategories = legacyRepository.getBudgetCategories(trackerId, frequency).first()
+                    val legacyPeriods = legacyMigrationStore.getBudgetPeriods(trackerId, frequency).first()
+                    val legacyCategories = legacyMigrationStore.getBudgetCategories(trackerId, frequency).first()
                     migrateLegacyBudgetFrequency(
                         trackerId = trackerId,
                         frequency = frequency,
@@ -210,9 +210,9 @@ class AndroidSharedCoreRepository @Inject constructor(
     ) {
         val periodIds = periods.map(BudgetPeriod::id).toSet()
         val categoryIds = categories.map(BudgetCategory::id).toSet()
-        val plans = legacyRepository.getBudgetCategoryPlansForTracker(trackerId).first()
+        val plans = legacyMigrationStore.getBudgetCategoryPlansForTracker(trackerId).first()
             .filter { plan -> plan.periodId in periodIds && plan.categoryId in categoryIds }
-        val entries = legacyRepository.getBudgetEntriesForTracker(trackerId).first()
+        val entries = legacyMigrationStore.getBudgetEntriesForTracker(trackerId).first()
             .filter { entry -> entry.periodId in periodIds && entry.categoryId in categoryIds }
 
         sharedBudgetRepository.seedBudgetData(
