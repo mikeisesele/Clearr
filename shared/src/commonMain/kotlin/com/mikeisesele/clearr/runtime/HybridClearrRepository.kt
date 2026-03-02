@@ -21,8 +21,7 @@ class HybridClearrRepository(
     private val trackerRepository: RoomAppConfigTrackerRepository,
     private val budgetRepository: RoomBudgetRepository,
     private val goalsRepository: RoomGoalsRepository,
-    private val todoRepository: RoomTodoRepository,
-    private val featureRepository: ClearrRepository
+    private val todoRepository: RoomTodoRepository
 ) : ClearrRepository {
     override fun getAppConfigFlow(): Flow<AppConfig?> = trackerRepository.getAppConfigFlow()
 
@@ -45,7 +44,6 @@ class HybridClearrRepository(
     }
 
     override suspend fun deleteTracker(id: Long) {
-        featureRepository.deleteTracker(id)
         budgetRepository.deleteBudgetDataForTracker(id)
         goalsRepository.deleteGoalsForTracker(id)
         todoRepository.deleteTodosForTracker(id)

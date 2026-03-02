@@ -17,9 +17,9 @@ import platform.posix.timeval
 @OptIn(ExperimentalForeignApi::class)
 class IosClearrRuntime(
     store: KeyValueStoreDriver = NSUserDefaultsKeyValueStoreDriver(),
-    featureRepository: IosClearrRepository = IosClearrRepository(store),
+    migrationStore: LegacyIosMigrationStore = LegacyIosMigrationStore(store),
     roomDatabase: com.mikeisesele.clearr.data.local.room.ClearrSharedDatabase = createIosClearrSharedDatabase(),
-    override val repository: HybridClearrRepository = createIosHybridRepository(roomDatabase, featureRepository),
+    override val repository: HybridClearrRepository = createIosHybridRepository(roomDatabase, migrationStore),
     override val onboardingStatusRepository: KeyValueOnboardingStatusRepository = KeyValueOnboardingStatusRepository(store),
     override val budgetPreferencesRepository: KeyValueBudgetPreferencesRepository = KeyValueBudgetPreferencesRepository(store),
     override val todoPreferencesRepository: KeyValueTodoPreferencesRepository = KeyValueTodoPreferencesRepository(store),
@@ -37,7 +37,7 @@ class IosClearrRuntime(
 
 private fun createIosHybridRepository(
     roomDatabase: com.mikeisesele.clearr.data.local.room.ClearrSharedDatabase,
-    featureRepository: IosClearrRepository
+    migrationStore: LegacyIosMigrationStore
 ): HybridClearrRepository {
     val trackerRepository = RoomAppConfigTrackerRepository(
         appConfigDao = roomDatabase.appConfigDao(),
@@ -50,49 +50,48 @@ private fun createIosHybridRepository(
         migrateLegacyBudgetIfNeeded(
             trackerRepository = trackerRepository,
             budgetRepository = budgetRepository,
-            featureRepository = featureRepository
+            migrationStore = migrationStore
         )
         migrateLegacyTodosIfNeeded(
             trackerRepository = trackerRepository,
             todoRepository = todoRepository,
-            featureRepository = featureRepository
+            migrationStore = migrationStore
         )
         migrateLegacyGoalsIfNeeded(
             trackerRepository = trackerRepository,
             goalsRepository = goalsRepository,
-            featureRepository = featureRepository
+            migrationStore = migrationStore
         )
     }
     return HybridClearrRepository(
         trackerRepository = trackerRepository,
         budgetRepository = budgetRepository,
         goalsRepository = goalsRepository,
-        todoRepository = todoRepository,
-        featureRepository = featureRepository
+        todoRepository = todoRepository
     )
 }
 
 private suspend fun migrateLegacyBudgetIfNeeded(
     trackerRepository: RoomAppConfigTrackerRepository,
     budgetRepository: RoomBudgetRepository,
-    featureRepository: IosClearrRepository
+    migrationStore: LegacyIosMigrationStore
 ) {
     if (!budgetRepository.isEmpty()) return
     val budgetTrackers = trackerRepository.getAllTrackers().first()
         .filter { it.type == com.mikeisesele.clearr.data.model.TrackerType.BUDGET }
     val periods = budgetTrackers.flatMap { tracker ->
-        featureRepository.getBudgetPeriods(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY).first() +
-            featureRepository.getBudgetPeriods(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.WEEKLY).first()
+        migrationStore.loadBudgetPeriods(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY) +
+            migrationStore.loadBudgetPeriods(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.WEEKLY)
     }
     val categories = budgetTrackers.flatMap { tracker ->
-        featureRepository.getBudgetCategories(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY).first() +
-            featureRepository.getBudgetCategories(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.WEEKLY).first()
+        migrationStore.loadBudgetCategories(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY) +
+            migrationStore.loadBudgetCategories(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.WEEKLY)
     }
     val plans = budgetTrackers.flatMap { tracker ->
-        featureRepository.getBudgetCategoryPlansForTracker(tracker.id).first()
+        migrationStore.loadBudgetCategoryPlans(tracker.id)
     }
     val entries = budgetTrackers.flatMap { tracker ->
-        featureRepository.getBudgetEntriesForTracker(tracker.id).first()
+        migrationStore.loadBudgetEntries(tracker.id)
     }
     budgetRepository.seedBudgetData(periods, categories, plans, entries)
 }
@@ -100,22 +99,22 @@ private suspend fun migrateLegacyBudgetIfNeeded(
 private suspend fun migrateLegacyTodosIfNeeded(
     trackerRepository: RoomAppConfigTrackerRepository,
     todoRepository: RoomTodoRepository,
-    featureRepository: IosClearrRepository
+    migrationStore: LegacyIosMigrationStore
 ) {
     if (!todoRepository.isEmpty()) return
     val legacyTodos = trackerRepository.getAllTrackers().first()
-        .flatMap { tracker -> featureRepository.getTodosForTracker(tracker.id).first() }
+        .flatMap { tracker -> migrationStore.loadTodos(tracker.id) }
     todoRepository.seedTodos(legacyTodos)
 }
 
 private suspend fun migrateLegacyGoalsIfNeeded(
     trackerRepository: RoomAppConfigTrackerRepository,
     goalsRepository: RoomGoalsRepository,
-    featureRepository: IosClearrRepository
+    migrationStore: LegacyIosMigrationStore
 ) {
     if (!goalsRepository.isEmpty()) return
     val trackers = trackerRepository.getAllTrackers().first()
-    val legacyGoals = trackers.flatMap { tracker -> featureRepository.getGoalsForTracker(tracker.id).first() }
-    val legacyCompletions = trackers.flatMap { tracker -> featureRepository.getGoalCompletionsForTracker(tracker.id).first() }
+    val legacyGoals = trackers.flatMap { tracker -> migrationStore.loadGoals(tracker.id) }
+    val legacyCompletions = trackers.flatMap { tracker -> migrationStore.loadGoalCompletionsForTracker(tracker.id) }
     goalsRepository.seedGoals(legacyGoals, legacyCompletions)
 }
