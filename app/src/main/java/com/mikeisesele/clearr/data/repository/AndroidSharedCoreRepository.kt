@@ -2,7 +2,9 @@ package com.mikeisesele.clearr.data.repository
 
 import com.mikeisesele.clearr.data.local.room.ClearrSharedDatabase
 import com.mikeisesele.clearr.data.local.room.RoomAppConfigTrackerRepository
+import com.mikeisesele.clearr.data.local.room.RoomTodoRepository
 import com.mikeisesele.clearr.data.model.AppConfig
+import com.mikeisesele.clearr.data.model.TodoItem
 import com.mikeisesele.clearr.data.model.Tracker
 import com.mikeisesele.clearr.domain.repository.AppConfigRepository
 import com.mikeisesele.clearr.domain.repository.ClearrRepository
@@ -21,6 +23,9 @@ class AndroidSharedCoreRepository @Inject constructor(
     private val sharedRepository = RoomAppConfigTrackerRepository(
         appConfigDao = sharedDatabase.appConfigDao(),
         trackerDao = sharedDatabase.trackerDao()
+    )
+    private val sharedTodoRepository = RoomTodoRepository(
+        todoDao = sharedDatabase.todoDao()
     )
 
     init {
@@ -55,6 +60,7 @@ class AndroidSharedCoreRepository @Inject constructor(
 
     override suspend fun deleteTracker(id: Long) {
         featureRepository.deleteTracker(id)
+        sharedTodoRepository.deleteTodosForTracker(id)
         sharedRepository.deleteTracker(id)
     }
 
@@ -131,24 +137,28 @@ class AndroidSharedCoreRepository @Inject constructor(
         featureRepository.deleteGoal(goalId)
     }
 
-    override fun getTodosForTracker(trackerId: Long) = featureRepository.getTodosForTracker(trackerId)
+    override fun getTodosForTracker(trackerId: Long) = sharedTodoRepository.getTodosForTracker(trackerId)
 
-    override suspend fun getTodoById(id: String) = featureRepository.getTodoById(id)
+    override suspend fun getTodoById(id: String) = sharedTodoRepository.getTodoById(id)
 
     override suspend fun insertTodo(todo: com.mikeisesele.clearr.data.model.TodoItem) {
         featureRepository.insertTodo(todo)
+        sharedTodoRepository.insertTodo(todo)
     }
 
     override suspend fun updateTodo(todo: com.mikeisesele.clearr.data.model.TodoItem) {
         featureRepository.updateTodo(todo)
+        sharedTodoRepository.updateTodo(todo)
     }
 
     override suspend fun markTodoDone(id: String, completedAt: Long) {
         featureRepository.markTodoDone(id, completedAt)
+        sharedTodoRepository.markTodoDone(id, completedAt)
     }
 
     override suspend fun deleteTodo(id: String) {
         featureRepository.deleteTodo(id)
+        sharedTodoRepository.deleteTodo(id)
     }
 
     private suspend fun synchronizeCoreDataIfNeeded() {
@@ -167,6 +177,30 @@ class AndroidSharedCoreRepository @Inject constructor(
             }
             featureTrackers.isEmpty() && sharedTrackers.isNotEmpty() -> {
                 sharedTrackers.forEach { tracker -> featureRepository.insertTracker(tracker) }
+            }
+        }
+
+        synchronizeTodosIfNeeded(featureTrackers, sharedTrackers)
+    }
+
+    private suspend fun synchronizeTodosIfNeeded(
+        featureTrackers: List<Tracker>,
+        sharedTrackers: List<Tracker>
+    ) {
+        val featureTrackerIds = featureTrackers.map(Tracker::id).toSet()
+        val sharedTrackerIds = sharedTrackers.map(Tracker::id).toSet()
+        val trackerIds = (featureTrackerIds + sharedTrackerIds).filter { id -> id > 0L }
+
+        trackerIds.forEach { trackerId ->
+            val sharedTodos = sharedTodoRepository.getTodosForTracker(trackerId).first()
+            val featureTodos = featureRepository.getTodosForTracker(trackerId).first()
+            when {
+                sharedTodos.isEmpty() && featureTodos.isNotEmpty() -> {
+                    sharedTodoRepository.seedTodos(featureTodos)
+                }
+                featureTodos.isEmpty() && sharedTodos.isNotEmpty() -> {
+                    sharedTodos.forEach { todo -> featureRepository.insertTodo(todo) }
+                }
             }
         }
     }

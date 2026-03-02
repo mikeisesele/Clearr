@@ -43,7 +43,7 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindTodoRepository(impl: ClearrRepositoryImpl): TodoRepository
+    abstract fun bindTodoRepository(impl: AndroidSharedCoreRepository): TodoRepository
 
     @Binds
     @Singleton
