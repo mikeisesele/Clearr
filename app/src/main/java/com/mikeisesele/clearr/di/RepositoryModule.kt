@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.di
 
 import com.mikeisesele.clearr.data.repository.BudgetPreferencesRepository
+import com.mikeisesele.clearr.data.repository.AndroidSharedCoreRepository
 import com.mikeisesele.clearr.data.repository.ClearrRepositoryImpl
 import com.mikeisesele.clearr.data.repository.TodoPreferencesRepository
 import com.mikeisesele.clearr.domain.budget.BudgetPeriodPlanner
@@ -30,11 +31,11 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindClearrRepository(impl: ClearrRepositoryImpl): ClearrRepository
+    abstract fun bindClearrRepository(impl: AndroidSharedCoreRepository): ClearrRepository
 
     @Binds
     @Singleton
-    abstract fun bindAppConfigRepository(impl: ClearrRepositoryImpl): AppConfigRepository
+    abstract fun bindAppConfigRepository(impl: AndroidSharedCoreRepository): AppConfigRepository
 
     @Binds
     @Singleton

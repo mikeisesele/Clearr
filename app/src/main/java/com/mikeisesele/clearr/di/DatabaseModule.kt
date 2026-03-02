@@ -2,6 +2,8 @@ package com.mikeisesele.clearr.di
 
 import android.content.Context
 import androidx.room.Room
+import com.mikeisesele.clearr.data.local.room.ClearrSharedDatabase
+import com.mikeisesele.clearr.data.local.room.createAndroidClearrSharedDatabase
 import com.mikeisesele.clearr.data.dao.AppConfigDao
 import com.mikeisesele.clearr.data.dao.BudgetDao
 import com.mikeisesele.clearr.data.dao.GoalsDao
@@ -29,6 +31,11 @@ object DatabaseModule {
         )
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
+
+    @Provides
+    @Singleton
+    fun provideSharedDatabase(@ApplicationContext context: Context): ClearrSharedDatabase =
+        createAndroidClearrSharedDatabase(context)
 
     @Provides
     fun provideAppConfigDao(db: ClearrDatabase): AppConfigDao = db.appConfigDao()
