@@ -24,7 +24,7 @@ import kotlinx.coroutines.runBlocking
 
 @Singleton
 class AndroidSharedCoreRepository @Inject constructor(
-    private val featureRepository: ClearrRepositoryImpl,
+    private val legacyRepository: ClearrRepositoryImpl,
     sharedDatabase: ClearrSharedDatabase
 ) : ClearrRepository, AppConfigRepository {
 
@@ -43,17 +43,14 @@ class AndroidSharedCoreRepository @Inject constructor(
     )
 
     init {
-        runBlocking { synchronizeCoreDataIfNeeded() }
+        runBlocking { migrateLegacyDataIfNeeded() }
     }
 
     override fun getAppConfigFlow(): Flow<AppConfig?> = sharedRepository.getAppConfigFlow()
 
     override suspend fun getAppConfig(): AppConfig? = sharedRepository.getAppConfig()
 
-    override suspend fun upsertAppConfig(config: AppConfig) {
-        featureRepository.upsertAppConfig(config)
-        sharedRepository.upsertAppConfig(config)
-    }
+    override suspend fun upsertAppConfig(config: AppConfig) = sharedRepository.upsertAppConfig(config)
 
     override fun getAllTrackers(): Flow<List<Tracker>> = sharedRepository.getAllTrackers()
 
@@ -61,37 +58,24 @@ class AndroidSharedCoreRepository @Inject constructor(
 
     override fun getTrackerByIdFlow(id: Long): Flow<Tracker?> = sharedRepository.getTrackerByIdFlow(id)
 
-    override suspend fun insertTracker(tracker: Tracker): Long {
-        val id = featureRepository.insertTracker(tracker)
-        sharedRepository.insertTracker(tracker.copy(id = id))
-        return id
-    }
+    override suspend fun insertTracker(tracker: Tracker): Long = sharedRepository.insertTracker(tracker)
 
-    override suspend fun updateTracker(tracker: Tracker) {
-        featureRepository.updateTracker(tracker)
-        sharedRepository.updateTracker(tracker)
-    }
+    override suspend fun updateTracker(tracker: Tracker) = sharedRepository.updateTracker(tracker)
 
     override suspend fun deleteTracker(id: Long) {
-        featureRepository.deleteTracker(id)
         sharedBudgetRepository.deleteBudgetDataForTracker(id)
         sharedGoalsRepository.deleteGoalsForTracker(id)
         sharedTodoRepository.deleteTodosForTracker(id)
         sharedRepository.deleteTracker(id)
     }
 
-    override suspend fun clearTrackerNewFlag(id: Long) {
-        featureRepository.clearTrackerNewFlag(id)
-        sharedRepository.clearTrackerNewFlag(id)
-    }
+    override suspend fun clearTrackerNewFlag(id: Long) = sharedRepository.clearTrackerNewFlag(id)
 
     override fun getBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) =
         sharedBudgetRepository.getBudgetPeriods(trackerId, frequency)
 
-    override suspend fun ensureBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) {
-        featureRepository.ensureBudgetPeriods(trackerId, frequency)
+    override suspend fun ensureBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) =
         sharedBudgetRepository.ensureBudgetPeriods(trackerId, frequency)
-    }
 
     override fun getBudgetCategories(trackerId: Long, frequency: BudgetFrequency) =
         sharedBudgetRepository.getBudgetCategories(trackerId, frequency)
@@ -100,29 +84,18 @@ class AndroidSharedCoreRepository @Inject constructor(
         sharedBudgetRepository.getBudgetMaxSortOrder(trackerId, frequency)
 
     override suspend fun addBudgetCategory(category: BudgetCategory): Long {
-        val id = featureRepository.addBudgetCategory(category)
-        sharedBudgetRepository.addBudgetCategory(category.copy(id = id))
-        return id
+        return sharedBudgetRepository.addBudgetCategory(category)
     }
 
-    override suspend fun updateBudgetCategory(category: BudgetCategory) {
-        featureRepository.updateBudgetCategory(category)
-        sharedBudgetRepository.updateBudgetCategory(category)
-    }
+    override suspend fun updateBudgetCategory(category: BudgetCategory) = sharedBudgetRepository.updateBudgetCategory(category)
 
-    override suspend fun deleteBudgetCategory(categoryId: Long) {
-        featureRepository.deleteBudgetCategory(categoryId)
-        sharedBudgetRepository.deleteBudgetCategory(categoryId)
-    }
+    override suspend fun deleteBudgetCategory(categoryId: Long) = sharedBudgetRepository.deleteBudgetCategory(categoryId)
 
     override suspend fun reorderBudgetCategories(
         trackerId: Long,
         frequency: BudgetFrequency,
         orderedIds: List<Long>
-    ) {
-        featureRepository.reorderBudgetCategories(trackerId, frequency, orderedIds)
-        sharedBudgetRepository.reorderBudgetCategories(trackerId, frequency, orderedIds)
-    }
+    ) = sharedBudgetRepository.reorderBudgetCategories(trackerId, frequency, orderedIds)
 
     override fun getBudgetCategoryPlansForTracker(trackerId: Long) =
         sharedBudgetRepository.getBudgetCategoryPlansForTracker(trackerId)
@@ -133,175 +106,103 @@ class AndroidSharedCoreRepository @Inject constructor(
     override suspend fun saveBudgetCategoryPlans(
         periodId: Long,
         plans: List<BudgetCategoryPlan>
-    ) {
-        featureRepository.saveBudgetCategoryPlans(periodId, plans)
-        sharedBudgetRepository.saveBudgetCategoryPlans(periodId, plans)
-    }
+    ) = sharedBudgetRepository.saveBudgetCategoryPlans(periodId, plans)
 
     override fun getBudgetEntriesForTracker(trackerId: Long) =
         sharedBudgetRepository.getBudgetEntriesForTracker(trackerId)
 
-    override suspend fun addBudgetEntry(entry: BudgetEntry): Long {
-        val id = featureRepository.addBudgetEntry(entry)
-        sharedBudgetRepository.addBudgetEntry(entry.copy(id = id))
-        return id
-    }
+    override suspend fun addBudgetEntry(entry: BudgetEntry): Long = sharedBudgetRepository.addBudgetEntry(entry)
 
     override fun getGoalsForTracker(trackerId: Long) = sharedGoalsRepository.getGoalsForTracker(trackerId)
 
     override fun getGoalCompletionsForTracker(trackerId: Long) =
         sharedGoalsRepository.getGoalCompletionsForTracker(trackerId)
 
-    override suspend fun insertGoal(goal: com.mikeisesele.clearr.data.model.Goal) {
-        featureRepository.insertGoal(goal)
-        sharedGoalsRepository.insertGoal(goal)
-    }
+    override suspend fun insertGoal(goal: Goal) = sharedGoalsRepository.insertGoal(goal)
 
-    override suspend fun addGoalCompletion(completion: com.mikeisesele.clearr.data.model.GoalCompletion) {
-        featureRepository.addGoalCompletion(completion)
+    override suspend fun addGoalCompletion(completion: GoalCompletion) =
         sharedGoalsRepository.addGoalCompletion(completion)
-    }
 
-    override suspend fun deleteGoal(goalId: String) {
-        featureRepository.deleteGoal(goalId)
-        sharedGoalsRepository.deleteGoal(goalId)
-    }
+    override suspend fun deleteGoal(goalId: String) = sharedGoalsRepository.deleteGoal(goalId)
 
     override fun getTodosForTracker(trackerId: Long) = sharedTodoRepository.getTodosForTracker(trackerId)
 
     override suspend fun getTodoById(id: String) = sharedTodoRepository.getTodoById(id)
 
-    override suspend fun insertTodo(todo: com.mikeisesele.clearr.data.model.TodoItem) {
-        featureRepository.insertTodo(todo)
+    override suspend fun insertTodo(todo: com.mikeisesele.clearr.data.model.TodoItem) =
         sharedTodoRepository.insertTodo(todo)
-    }
 
-    override suspend fun updateTodo(todo: com.mikeisesele.clearr.data.model.TodoItem) {
-        featureRepository.updateTodo(todo)
+    override suspend fun updateTodo(todo: com.mikeisesele.clearr.data.model.TodoItem) =
         sharedTodoRepository.updateTodo(todo)
-    }
 
-    override suspend fun markTodoDone(id: String, completedAt: Long) {
-        featureRepository.markTodoDone(id, completedAt)
+    override suspend fun markTodoDone(id: String, completedAt: Long) =
         sharedTodoRepository.markTodoDone(id, completedAt)
-    }
 
-    override suspend fun deleteTodo(id: String) {
-        featureRepository.deleteTodo(id)
-        sharedTodoRepository.deleteTodo(id)
-    }
+    override suspend fun deleteTodo(id: String) = sharedTodoRepository.deleteTodo(id)
 
-    private suspend fun synchronizeCoreDataIfNeeded() {
+    private suspend fun migrateLegacyDataIfNeeded() {
         val sharedConfig = sharedRepository.getAppConfig()
-        val featureConfig = featureRepository.getAppConfig()
-        when {
-            sharedConfig == null && featureConfig != null -> sharedRepository.upsertAppConfig(featureConfig)
-            sharedConfig != null && featureConfig == null -> featureRepository.upsertAppConfig(sharedConfig)
+        val legacyConfig = legacyRepository.getAppConfig()
+        if (sharedConfig == null && legacyConfig != null) {
+            sharedRepository.upsertAppConfig(legacyConfig)
         }
 
         val sharedTrackers = sharedRepository.getAllTrackers().first()
-        val featureTrackers = featureRepository.getAllTrackers().first()
-        when {
-            sharedTrackers.isEmpty() && featureTrackers.isNotEmpty() -> {
-                featureTrackers.forEach { tracker -> sharedRepository.insertTracker(tracker) }
-            }
-            featureTrackers.isEmpty() && sharedTrackers.isNotEmpty() -> {
-                sharedTrackers.forEach { tracker -> featureRepository.insertTracker(tracker) }
-            }
+        val legacyTrackers = legacyRepository.getAllTrackers().first()
+        if (sharedTrackers.isEmpty() && legacyTrackers.isNotEmpty()) {
+            legacyTrackers.forEach { tracker -> sharedRepository.insertTracker(tracker) }
         }
 
-        synchronizeTodosIfNeeded(featureTrackers, sharedTrackers)
-        synchronizeGoalsIfNeeded(featureTrackers, sharedTrackers)
-        synchronizeBudgetIfNeeded(featureTrackers, sharedTrackers)
+        migrateLegacyTodosIfNeeded(legacyTrackers)
+        migrateLegacyGoalsIfNeeded(legacyTrackers)
+        migrateLegacyBudgetIfNeeded(legacyTrackers)
     }
 
-    private suspend fun synchronizeTodosIfNeeded(
-        featureTrackers: List<Tracker>,
-        sharedTrackers: List<Tracker>
-    ) {
-        val featureTrackerIds = featureTrackers.map(Tracker::id).toSet()
-        val sharedTrackerIds = sharedTrackers.map(Tracker::id).toSet()
-        val trackerIds = (featureTrackerIds + sharedTrackerIds).filter { id -> id > 0L }
-
-        trackerIds.forEach { trackerId ->
+    private suspend fun migrateLegacyTodosIfNeeded(legacyTrackers: List<Tracker>) {
+        legacyTrackers.map(Tracker::id).filter { id -> id > 0L }.forEach { trackerId ->
             val sharedTodos = sharedTodoRepository.getTodosForTracker(trackerId).first()
-            val featureTodos = featureRepository.getTodosForTracker(trackerId).first()
-            when {
-                sharedTodos.isEmpty() && featureTodos.isNotEmpty() -> {
-                    sharedTodoRepository.seedTodos(featureTodos)
-                }
-                featureTodos.isEmpty() && sharedTodos.isNotEmpty() -> {
-                    sharedTodos.forEach { todo -> featureRepository.insertTodo(todo) }
-                }
+            if (sharedTodos.isEmpty()) {
+                val legacyTodos = legacyRepository.getTodosForTracker(trackerId).first()
+                sharedTodoRepository.seedTodos(legacyTodos)
             }
         }
     }
 
-    private suspend fun synchronizeGoalsIfNeeded(
-        featureTrackers: List<Tracker>,
-        sharedTrackers: List<Tracker>
-    ) {
-        val featureTrackerIds = featureTrackers.map(Tracker::id).toSet()
-        val sharedTrackerIds = sharedTrackers.map(Tracker::id).toSet()
-        val trackerIds = (featureTrackerIds + sharedTrackerIds).filter { id -> id > 0L }
-
-        trackerIds.forEach { trackerId ->
+    private suspend fun migrateLegacyGoalsIfNeeded(legacyTrackers: List<Tracker>) {
+        legacyTrackers.map(Tracker::id).filter { id -> id > 0L }.forEach { trackerId ->
             val sharedGoals = sharedGoalsRepository.getGoalsForTracker(trackerId).first()
             val sharedCompletions = sharedGoalsRepository.getGoalCompletionsForTracker(trackerId).first()
-            val featureGoals = featureRepository.getGoalsForTracker(trackerId).first()
-            val featureCompletions = featureRepository.getGoalCompletionsForTracker(trackerId).first()
-            when {
-                sharedGoals.isEmpty() && sharedCompletions.isEmpty() &&
-                    (featureGoals.isNotEmpty() || featureCompletions.isNotEmpty()) -> {
-                    sharedGoalsRepository.seedGoals(featureGoals, featureCompletions)
-                }
-                featureGoals.isEmpty() && featureCompletions.isEmpty() &&
-                    (sharedGoals.isNotEmpty() || sharedCompletions.isNotEmpty()) -> {
-                    seedFeatureGoals(sharedGoals, sharedCompletions)
-                }
+            if (sharedGoals.isEmpty() && sharedCompletions.isEmpty()) {
+                val legacyGoals = legacyRepository.getGoalsForTracker(trackerId).first()
+                val legacyCompletions = legacyRepository.getGoalCompletionsForTracker(trackerId).first()
+                sharedGoalsRepository.seedGoals(legacyGoals, legacyCompletions)
             }
         }
     }
 
-    private suspend fun seedFeatureGoals(
-        goals: List<Goal>,
-        completions: List<GoalCompletion>
-    ) {
-        goals.forEach { goal -> featureRepository.insertGoal(goal) }
-        completions.forEach { completion -> featureRepository.addGoalCompletion(completion) }
-    }
-
-    private suspend fun synchronizeBudgetIfNeeded(
-        featureTrackers: List<Tracker>,
-        sharedTrackers: List<Tracker>
-    ) {
-        val featureTrackerIds = featureTrackers.map(Tracker::id).toSet()
-        val sharedTrackerIds = sharedTrackers.map(Tracker::id).toSet()
-        val trackerIds = (featureTrackerIds + sharedTrackerIds).filter { id -> id > 0L }
-
-        trackerIds.forEach { trackerId ->
+    private suspend fun migrateLegacyBudgetIfNeeded(legacyTrackers: List<Tracker>) {
+        legacyTrackers.map(Tracker::id).filter { id -> id > 0L }.forEach { trackerId ->
             BudgetFrequency.entries.forEach { frequency ->
                 val sharedPeriods = sharedBudgetRepository.getBudgetPeriods(trackerId, frequency).first()
                 val sharedCategories = sharedBudgetRepository.getBudgetCategories(trackerId, frequency).first()
-                val featurePeriods = featureRepository.getBudgetPeriods(trackerId, frequency).first()
-                val featureCategories = featureRepository.getBudgetCategories(trackerId, frequency).first()
                 if (
                     sharedPeriods.isEmpty() &&
-                    sharedCategories.isEmpty() &&
-                    (featurePeriods.isNotEmpty() || featureCategories.isNotEmpty())
+                    sharedCategories.isEmpty()
                 ) {
-                    seedSharedBudgetForFrequency(
+                    val legacyPeriods = legacyRepository.getBudgetPeriods(trackerId, frequency).first()
+                    val legacyCategories = legacyRepository.getBudgetCategories(trackerId, frequency).first()
+                    migrateLegacyBudgetFrequency(
                         trackerId = trackerId,
                         frequency = frequency,
-                        periods = featurePeriods,
-                        categories = featureCategories
+                        periods = legacyPeriods,
+                        categories = legacyCategories
                     )
                 }
             }
         }
     }
 
-    private suspend fun seedSharedBudgetForFrequency(
+    private suspend fun migrateLegacyBudgetFrequency(
         trackerId: Long,
         frequency: BudgetFrequency,
         periods: List<BudgetPeriod>,
@@ -309,9 +210,9 @@ class AndroidSharedCoreRepository @Inject constructor(
     ) {
         val periodIds = periods.map(BudgetPeriod::id).toSet()
         val categoryIds = categories.map(BudgetCategory::id).toSet()
-        val plans = featureRepository.getBudgetCategoryPlansForTracker(trackerId).first()
+        val plans = legacyRepository.getBudgetCategoryPlansForTracker(trackerId).first()
             .filter { plan -> plan.periodId in periodIds && plan.categoryId in categoryIds }
-        val entries = featureRepository.getBudgetEntriesForTracker(trackerId).first()
+        val entries = legacyRepository.getBudgetEntriesForTracker(trackerId).first()
             .filter { entry -> entry.periodId in periodIds && entry.categoryId in categoryIds }
 
         sharedBudgetRepository.seedBudgetData(
