@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import com.mikeisesele.clearr.data.model.GoalFrequency
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
+import com.mikeisesele.clearr.ui.commons.components.PlatformBackHandler
 import com.mikeisesele.clearr.ui.feature.goals.components.GoalSectionTitle
 import com.mikeisesele.clearr.ui.feature.goals.components.GoalSheetInput
 import com.mikeisesele.clearr.ui.feature.goals.utils.goalPalette
@@ -89,6 +90,8 @@ fun AddGoalScreen(
     val palette = goalPalette(colorToken)
 
     if (state.trackerId < 0) return
+
+    PlatformBackHandler(onBack = onClose)
 
     LaunchedEffect(Unit) { titleFocusRequester.requestFocus() }
     LaunchedEffect(title, target) {

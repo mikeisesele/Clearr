@@ -109,11 +109,10 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
     val currentRoute = currentBackStack?.destination?.route
     val backDestination = currentDestination?.backDestinationOrNull()
 
-    BackHandler(enabled = backDestination != null) {
-        when {
-            currentDestination?.isAddFlowDestination() == true -> shellNavigator.pop()
-            backDestination != null -> shellNavigator.openTopLevel(backDestination)
-        }
+    BackHandler(
+        enabled = currentDestination?.isTopLevelDestination() == true && backDestination != null
+    ) {
+        backDestination?.let(shellNavigator::openTopLevel)
     }
 
     LaunchedEffect(shellNavState.current, currentDestination) {

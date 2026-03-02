@@ -59,6 +59,8 @@ fun AddBudgetCategoryScreen(
 
     var selectedPreset by remember { mutableStateOf<BudgetCategoryPreset?>(null) }
 
+    PlatformBackHandler(enabled = selectedPreset == null, onBack = onClose)
+
     Column(
         modifier = Modifier
             .fillMaxSize()

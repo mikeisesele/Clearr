@@ -41,6 +41,7 @@ import com.mikeisesele.clearr.core.time.plusDays
 import com.mikeisesele.clearr.core.time.todayLocalDate
 import com.mikeisesele.clearr.data.model.TodoPriority
 import com.mikeisesele.clearr.ui.commons.components.ClearrTopBar
+import com.mikeisesele.clearr.ui.commons.components.PlatformBackHandler
 import com.mikeisesele.clearr.ui.feature.todo.components.CustomDatePickerDialog
 import com.mikeisesele.clearr.ui.feature.todo.components.TodoSheetInput
 import com.mikeisesele.clearr.ui.feature.todo.utils.dueDateFromOption
@@ -67,6 +68,8 @@ fun AddTodoScreen(
     val canSubmit = title.trim().isNotEmpty()
     val options = listOf("Today", "Tomorrow", "This week", "Next week", "Custom", "No due date")
     val customLabel = customDate?.let(::formatMonthDay)
+
+    PlatformBackHandler(onBack = onClose)
 
     LaunchedEffect(Unit) { titleFocusRequester.requestFocus() }
 
