@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.runtime
 
 import com.mikeisesele.clearr.data.local.room.RoomAppConfigTrackerRepository
+import com.mikeisesele.clearr.data.local.room.RoomBudgetRepository
 import com.mikeisesele.clearr.data.local.room.RoomGoalsRepository
 import com.mikeisesele.clearr.data.local.room.RoomTodoRepository
 import com.mikeisesele.clearr.data.local.room.createIosClearrSharedDatabase
@@ -42,9 +43,15 @@ private fun createIosHybridRepository(
         appConfigDao = roomDatabase.appConfigDao(),
         trackerDao = roomDatabase.trackerDao()
     )
+    val budgetRepository = RoomBudgetRepository(roomDatabase.budgetDao())
     val goalsRepository = RoomGoalsRepository(roomDatabase.goalDao())
     val todoRepository = RoomTodoRepository(roomDatabase.todoDao())
     runBlocking {
+        migrateLegacyBudgetIfNeeded(
+            trackerRepository = trackerRepository,
+            budgetRepository = budgetRepository,
+            featureRepository = featureRepository
+        )
         migrateLegacyTodosIfNeeded(
             trackerRepository = trackerRepository,
             todoRepository = todoRepository,
@@ -58,10 +65,36 @@ private fun createIosHybridRepository(
     }
     return HybridClearrRepository(
         trackerRepository = trackerRepository,
+        budgetRepository = budgetRepository,
         goalsRepository = goalsRepository,
         todoRepository = todoRepository,
         featureRepository = featureRepository
     )
+}
+
+private suspend fun migrateLegacyBudgetIfNeeded(
+    trackerRepository: RoomAppConfigTrackerRepository,
+    budgetRepository: RoomBudgetRepository,
+    featureRepository: IosClearrRepository
+) {
+    if (!budgetRepository.isEmpty()) return
+    val budgetTrackers = trackerRepository.getAllTrackers().first()
+        .filter { it.type == com.mikeisesele.clearr.data.model.TrackerType.BUDGET }
+    val periods = budgetTrackers.flatMap { tracker ->
+        featureRepository.getBudgetPeriods(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY).first() +
+            featureRepository.getBudgetPeriods(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.WEEKLY).first()
+    }
+    val categories = budgetTrackers.flatMap { tracker ->
+        featureRepository.getBudgetCategories(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.MONTHLY).first() +
+            featureRepository.getBudgetCategories(tracker.id, com.mikeisesele.clearr.data.model.BudgetFrequency.WEEKLY).first()
+    }
+    val plans = budgetTrackers.flatMap { tracker ->
+        featureRepository.getBudgetCategoryPlansForTracker(tracker.id).first()
+    }
+    val entries = budgetTrackers.flatMap { tracker ->
+        featureRepository.getBudgetEntriesForTracker(tracker.id).first()
+    }
+    budgetRepository.seedBudgetData(periods, categories, plans, entries)
 }
 
 private suspend fun migrateLegacyTodosIfNeeded(

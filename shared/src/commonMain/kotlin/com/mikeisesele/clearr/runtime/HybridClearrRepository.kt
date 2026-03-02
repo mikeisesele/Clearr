@@ -1,6 +1,7 @@
 package com.mikeisesele.clearr.runtime
 
 import com.mikeisesele.clearr.data.local.room.RoomAppConfigTrackerRepository
+import com.mikeisesele.clearr.data.local.room.RoomBudgetRepository
 import com.mikeisesele.clearr.data.local.room.RoomGoalsRepository
 import com.mikeisesele.clearr.data.local.room.RoomTodoRepository
 import com.mikeisesele.clearr.data.model.AppConfig
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 
 class HybridClearrRepository(
     private val trackerRepository: RoomAppConfigTrackerRepository,
+    private val budgetRepository: RoomBudgetRepository,
     private val goalsRepository: RoomGoalsRepository,
     private val todoRepository: RoomTodoRepository,
     private val featureRepository: ClearrRepository
@@ -44,6 +46,7 @@ class HybridClearrRepository(
 
     override suspend fun deleteTracker(id: Long) {
         featureRepository.deleteTracker(id)
+        budgetRepository.deleteBudgetDataForTracker(id)
         goalsRepository.deleteGoalsForTracker(id)
         todoRepository.deleteTodosForTracker(id)
         trackerRepository.deleteTracker(id)
@@ -54,47 +57,47 @@ class HybridClearrRepository(
     }
 
     override fun getBudgetPeriods(trackerId: Long, frequency: BudgetFrequency): Flow<List<BudgetPeriod>> =
-        featureRepository.getBudgetPeriods(trackerId, frequency)
+        budgetRepository.getBudgetPeriods(trackerId, frequency)
 
     override suspend fun ensureBudgetPeriods(trackerId: Long, frequency: BudgetFrequency) {
-        featureRepository.ensureBudgetPeriods(trackerId, frequency)
+        budgetRepository.ensureBudgetPeriods(trackerId, frequency)
     }
 
     override fun getBudgetCategories(trackerId: Long, frequency: BudgetFrequency): Flow<List<BudgetCategory>> =
-        featureRepository.getBudgetCategories(trackerId, frequency)
+        budgetRepository.getBudgetCategories(trackerId, frequency)
 
     override suspend fun getBudgetMaxSortOrder(trackerId: Long, frequency: BudgetFrequency): Int =
-        featureRepository.getBudgetMaxSortOrder(trackerId, frequency)
+        budgetRepository.getBudgetMaxSortOrder(trackerId, frequency)
 
     override suspend fun addBudgetCategory(category: BudgetCategory): Long =
-        featureRepository.addBudgetCategory(category)
+        budgetRepository.addBudgetCategory(category)
 
     override suspend fun updateBudgetCategory(category: BudgetCategory) {
-        featureRepository.updateBudgetCategory(category)
+        budgetRepository.updateBudgetCategory(category)
     }
 
     override suspend fun deleteBudgetCategory(categoryId: Long) {
-        featureRepository.deleteBudgetCategory(categoryId)
+        budgetRepository.deleteBudgetCategory(categoryId)
     }
 
     override suspend fun reorderBudgetCategories(trackerId: Long, frequency: BudgetFrequency, orderedIds: List<Long>) {
-        featureRepository.reorderBudgetCategories(trackerId, frequency, orderedIds)
+        budgetRepository.reorderBudgetCategories(trackerId, frequency, orderedIds)
     }
 
     override fun getBudgetCategoryPlansForTracker(trackerId: Long): Flow<List<BudgetCategoryPlan>> =
-        featureRepository.getBudgetCategoryPlansForTracker(trackerId)
+        budgetRepository.getBudgetCategoryPlansForTracker(trackerId)
 
     override suspend fun getBudgetCategoryPlansForPeriod(periodId: Long): List<BudgetCategoryPlan> =
-        featureRepository.getBudgetCategoryPlansForPeriod(periodId)
+        budgetRepository.getBudgetCategoryPlansForPeriod(periodId)
 
     override suspend fun saveBudgetCategoryPlans(periodId: Long, plans: List<BudgetCategoryPlan>) {
-        featureRepository.saveBudgetCategoryPlans(periodId, plans)
+        budgetRepository.saveBudgetCategoryPlans(periodId, plans)
     }
 
     override fun getBudgetEntriesForTracker(trackerId: Long): Flow<List<BudgetEntry>> =
-        featureRepository.getBudgetEntriesForTracker(trackerId)
+        budgetRepository.getBudgetEntriesForTracker(trackerId)
 
-    override suspend fun addBudgetEntry(entry: BudgetEntry): Long = featureRepository.addBudgetEntry(entry)
+    override suspend fun addBudgetEntry(entry: BudgetEntry): Long = budgetRepository.addBudgetEntry(entry)
 
     override fun getGoalsForTracker(trackerId: Long): Flow<List<Goal>> =
         goalsRepository.getGoalsForTracker(trackerId)
