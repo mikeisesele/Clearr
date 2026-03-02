@@ -116,6 +116,17 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
         }
     }
 
+    LaunchedEffect(currentDestination) {
+        val destination = currentDestination ?: return@LaunchedEffect
+        if (destination == shellNavState.current) return@LaunchedEffect
+
+        if (destination.isTopLevelDestination()) {
+            shellNavigator.openTopLevel(destination)
+        } else {
+            shellNavigator.replaceCurrent(destination)
+        }
+    }
+
     LaunchedEffect(shellNavState.current, currentDestination) {
         val desired = shellNavState.current
         if (currentDestination == desired) return@LaunchedEffect
@@ -172,6 +183,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
                     BudgetDetailScreen(
                         trackerId = trackerId,
+                        onNavigateBack = { shellNavigator.openTopLevel(AppShellDestination.Dashboard) },
                         onAddCategory = {
                             AppShellDestination.BudgetRoot(trackerId)
                                 .addFlowDestinationOrNull()
@@ -186,6 +198,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
                     TodoRoute(
                         trackerId = trackerId,
+                        onNavigateBack = { shellNavigator.openTopLevel(AppShellDestination.Dashboard) },
                         onAddTodo = {
                             AppShellDestination.TodoRoot(trackerId)
                                 .addFlowDestinationOrNull()
@@ -200,6 +213,7 @@ private fun MainNavHost(onThemeChange: (ThemeMode) -> Unit) {
                     val trackerId = backStackEntry.arguments?.getLong(AppShellRouteArgs.TRACKER_ID) ?: return@composable
                     GoalsDetailScreen(
                         trackerId = trackerId,
+                        onNavigateBack = { shellNavigator.openTopLevel(AppShellDestination.Dashboard) },
                         onAddGoal = {
                             AppShellDestination.GoalsRoot(trackerId)
                                 .addFlowDestinationOrNull()
